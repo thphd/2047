@@ -1,0 +1,24 @@
+{%extends 'base.html'%}
+{%block content%}
+<div class="header">{{page_title}}</div>
+
+<div class="threadcontent">
+  <div class="postlistitem">
+    <div class="left">
+      <a href="/u/{{u.uid}}"><img class="avatar" src="/avatar/{{u.uid}}" alt=""></a>
+    </div>
+    <div class="right">
+      <div class="details">
+        <div class="post_content">
+          {{convert_markdown(u.profile_string)|safe}}
+          {%if u.brief%}
+          <blockquote>{{convert_markdown(u.brief)|safe}}</blockquote>
+          {%endif%}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{%endblock%}

@@ -427,6 +427,46 @@ def thrd(tid):
         **(globals())
     )
 
+@app.route('/u/<int:uid>')
+def userpage(uid):
+    uobj = aql('''
+    for u in users filter u.uid==@uid
+    return u
+    ''', uid=uid, silent=True)
+
+    if len(uobj)!=1:
+        return make_response('user not exist', 404)
+
+    uobj = uobj[0]
+
+    stats = aql('''return {
+            nthreads:length(for t in threads filter t.uid==@uid return t),
+            nposts:length(for p in posts filter p.uid==@uid return p),
+        }
+        ''',uid=uid, silent=True)[0]
+
+    u = uobj
+    uobj['stats']=stats
+    uobj['profile_string']='''
+用户名 {}
+
+UID {}
+
+注册时间 {}
+
+发帖 {}
+
+回复 {}
+    '''.format(u['name'], u['uid'], format_time_dateifnottoday(u['t_c']),
+        stats['nthreads'],stats['nposts'],
+    )
+
+    return render_template('userpage.html',
+        page_title=uobj['name'],
+        u=uobj,
+        **(globals())
+    )
+
 # feedback regulated ping service
 # ensure 1 ping every 10 sec
 lastping = time.time()
