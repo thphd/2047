@@ -95,6 +95,7 @@ class Paginator:
         self.post_list_defaults = dfs
 
         dfs = dfs.copy()
+        dfs['order']='desc'
         self.user_post_list_defaults = dfs
 
     def get_post_list(self,
@@ -124,8 +125,10 @@ class Paginator:
 
         if by=='thread':
             filter = 'filter i.tid == {}'.format(tid)
-        else:
+            mode='post'
+        else: # filter by user
             filter = 'filter i.uid == {}'.format(uid)
+            mode='user_post'
 
         querystring_complex = '''
         for i in posts
@@ -154,7 +157,7 @@ class Paginator:
         # for idx, p in enumerate(postlist):
         #     p['floor_num'] = idx + start + 1
 
-        pagination_obj = self.get_pagination_obj(count, pagenumber, pagesize, order, path, sortby, mode='post')
+        pagination_obj = self.get_pagination_obj(count, pagenumber, pagesize, order, path, sortby, mode=mode)
 
         return postlist, pagination_obj
 
@@ -186,8 +189,10 @@ class Paginator:
                 filter = ''
             else:
                 filter = 'filter i.cid == {}'.format(category)
-        else:
+            mode='thread'
+        else: # filter by user
             filter = 'filter i.uid == {}'.format(uid)
+            mode='user_thread'
 
         querystring_complex = '''
         for i in threads
@@ -221,7 +226,7 @@ class Paginator:
         threadlist = aql(querystring_complex, silent=True)
         # print('done',time.time()-ts);ts=time.time()
 
-        pagination_obj = self.get_pagination_obj(count, pagenumber, pagesize, order, path, sortby)
+        pagination_obj = self.get_pagination_obj(count, pagenumber, pagesize, order, path, sortby, mode)
 
         return threadlist, pagination_obj
 
@@ -261,13 +266,14 @@ class Paginator:
 
             if pagenumber!=defaults['pagenumber']:
                 ql.append(('page', pagenumber))
+
             if pagesize!=defaults['pagesize']:
                 ql.append(('pagesize', pagesize))
 
             if order!=defaults['order']:
                 ql.append(('order', order))
 
-            if sortby!=defaults['sortby'] and mode=='thread':
+            if sortby!=defaults['sortby']:
                 ql.append(('sortby', sortby))
 
             qs = '&'.join(['='.join([str(j) for j in k]) for k in ql])
@@ -471,6 +477,46 @@ def thrd(tid):
         **(globals())
     )
 
+# list of user posts.
+@app.route('/u/<int:uid>/p')
+def uposts(uid):
+    uobj = aql('''
+    for u in users filter u.uid==@uid
+    return u
+    ''', uid=uid, silent=True)
+
+    if len(uobj)!=1:
+        return make_response('user not exist', 404)
+
+    uobj = uobj[0]
+
+    pagenumber = rai('page') or 1
+    pagesize = rai('pagesize') or 50
+    order = ras('order') or 'desc'
+    # sortby = ras('sortby') or 't_u'
+
+    rpath = request.path
+
+    postlist, pagination = pgnt.get_post_list(
+        # by='thread',
+        by='user',
+        # tid=tid,
+        uid=uid,
+        # sortby=sortby,
+        order=order,
+        pagenumber=pagenumber, pagesize=pagesize,
+        path = rpath)
+
+    return render_template('postlist.html',
+        page_title='回复 - '+uobj['name'],
+        # threadlist=threadlist,
+        postlist=postlist,
+        pagination=pagination,
+        # t=thobj,
+        u=uobj,
+        # threadcount=count,
+        **(globals())
+    )
 @app.route('/u/<int:uid>')
 def userpage(uid):
     uobj = aql('''
@@ -504,9 +550,9 @@ UID {}
 
 发帖 [{}](/u/{}/t)
 
-回复 {}
+回复 [{}](/u/{}/p)
     '''.format(u['name'], u['uid'], format_time_dateifnottoday(u['t_c']),
-        stats['nthreads'], u['uid'], stats['nposts'],
+        stats['nthreads'], u['uid'], stats['nposts'], u['uid']
     )
 
     return render_template('userpage.html',

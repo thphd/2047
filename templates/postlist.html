@@ -2,6 +2,7 @@
 {%block content%}
 <div class="header">{{page_title}}</div>
 
+{%if t%}{# if there is a thread object #}
 <div class="threadcontent">
   <div class="threadlistitem">
     <div class="left">
@@ -22,15 +23,15 @@
       </div>
     </div>
   </div>
-
 </div>
+{%endif%}
 
 {%include 'pagination.html'%}
 
 <div class="threadlist">
 
   {%for p in postlist%}
-  <div class="threadlistitem">
+  <div class="threadlistitem" id="{{p._key}}">
 
     <div class="left">
       <a href="/u/{{p.uid}}"><img class="avatar" src="/avatar/{{p.uid}}" alt=""></a>
@@ -43,7 +44,7 @@
 
           {# floor no #}
           {#
-            <span class='floor_num'>#{{p.floor_num}}</span>
+          <span class='floor_num'>#{{p.floor_num}}</span>
           #}
           {# publish date #}
           <span>{{format_time_dateifnottoday(p.t_c)}}</span>
@@ -51,6 +52,10 @@
           {# publisher #}
           <a class="user_name" href="/u/{{p.uid}}">{{p.user.name}}</a>
 
+          {%if not t%}
+          {#link to original article#}
+          <a href="/t/{{p.tid}}#{{p._key}}">/t/{{p.tid}}</a>
+          {%endif%}
 
         </div>
       </div>
