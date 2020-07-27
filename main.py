@@ -469,7 +469,7 @@ UID {}
     )
 
 # feedback regulated ping service
-# ensure 1 ping every 10 sec
+# ensure 1 ping every 3 sec
 lastping = time.time()
 pingtime = 1.
 durbuf = 0
@@ -481,7 +481,7 @@ def _():
 
     durbuf = dur*0.1+durbuf*0.9
     lastping = now
-    target = 10
+    target = 3
     err = target - dur
 
     pingtime = max(1, pingtime + err * 0.3)
