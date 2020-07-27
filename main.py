@@ -467,9 +467,11 @@ def _(uid):
             resp.headers['Content-Type'] = 'image/jpeg'
             resp.headers['Cache-Control']= 'max-age=1800'
             return resp
-        else:
-            return make_response('no avatar data', 404)
-    else:
-        return make_response('no avatar found for uid {}'.format(uid), 404)
+
+    resp = make_response(
+        'no avatar obj found for uid {}'.format(uid), 307)
+    resp.headers['Location'] = '/images/logo.png'
+    resp.headers['Cache-Control']= 'max-age=1800'
+    return resp
 
 app.run(host='0.0.0.0', port='5000', debug=True)
