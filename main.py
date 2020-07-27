@@ -293,7 +293,8 @@ class Paginator:
             if pagenumber!=total_pages:
                 button_groups.append([('下一页',querystring(pagenumber+1, pagesize, order, sortby))])
 
-        button_groups.append(orders)
+        if count>1:
+            button_groups.append(orders)
 
         if mode=='thread':
             button_groups.append(sortbys)
