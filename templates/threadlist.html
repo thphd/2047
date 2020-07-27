@@ -17,17 +17,17 @@
     <div class="right">
       <div class="details">
         <div class="title">
-          <a href="../t/{{t.tid}}">{{t.title}}</a>
+          <a href="/t/{{t.tid}}">{{t.title}}</a>
         </div>
         <div class="meta">
           {# category name #}
 
-            <a class="category_name" href="../c/{{t.cid}}">{{t.cname}}</a>
+            <a class="category_name" href="/c/{{t.cid}}">{{t.cname}}</a>
 
           {# publish date #}
           <span>{{format_time_dateifnottoday(t.t_c)}}</span>
           {# publisher #}
-          <a class="user_name" href="../u/{{t.uid}}">{{t.user.name}}</a>
+          <a class="user_name" href="/u/{{t.uid}}">{{t.user.name}}</a>
 
 
           {% if t.lastuser %}
@@ -38,7 +38,7 @@
           {# last commented date #}
           <span class="last_commented_date">{{format_time_dateifnottoday(t.last.t_c)}}</span>
           {# last commenter #}
-          <a class="user_name" href="../u/{{t.lastuser.uid}}">{{t.lastuser.name}}</a>
+          <a class="user_name" href="/u/{{t.lastuser.uid}}">{{t.lastuser.name}}</a>
 
 
 

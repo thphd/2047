@@ -74,11 +74,6 @@ aqlc.create_index('users',
 is_integer = lambda i:isinstance(i, int)
 class Paginator:
     def __init__(self,):
-        self.default_pagenumber=1
-        self.default_pagesize=50
-        self.default_order='desc'
-        self.default_sortby='t_u'
-
         dfs = {}
         dfs['pagenumber'] = 1
         dfs['pagesize'] = 30
@@ -88,11 +83,19 @@ class Paginator:
         self.thread_list_defaults = dfs
 
         dfs = dfs.copy()
+        dfs['sortby']='t_c'
+
+        self.user_thread_list_defaults = dfs
+
+        dfs = dfs.copy()
         dfs['order'] = 'asc'
         dfs['sortby']='t_c'
         dfs['pagesize'] = 50
 
         self.post_list_defaults = dfs
+
+        dfs = dfs.copy()
+        self.user_post_list_defaults = dfs
 
     def get_post_list(self,
         by='thread',
@@ -246,6 +249,10 @@ class Paginator:
             defaults = self.thread_list_defaults
         elif mode=='post':
             defaults = self.post_list_defaults
+        elif mode=='user_thread':
+            defaults = self.user_thread_list_defaults
+        elif mode=='user_post':
+            defaults = self.user_post_list_defaults
         else:
             raise Exception('unsupported mode')
 
@@ -389,6 +396,42 @@ def catspe(cid):
         **(globals())
     )
 
+@app.route('/u/<int:uid>/t')
+def userthreads(uid):
+    uobj = aql('''
+    for u in users filter u.uid==@uid
+    return u
+    ''', uid=uid, silent=True)
+
+    if len(uobj)!=1:
+        return make_response('user not exist', 404)
+
+    uobj = uobj[0]
+
+    pagenumber = rai('page') or 1
+    pagesize = rai('pagesize') or 30
+    order = ras('order') or 'desc'
+    sortby = ras('sortby') or 't_c'
+
+    rpath = request.path
+    # print(request.args)
+
+    threadlist, pagination = pgnt.get_thread_list(
+        by='user', uid=uid,
+        sortby=sortby,
+        order=order,
+        pagenumber=pagenumber, pagesize=pagesize,
+        path = rpath)
+
+    return render_template('threadlist.html',
+        # page_title=catobj['name'],
+        page_title='帖子 - '+uobj['name'],
+        threadlist=threadlist,
+        pagination=pagination,
+        # threadcount=count,
+        **(globals())
+    )
+
 # thread, list of posts
 @app.route('/t/<int:tid>')
 def thrd(tid):
@@ -455,11 +498,11 @@ UID {}
 
 注册时间 {}
 
-发帖 {}
+发帖 [{}](/u/{}/t)
 
 回复 {}
     '''.format(u['name'], u['uid'], format_time_dateifnottoday(u['t_c']),
-        stats['nthreads'],stats['nposts'],
+        stats['nthreads'], u['uid'], stats['nposts'],
     )
 
     return render_template('userpage.html',
