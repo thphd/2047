@@ -482,6 +482,11 @@ def userpage(uid):
         return make_response('user not exist', 404)
 
     uobj = uobj[0]
+    u = uobj
+
+    if 't_c' not in u: # some user data are incomplete
+        u['t_c'] = '1989-06-04T00:00:00'
+        u['brief'] = '此用户的数据由于各种可能的原因，在github上2049bbs.xyz的备份中找不到，所以就只能像现在这样处理了'
 
     stats = aql('''return {
             nthreads:length(for t in threads filter t.uid==@uid return t),
@@ -489,7 +494,6 @@ def userpage(uid):
         }
         ''',uid=uid, silent=True)[0]
 
-    u = uobj
     uobj['stats']=stats
     uobj['profile_string']='''
 用户名 {}
