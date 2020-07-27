@@ -1,7 +1,6 @@
 import time,os,sched,random,threading,traceback,datetime
 import re,base64
 from colors import *
-from schedrun import schedrun
 
 import requests as r
 from times import *
