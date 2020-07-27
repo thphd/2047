@@ -147,8 +147,9 @@ class Paginator:
         postlist = aql(querystring_complex, silent=True)
         # print('done',time.time()-ts);ts=time.time()
 
-        for idx, p in enumerate(postlist):
-            p['floor_num'] = idx + start + 1
+        # uncomment if you want floor number in final output.
+        # for idx, p in enumerate(postlist):
+        #     p['floor_num'] = idx + start + 1
 
         pagination_obj = self.get_pagination_obj(count, pagenumber, pagesize, order, path, sortby, mode='post')
 
