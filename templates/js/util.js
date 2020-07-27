@@ -22,7 +22,7 @@ function xhr(method, dest, data){
 function timed(interval){
   setTimeout(function(){
     var itvl = interval
-    xhr('get', '../ping').then(jt=>{
+    xhr('get', '/ping').then(jt=>{
       var js = JSON.parse(jt)
       if(js.interval){
         itvl = js.interval
