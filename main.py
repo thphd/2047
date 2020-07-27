@@ -81,7 +81,7 @@ class Paginator:
 
         dfs = {}
         dfs['pagenumber'] = 1
-        dfs['pagesize'] = 50
+        dfs['pagesize'] = 30
         dfs['order']='desc'
         dfs['sortby']='t_u'
 
@@ -90,6 +90,7 @@ class Paginator:
         dfs = dfs.copy()
         dfs['order'] = 'asc'
         dfs['sortby']='t_c'
+        dfs['pagesize'] = 50
 
         self.post_list_defaults = dfs
 
@@ -335,7 +336,7 @@ site_name='2047'
 @app.route('/c/all')
 def catall():
     pagenumber = rai('page') or 1
-    pagesize = rai('pagesize') or 50
+    pagesize = rai('pagesize') or 30
     order = ras('order') or 'desc'
     sortby = ras('sortby') or 't_u'
 
@@ -365,7 +366,7 @@ def catspe(cid):
     catobj = catobj[0]
 
     pagenumber = rai('page') or 1
-    pagesize = rai('pagesize') or 50
+    pagesize = rai('pagesize') or 30
     order = ras('order') or 'desc'
     sortby = ras('sortby') or 't_u'
 
