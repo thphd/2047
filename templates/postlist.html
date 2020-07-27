@@ -3,7 +3,7 @@
 <div class="header">{{page_title}}</div>
 
 <div class="threadcontent">
-  <div class="postlistitem">
+  <div class="threadlistitem">
     <div class="left">
       <a href="/u/{{t.uid}}"><img class="avatar" src="/avatar/{{t.uid}}" alt=""></a>
     </div>
@@ -27,10 +27,10 @@
 
 {%include 'pagination.html'%}
 
-<div class="postlist">
+<div class="threadlist">
 
   {%for p in postlist%}
-  <div class="postlistitem">
+  <div class="threadlistitem">
 
     <div class="left">
       <a href="/u/{{p.uid}}"><img class="avatar" src="/avatar/{{p.uid}}" alt=""></a>

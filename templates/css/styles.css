@@ -48,13 +48,13 @@ div#header * {
   height: 48px;
   border-radius: 4px;
 }
-.threadlistitem .avatar,.postlistitem .avatar {
+.threadlistitem .avatar {
   vertical-align: middle;
 
   margin-right: 10px;
 }
 
-.threadlistitem .details, .postlistitem .details {
+.threadlistitem .details{
   /* display: inline-block; */
   vertical-align: middle;
 }
@@ -95,7 +95,7 @@ span.last_commented_date {
   margin-bottom: 5px;
 }
 
-.threadlistitem, .postlistitem {
+.threadlistitem {
   margin: 0px 0;
   border-style: solid;
   border-width: 1px 0 0 0;
@@ -123,7 +123,7 @@ span.last_commented_date {
   margin-right: 4px;
 }
 
-.threadlistitem:last-child, .postlistitem:last-child {
+.threadlistitem:last-child {
   border-width: 1px 0;
 }
 
@@ -147,7 +147,7 @@ span.last_commented_date {
     /* margin: 6px 0; */
 }
 
-.threadlistitem > *, .postlistitem> * {display: table-cell;}
+.threadlistitem > *{display: table-cell;}
 
 .header {
     font-size: 22px;
@@ -172,11 +172,7 @@ span.last_commented_date {
     /* display: inline-block; */
 }
 
-/* .threadlist, .postlist {
-    display: inline-block;
-} */
-
-.postlistitem, .threadlistitem {
+.threadlistitem {
     display: block;
     /* width: 600px; */
 }
@@ -195,10 +191,6 @@ span.last_commented_date {
 }
 
 .left .avatar {margin-right: 15px;}
-
-.postlistitem .user_name {
-    text-align: left;
-}
 
 
 .threadlistitem:last-child {}
