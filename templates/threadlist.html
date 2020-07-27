@@ -1,0 +1,57 @@
+{%extends 'base.html'%}
+{%block content%}
+
+<div class="header">{{page_title}}</div>
+{%include 'pagination.html'%}
+
+<div class="threadlist">
+
+
+  {%for t in threadlist%}
+  <div class="threadlistitem">
+
+    <div class="left">
+      <img class="avatar" src="../avatar/{{t.uid}}" alt="">
+    </div>
+
+    <div class="right">
+      <div class="details">
+        <div class="title">
+          <a href="../t/{{t.tid}}">{{t.title}}</a>
+        </div>
+        <div class="meta">
+          {# category name #}
+          <div class="category_name_bkgnd">
+            <a class="category_name" href="../c/{{t.cid}}">{{t.cname}}</a>
+          </div>
+          {# publish date #}
+          <span>{{format_time_dateifnottoday(t.t_c)}}</span>
+          {# publisher #}
+          <a class="user_name" href="../u/{{t.uid}}">{{t.user.name}}</a>
+
+
+          {% if t.lastuser %}
+          {# <span>最后回复</span> #}
+
+          <span class="response">{{t.count}} 个回复</span>
+
+          {# last commented date #}
+          <span class="last_commented_date">{{format_time_dateifnottoday(t.last.t_c)}}</span>
+          {# last commenter #}
+          <a class="user_name" href="../u/{{t.lastuser.uid}}">{{t.lastuser.name}}</a>
+
+
+
+          {%endif%}
+        </div>
+      </div>
+    </div>
+
+  </div>
+  {%endfor%}
+
+</div>
+{%include 'pagination.html'%}
+
+
+{%endblock%}

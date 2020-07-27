@@ -1,0 +1,36 @@
+{# base template #}
+<!DOCTYPE html>
+<html lang="zh" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="icon" type="image/png" href="../images/favicon.png">
+  <title>{{page_title}} - {{site_name}}</title>
+  {%block meta%}{%endblock%}
+</head>
+<body>
+  <div id="header" class="">
+    {# left 2 right: logo, [links], search, [uavatar, uname, login/logout] #}
+    <a href="/">
+      <img id="site_logo" src="/images/logo.png" alt=""><div id="site_name">{{site_name}}</div>
+    </a>
+
+  </div>
+
+  <div id="content" class="">
+    {%block content%}{%endblock%}
+  </div>
+  <div id="navigator" class="">
+
+  </div>
+  <div id="footer" class="">
+    <div class="copyright">
+      ©1989 Tsinghua University
+    </div>
+    <div class="copyright">
+      ©2047 Beijing Wudaokou Computing Technology LLC
+    </div>
+  </div>
+  <script src="/js/util.js" charset="utf-8"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+{%extends 'base.html'%}
+{%block content%}
+<div class="header">{{page_title}}</div>
+
+<div class="threadcontent">
+<div class="postlistitem">
+  <div class="left">
+    <img class="avatar" src="../avatar/{{t.uid}}" alt="">
+  </div>
+  <div class="right">
+    <div class="details">
+      <div class="post_content">{{convert_markdown(t.content)|safe}}</div>
+      <div class="meta">
+
+        {# publish date #}
+        <span>{{format_time_dateifnottoday(t.t_c)}}</span>
+
+        {# publisher #}
+        <a class="user_name" href="../u/{{t.uid}}">{{t.user.name}}</a>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+{%include 'pagination.html'%}
+
+<div class="postlist">
+
+  {%for p in postlist%}
+  <div class="postlistitem">
+
+    <div class="left">
+      <img class="avatar" src="../avatar/{{p.uid}}" alt="">
+    </div>
+
+    <div class="right">
+      <div class="details">
+        <div class="post_content">{{convert_markdown(p.content)|safe}}</div>
+        <div class="meta">
+
+          {# floor no #}
+          <span class='floor_num'>#{{p.floor_num}}</span>
+          {# publish date #}
+          <span>{{format_time_dateifnottoday(p.t_c)}}</span>
+
+          {# publisher #}
+          <a class="user_name" href="../u/{{p.uid}}">{{p.user.name}}</a>
+
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+  {%endfor%}
+
+</div>
+{%include 'pagination.html'%}
+
+{%endblock%}
