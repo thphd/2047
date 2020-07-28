@@ -306,7 +306,7 @@ class Paginator:
         if count>1:
             button_groups.append(orders)
 
-        if mode=='thread':
+        if mode=='thread' or mode=='user_thread':
             button_groups.append(sortbys)
 
         return {
