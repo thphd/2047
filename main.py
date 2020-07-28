@@ -55,6 +55,9 @@ aqlc.create_index('threads',
 
 aqlc.create_index('posts',
     type='persistent', fields=['tid','t_c'], unique=False, sparse=False)
+aqlc.create_index('posts',
+    type='persistent', fields=['uid','t_c'], unique=False, sparse=False)
+
 aqlc.create_index('categories',
     type='persistent', fields=['cid'], unique=True, sparse=False)
 
@@ -93,6 +96,56 @@ class Paginator:
         dfs = dfs.copy()
         dfs['order']='desc'
         self.user_post_list_defaults = dfs
+
+        dfs = dfs.copy()
+        dfs['pagesize'] = 50
+        dfs['sortby'] = 'uid'
+        self.user_list_defaults = dfs
+
+    def get_user_list(self,
+        sortby='uid',
+        order='desc',
+        pagesize=50,
+        pagenumber=1,
+        path=''):
+
+        assert sortby in ['t_c','uid'] # future can have more.
+        # sortby = 't_c'
+        assert order in ['desc', 'asc']
+
+        pagenumber = max(1, pagenumber)
+
+        start = (pagenumber-1)*pagesize
+        count = pagesize
+
+        mode = 'user'
+
+        querystring_complex = '''
+        for u in users
+        sort u.{sortby} {order}
+        limit {start},{count}
+
+        let stat = {{
+            nthreads:length(for t in threads filter t.uid==u.uid return t),
+            nposts:length(for p in posts filter p.uid==u.uid return p),
+        }}
+
+        return merge(u, stat)
+        '''.format(sortby=sortby, order=order,
+        start=start, count=count,)
+
+        querystring_simple = 'return length({})'.format(querystring_complex)
+
+        count = aql(querystring_simple, silent=True)[0]
+        userlist = aql(querystring_complex, silent=True)
+
+        pagination_obj = self.get_pagination_obj(count, pagenumber, pagesize, order, path, sortby, mode=mode)
+
+        for u in userlist:
+            userfill(u)
+            # u['profile_string'] = u['name']
+
+        return userlist, pagination_obj
 
     def get_post_list(self,
         by='thread',
@@ -254,6 +307,8 @@ class Paginator:
             defaults = self.user_thread_list_defaults
         elif mode=='user_post':
             defaults = self.user_post_list_defaults
+        elif mode=='user':
+            defaults = self.user_list_defaults
         else:
             raise Exception('unsupported mode')
 
@@ -292,6 +347,11 @@ class Paginator:
         ('发布时间', querystring(pagenumber, pagesize, order, 't_c'), 't_c'==sortby),
         ]
 
+        sortbys2 = [
+        ('UID',querystring(pagenumber, pagesize, order, 'uid'), 'uid'==sortby),
+        ('注册时间', querystring(pagenumber, pagesize, order, 't_c'),'t_c'==sortby)
+        ]
+
         button_groups = []
 
         if len(slots):
@@ -308,6 +368,9 @@ class Paginator:
 
         if mode=='thread' or mode=='user_thread':
             button_groups.append(sortbys)
+
+        if mode=='user':
+            button_groups.append(sortbys2)
 
         return {
             # 'slots':slots,
@@ -365,6 +428,27 @@ def catall():
         # threadcount=count,
         **(globals())
     )
+@app.route('/u/all')
+def alluser():
+    pagenumber = rai('page') or 1
+    pagesize = rai('pagesize') or 50
+    order = ras('order') or 'desc'
+    sortby = ras('sortby') or 'uid'
+    rpath = request.path
+
+    userlist, pagination = pgnt.get_user_list(
+        sortby=sortby, order=order,
+        pagenumber=pagenumber, pagesize=pagesize,
+        path = rpath)
+
+    return render_template('userlist.html',
+        page_title='所有用户',
+        # threadlist=threadlist,
+        userlist = userlist,
+        pagination=pagination,
+        # threadcount=count,
+        **(globals())
+    )
 
 @app.route('/c/<int:cid>')
 def catspe(cid):
@@ -392,6 +476,7 @@ def catspe(cid):
 
     return render_template('threadlist.html',
         page_title=catobj['name'],
+        page_subheader=(catobj['brief'] or '').replace('\\',''),
         threadlist=threadlist,
         pagination=pagination,
         # threadcount=count,
@@ -513,6 +598,12 @@ def uposts(uid):
         # threadcount=count,
         **(globals())
     )
+
+def userfill(u):
+    if 't_c' not in u: # some user data are incomplete
+        u['t_c'] = '1989-06-04T00:00:00'
+        u['brief'] = '此用户的数据由于各种可能的原因，在github上2049bbs.xyz的备份中找不到，所以就只能像现在这样处理了'
+
 @app.route('/u/<int:uid>')
 def userpage(uid):
     uobj = aql('''
@@ -526,9 +617,7 @@ def userpage(uid):
     uobj = uobj[0]
     u = uobj
 
-    if 't_c' not in u: # some user data are incomplete
-        u['t_c'] = '1989-06-04T00:00:00'
-        u['brief'] = '此用户的数据由于各种可能的原因，在github上2049bbs.xyz的备份中找不到，所以就只能像现在这样处理了'
+    userfill(u)
 
     stats = aql('''return {
             nthreads:length(for t in threads filter t.uid==@uid return t),
@@ -547,7 +636,7 @@ UID {}
 发帖 [{}](/u/{}/t)
 
 回复 [{}](/u/{}/p)
-    '''.format(u['name'], u['uid'], format_time_dateifnottoday(u['t_c']),
+    '''.format(u['name'], u['uid'], format_time_datetime(u['t_c']),
         stats['nthreads'], u['uid'], stats['nposts'], u['uid']
     )
 

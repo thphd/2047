@@ -166,6 +166,7 @@ span.last_commented_date {
     vertical-align: middle;
     display: inline-block;
     width: 70px;
+    text-decoration: none;
 }
 
 .details>.post_content {
@@ -196,7 +197,7 @@ span.last_commented_date {
 .threadlistitem:last-child {}
 
 
-span.response {
+.response {
     color: #2da226;
     /* width: 70px; */
 }
@@ -250,4 +251,21 @@ span.floor_num {color: #652929;}
 .post_content iframe {
     width: 100%;
     height: 100%;
+}
+
+.threads {
+    color: #3594cc;
+}
+
+
+.subheader {
+    font-size: 16px;
+    color: #8db4d6;
+}
+
+.post_content a {
+    text-decoration: none;
+    color: #0088ff;
+    margin-left: 2px;
+    margin-right: 2px;
 }
