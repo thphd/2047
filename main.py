@@ -10,11 +10,7 @@ import markdown
 def convert_markdown(s):
     return markdown.markdown(s)
 
-from aql import AQLController
-aqlc = AQLController('http://127.0.0.1:8529', 'db2047',[
-'queue',
-])
-aql = aqlc.aql
+from aql_defaults import *
 
 def init_directory(d):
     try:
