@@ -11,9 +11,31 @@
 <body>
   <div id="header" class="">
     {# left 2 right: logo, [links], search, [uavatar, uname, login/logout] #}
-    <a href="/">
+    <a class="leftalign" href="/">
       <img id="site_logo" src="/images/logo.png" alt=""><div id="site_name">{{site_name}}</div>
     </a>
+
+    <div class="rightalign">
+
+      {%if logged_in%}
+
+      <a href="javascript:void(0)" onclick="logout();">退出</a>
+      <a href="/u/{{logged_in.uid}}">
+        <div class="headerbtn">
+          {{logged_in.name}}
+        </div>
+      </a>
+      <a href="/u/{{logged_in.uid}}">
+        <img class="headerbtn" src="/avatar/{{logged_in.uid}}" alt="">
+      </a>
+
+      {%else%}
+
+      <a class="headerbtn" href="/login">登陆</a>
+
+      {%endif%}
+
+    </div>
 
   </div>
 
@@ -31,6 +53,7 @@
       ©2047 Beijing Wudaokou Computing Technology LLC
     </div>
   </div>
+  <script src="/js/md5.js" charset="utf-8"></script>
   <script src="/js/util.js" charset="utf-8"></script>
 </body>
 </html>

@@ -1,0 +1,24 @@
+{%extends 'base.html'%}
+{%block content%}
+
+<div class="header">{{page_title}}</div>
+
+<div class="threadlist">
+
+  <form class="register">
+
+    <label>用户名</label>
+    <input type="text" id="username" value="{{username}}">
+    <br>
+    <label>密码</label>
+    <input type="password" id="password" value="">
+    <br>
+    <label></label>
+    <button type="button" id="login">登录</button>
+  </form>
+  <br>
+
+</div>
+
+
+{%endblock%}

@@ -1,0 +1,41 @@
+{%extends 'base.html'%}
+{%block content%}
+
+<div class="header">{{page_title}}</div>
+
+<div class="threadlist">
+
+  <form class="register">
+
+    <label>用户名</label>
+    <input type="text" id="username" value="">
+    <br>
+    <label>密码</label>
+    <input type="password" id="password" value="">
+    <br>
+    <label>再输入一次</label>
+    <input type="password" id="password2" value="">
+    <br>
+    <label>邀请码</label>
+    <input type="text" id="invitation" value="{{invitation}}">
+    <br>
+    <label></label>
+    <button type="button" id="register">注册</button>
+  </form>
+  <br>
+  <div class="post_content">
+    <blockquote>
+      用户名需符合 {{username_regex_string}}
+      <br>
+      密码不应过分简单
+      <br>
+      密码提交前将在浏览器端作hash，服务器不接收、不记录明文密码
+      <br>
+      服务器端收到用户提交hash后，会再用pbkdf2-hmac-sha256+salt作hash
+    </blockquote>
+  </div>
+
+</div>
+
+
+{%endblock%}

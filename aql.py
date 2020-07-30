@@ -37,8 +37,9 @@ class AQLController:
         return self.request('POST', '/_db/'+self.dbname+'/_api/collection',
         name=name, waitForSync=True, raise_error=False)
 
-    def clear_collection(self, name):
-        return self.aql('for i in {} remove i in {}'.format(name, name))
+    def clear_collection(self, name, filter=''):
+        return self.aql('for i in {} {} remove i in {}'.format(
+            name, filter, name))
 
     def create_index(self, collection, **kw):
         return self.request('post', '/_db/'+self.dbname+'/_api/index?collection='+collection, raise_error=False, **kw)

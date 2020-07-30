@@ -23,12 +23,23 @@ def init_directory(d):
 init_directory('./static/')
 init_directory('./static/upload/')
 
-from flask import Flask
 from flask_cors import CORS
+
+from flask import Flask, session
 from flask import render_template, request, send_from_directory, make_response
 # from flask_gzip import Gzip
 
+def get_secret():
+    fn = 'secret.bin'
+    if os.path.exists(fn):
+        f = open(fn, 'rb');r = f.read();f.close()
+    else:
+        r = os.urandom(32)
+        f = open(fn, 'wb');f.write(r);f.close()
+    return r
+
 app = Flask(__name__, static_url_path='')
+app.secret_key = get_secret()
 CORS(app)
 # gzip = Gzip(app,minimum_size=0)
 
@@ -69,6 +80,9 @@ aqlc.create_index('users',
     type='persistent', fields=['uid'], unique=True, sparse=False)
 aqlc.create_index('users',
     type='persistent', fields=['name'], unique=False, sparse=False)
+
+aqlc.create_index('invitations',
+    type='persistent', fields=['key','active'], unique=True, sparse=False)
 
 is_integer = lambda i:isinstance(i, int)
 class Paginator:
@@ -404,6 +418,18 @@ def ras(k):
 
 site_name='2047'
 
+def get_user(uid):
+    return aql('for i in users filter i.uid==@k return i',
+        k=uid, silent=True)[0]
+
+logged_in = False
+@app.before_request
+def befr():
+    global logged_in
+    if 'uid' in session:
+        logged_in = get_user(int(session['uid']))
+    else:
+        logged_in = False
 
 @app.route('/')
 @app.route('/c/all')
@@ -646,27 +672,27 @@ UID {}
         **(globals())
     )
 
-# feedback regulated ping service
-# ensure 1 ping every 3 sec
-lastping = time.time()
-pingtime = 1.
-durbuf = 0
-@route('/ping')
-def _():
-    global lastping,durbuf,pingtime
-    now = time.time()
-    dur = now - lastping
+from constants import *
 
-    durbuf = dur*0.1+durbuf*0.9
-    lastping = now
-    target = 3
-    err = target - dur
+@app.route('/register')
+def regpage():
+    invitation = ras('code') or ''
 
-    pingtime = max(1, pingtime + err * 0.3)
-    # print('==={:4.4f}'.format(durbuf), 'pingtime {:4.4f}'.format(pingtime))
-    ping_itvl = int(pingtime*1000)
-    return {'ping':'pong','interval':ping_itvl}
+    return render_template('register.html',
+        invitation=invitation,
+        page_title='注册',
+        **(globals())
+    )
 
+@app.route('/login')
+def loginpage():
+    username = ras('username') or ''
+
+    return render_template('login.html',
+        username=username,
+        page_title='登录',
+        **(globals())
+    )
 # print(ptf('2020-07-19T16:00:00'))
 
 @route('/avatar/<int:uid>')
@@ -693,5 +719,60 @@ def _(uid):
     resp.headers['Location'] = '/images/logo.png'
     resp.headers['Cache-Control']= 'max-age=1800'
     return resp
+
+from api import api_registry
+@app.route('/api', methods=['GET', 'POST'])
+def apir():
+    global logged_in
+
+    def e(s): return make_response({'error':s}, 500)
+
+    if request.method not in ['GET','POST']:
+        return e('support GET and POST only')
+
+    if request.content_length:
+        if request.content_length > 1024*1024*3: # 3MB limit
+            return e('request too large')
+
+    j = request.get_json(silent=False)
+
+    if j is None:
+        if request.method=='POST':
+            return e('empty body for post')
+        else: # GET
+            if 'action' not in request.args:
+                return e('action not specified in url params')
+            else:
+                j = {}
+                for k in request.args:
+                    j[k] = request.args[k]
+    else:
+        if 'action' not in j:
+            return e('action not specified in json')
+
+    # print(j)
+    action = j['action']
+    j['logged_in'] = logged_in
+    if action in api_registry:
+        if action != 'ping':
+            print_up(j)
+        try:
+            answer = api_registry[action](j)
+        except Exception as ex:
+            traceback.print_exc()
+            errstr = ex.__class__.__name__+'/{}'.format(str(ex))
+            print_err('Exception in api "{}":'.format(action), errstr)
+            return e(errstr)
+        else:
+            if action != 'ping':
+                print_down(answer)
+            if 'setuid' in answer:
+                session['uid'] = answer['setuid']
+            if 'logout' in answer:
+                del session['uid']
+                
+            return answer
+    else:
+        return e('action function not registered')
 
 app.run(host='0.0.0.0', port='5000', debug=True)
