@@ -65,10 +65,16 @@ div#site_name {color: #005bac;font-family: arial;/* display: inline-block; *//* 
 .copyright {
   font-size: 10px;
   color: gray;
+  margin: 2px 0;
+  display: inline-block;
 }
 
 div#footer {
-  margin-top: 10px;
+  margin-top: 0px;
+  padding: 8px 20px;
+  border-style: solid;
+  border-width: 1px 0 0 0;
+  border-color: #efefef;
 }
 
 span.last_commented_date {
@@ -212,7 +218,7 @@ div#content {
     /* margin-left: 20px; */
 }
 
-body>#content,body>#footer {
+body>#content {
     margin-left: 20px;
     margin-right: 20px;
 }
@@ -337,6 +343,7 @@ img.headerbtn {
     width: 500px;
     height: 100px;
     display: flex;
+    padding: 5px;
 }
 
 .editor_button_row {
@@ -369,4 +376,8 @@ img.headerbtn {
     /* display: inline-block; */
     max-width: 600px;
     /* flex-grow: 1; */
+}
+
+#editor_text:focus {
+    outline: none;
 }

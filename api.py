@@ -151,13 +151,22 @@ def _(j):
             if lp[0]['content'] == content:
                 raise Exception('repeatedly posting same content')
 
+        timenow = time_iso_now()
+
         newpost = dict(
             uid=uid,
-            t_c=time_iso_now(),
+            t_c=timenow,
             content=content.strip(),
             tid=tid,
         )
         inserted = aql('insert @p in posts return NEW', p=newpost)[0]
+
+        # update thread update time
+        aql('''
+        for t in threads filter t.tid==@tid
+        update t with {t_u:@now} in threads
+        ''',silent=True,tid=tid,now=timenow)
+
         return inserted
 
     else:
