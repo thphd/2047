@@ -19,6 +19,26 @@
     </div>
   </div>
 
+  {%if (invitations!=None)%}
+  <div class="invitations">
+    <div class="invitation_list_title">
+      我的邀请码
+    </div>
+    <div class="invitation_list">
+
+      {%for i in invitations%}
+      <div class="invitation{{'' if i.active else ' inactive'}}">
+        <a href="/register?code={{i._key}}">{{i._key}}</a>
+        <span>{{format_time_datetime(i.t_c)}}</span>
+        <span>{{'未使用' if i.active else '已使用'}}</span>
+      </div>
+      {%endfor%}
+
+    </div>
+    <button type="button" onclick='generate_invitation_code()'>生成邀请码</button>
+  </div>
+  {%endif%}
+
 </div>
 
 {%endblock%}

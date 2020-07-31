@@ -194,7 +194,8 @@ if (regbtn){
       invitation_code:invcode,
     })
     .then(res=>{
-      alert(JSON.stringify(res))
+      print(JSON.stringify(res))
+      alert('注册成功，请登录')
 
       window.location.href = '/login?username='+username
     })
@@ -208,6 +209,10 @@ if (regbtn){
 var loginbtn = geid('login')
 if (loginbtn){
   geid('username').focus()
+  if(geid('username').value.length>0){
+    geid('password').focus()
+  }
+
   loginbtn.onclick=function(){
     var username = geid('username').value
     var password = geid('password').value
@@ -218,8 +223,11 @@ if (loginbtn){
       password_hash:hash_user_pass(username, password),
     })
     .then(res=>{
-      // window.location.href = '/'
-      window.history.back()
+      if (document.referrer.match('/register')||document.referrer==""){
+        window.location.href = '/'
+      }else{
+        window.history.back()
+      }
     })
     .catch(err=>{
       alert(err)
@@ -291,4 +299,14 @@ if (editor_target){
       bsubmit.disabled = false
     })
   }
+}
+
+function generate_invitation_code(){
+  api({
+    action:'generate_invitation_code',
+  })
+  .then(()=>{
+    window.location.reload()
+  })
+  .catch(alert)
 }

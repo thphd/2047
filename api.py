@@ -91,6 +91,7 @@ def _(j):
         name=uname,
         t_c=time_iso_now(),
         brief='',
+        invitation=ik,
     )
 
     pwobj = dict(
@@ -174,8 +175,7 @@ def _(j):
 
 @register('render')
 def _(j):
-    if 'logged_in' not in j:
-        raise Exception('you are not logged in')
+    if 'logged_in' not in j: raise Exception('you are not logged in')
 
     def es(k): return (str(j[k]) if (k in j) else None)
 
@@ -183,6 +183,35 @@ def _(j):
     content_length_check(content, allow_short=True)
 
     return {'html':convert_markdown(content)}
+
+import os, base64
+def r8():return os.urandom(8)
+
+@register('generate_invitation_code')
+def _(j):
+    if 'logged_in' not in j: raise Exception('you are not logged in')
+    uid = j['logged_in']['uid']
+
+    invs = aql('''for i in invitations
+        filter i.uid==@k and i.active == true
+        return i''',
+        k=uid, silent=True)
+
+    if len(invs)>=5:
+        raise Exception('you can only generate so much invitation code')
+
+    code = '2047'+base64.b16encode(r8()).decode('ascii')
+
+    inv = dict(
+        active=True,
+        uid=uid,
+        _key=code,
+        t_c=time_iso_now(),
+    )
+
+    aql('insert @k in invitations', k=inv)
+
+    return {'error':False}
 
 # feedback regulated ping service
 # average 1 ping every 3 sec

@@ -78,7 +78,9 @@ aqlc.create_index('users',
     type='persistent', fields=['name'], unique=False, sparse=False)
 
 aqlc.create_index('invitations',
-    type='persistent', fields=['key','active'], unique=True, sparse=False)
+    type='persistent', fields=['uid','active','t_c'], unique=False, sparse=False)
+aqlc.create_index('invitations',
+    type='persistent', fields=['uid','t_c'], unique=False, sparse=False)
 
 is_integer = lambda i:isinstance(i, int)
 class Paginator:
@@ -662,9 +664,16 @@ UID {}
         stats['nthreads'], u['uid'], stats['nposts'], u['uid']
     )
 
+    invitations = None
+    if logged_in:
+        if logged_in['uid']==uid:
+            k = aql('for i in invitations filter i.uid==@k sort i.t_c desc limit 50 return i',k=uid)
+            invitations = k
+
     return render_template('userpage.html',
         page_title=uobj['name'],
         u=uobj,
+        invitations=invitations,
         **(globals())
     )
 

@@ -381,3 +381,16 @@ img.headerbtn {
 #editor_text:focus {
     outline: none;
 }
+
+.invitations > * {
+    margin: 0 0 6px 0;
+}
+
+.invitation {
+    margin: 3px 0;
+}
+
+.invitation.inactive {
+    text-decoration: line-through;
+    color: #bfbfbf;
+}
