@@ -105,7 +105,7 @@ function xhr(method, dest, data){
       // print(this)
     })
     r.open(method, dest)
-    r.timeout = 5000;
+    r.timeout = 15000;
     if (data){
       r.setRequestHeader('Content-type','application/json')
       r.send(data)
