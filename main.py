@@ -667,7 +667,7 @@ UID {}
     invitations = None
     if logged_in:
         if logged_in['uid']==uid:
-            k = aql('for i in invitations filter i.uid==@k sort i.t_c desc limit 50 return i',k=uid)
+            k = aql('for i in invitations filter i.uid==@k sort i.t_c desc limit 50 return i',k=uid,silent=True)
             invitations = k
 
     return render_template('userpage.html',
