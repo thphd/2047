@@ -21,7 +21,7 @@ init_directory('./static/upload/')
 
 from flask_cors import CORS
 
-from flask import Flask, session
+from flask import Flask, session, g
 from flask import render_template, request, send_from_directory, make_response
 # from flask_gzip import Gzip
 
@@ -420,14 +420,13 @@ def get_user(uid):
     return aql('for i in users filter i.uid==@k return i',
         k=uid, silent=True)[0]
 
-logged_in = False
+# logged_in = False
 @app.before_request
 def befr():
-    global logged_in
     if 'uid' in session:
-        logged_in = get_user(int(session['uid']))
+        g.logged_in = get_user(int(session['uid']))
     else:
-        logged_in = False
+        g.logged_in = False
 
 @app.route('/')
 @app.route('/c/all')
@@ -665,8 +664,8 @@ UID {}
     )
 
     invitations = None
-    if logged_in:
-        if logged_in['uid']==uid:
+    if g.logged_in:
+        if g.logged_in['uid']==uid:
             k = aql('for i in invitations filter i.uid==@k sort i.t_c desc limit 50 return i',k=uid,silent=True)
             invitations = k
 
@@ -738,7 +737,7 @@ def _(name):
 from api import api_registry
 @app.route('/api', methods=['GET', 'POST'])
 def apir():
-    global logged_in
+    # global logged_in
 
     def e(s): return make_response({'error':s}, 500)
 
@@ -767,7 +766,7 @@ def apir():
 
     # print(j)
     action = j['action']
-    j['logged_in'] = logged_in
+    j['logged_in'] = g.logged_in
     if action in api_registry:
         if action != 'ping':
             print_up(j)

@@ -67,7 +67,7 @@
 </div>
 {%include 'pagination.html'%}
 
-{%if t and logged_in%}
+{%if t and g.logged_in%}
 <meta id="editor_target" _type="thread" _id="{{t.tid}}">
 <div class="editor" id="editor_inline">
   <div class="editor_left">

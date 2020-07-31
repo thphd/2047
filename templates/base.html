@@ -17,16 +17,16 @@
 
     <div class="rightalign">
 
-      {%if logged_in%}
+      {%if g.logged_in%}
 
       <a href="javascript:void(0)" onclick="logout();">退出</a>
-      <a href="/u/{{logged_in.uid}}">
+      <a href="/u/{{g.logged_in.uid}}">
         <div class="headerbtn">
-          {{logged_in.name}}
+          {{g.logged_in.name}}
         </div>
       </a>
-      <a href="/u/{{logged_in.uid}}">
-        <img class="headerbtn" src="/avatar/{{logged_in.uid}}" alt="">
+      <a href="/u/{{g.logged_in.uid}}">
+        <img class="headerbtn" src="/avatar/{{g.logged_in.uid}}" alt="">
       </a>
 
       {%else%}
