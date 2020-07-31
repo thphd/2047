@@ -218,7 +218,8 @@ if (loginbtn){
       password_hash:hash_user_pass(username, password),
     })
     .then(res=>{
-      window.location.href = '/'
+      // window.location.href = '/'
+      window.history.back()
     })
     .catch(err=>{
       alert(err)
@@ -235,4 +236,59 @@ function logout(){
     window.location.reload()
   })
   .catch(alert)
+}
+
+var editor_target = geid('editor_target')
+
+if (editor_target){
+  var bpreview = geid('editor_btnpreview')
+  var bsubmit = geid('editor_btnsubmit')
+  var preview = geid('editor_preview')
+  var editor_text = geid('editor_text')
+  var editor_right = geid('editor_right')
+
+  editor_right.style.display = 'none'
+
+  bpreview.onclick = function(){
+    bpreview.disabled = true
+
+    api({
+      action:'render',
+      content:editor_text.value
+    })
+    .then(j=>{
+      preview.innerHTML = j.html
+      editor_right.style.display = 'initial'
+    })
+    .catch(alert)
+    .then(()=>{
+      bpreview.disabled = false
+    })
+  }
+
+  bsubmit.onclick = function(){
+    bsubmit.disabled = true
+    bpreview.disabled = true
+
+    _type = editor_target.getAttribute('_type')
+    _id = editor_target.getAttribute('_id')
+
+    api({
+      action:'post',
+      type:_type,
+      id:_id,
+      content:editor_text.value,
+    })
+    .then(j=>{
+      // window.location.reload()
+      print(j)
+      // alert(j)
+      window.location.reload()
+    })
+    .catch(alert)
+    .then(()=>{
+      bpreview.disabled = false
+      bsubmit.disabled = false
+    })
+  }
 }

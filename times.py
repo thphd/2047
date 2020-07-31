@@ -38,6 +38,9 @@ def format_time_dateifnottoday(s):
     else:
         return format_time_timeonly(s)
 
+def time_iso_now():
+    return format_time_iso(dtn())
+
 if __name__ == '__main__':
     a = dtn()
     print(format_time_dateifnottoday(fti(a)))

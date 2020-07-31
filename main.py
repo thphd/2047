@@ -5,11 +5,7 @@ from colors import *
 import requests as r
 from times import *
 
-import markdown
-
-def convert_markdown(s):
-    return markdown.markdown(s)
-
+from constants import *
 from aql_defaults import *
 
 def init_directory(d):
@@ -672,8 +668,6 @@ UID {}
         **(globals())
     )
 
-from constants import *
-
 @app.route('/register')
 def regpage():
     invitation = ras('code') or ''
@@ -718,6 +712,18 @@ def _(uid):
         'no avatar obj found for uid {}'.format(uid), 307)
     resp.headers['Location'] = '/images/logo.png'
     resp.headers['Cache-Control']= 'max-age=1800'
+    return resp
+
+@route('/member/<string:name>')
+def _(name):
+    # check if user exists
+    res = aql('for u in users filter u.name==@n return u', n=name)
+    if len(res)==0:
+        return make_response('no such user', 500)
+
+    u = res[0]
+    resp = make_response('user found', 307)
+    resp.headers['Location'] = '/u/{}'.format(u['uid'])
     return resp
 
 from api import api_registry
@@ -770,7 +776,7 @@ def apir():
                 session['uid'] = answer['setuid']
             if 'logout' in answer:
                 del session['uid']
-                
+
             return answer
     else:
         return e('action function not registered')

@@ -89,7 +89,7 @@ def _(j):
     newuser = dict(
         uid=uid,
         name=uname,
-        t_c=format_time_iso(dtn()),
+        t_c=time_iso_now(),
         brief='',
     )
 
@@ -111,8 +111,72 @@ def _(j):
 def _(j):
     return {'logout':True}
 
+def content_length_check(content, allow_short=False):
+    if len(content)>100000:
+        raise Exception('content too long')
+    if len(content)<4 and allow_short==False:
+        raise Exception('content too short')
+
+@register('post')
+def _(j):
+    if 'logged_in' not in j:
+        raise Exception('you are not logged in')
+
+    uid = j['logged_in']['uid']
+
+    def es(k): return (str(j[k]) if (k in j) else None)
+
+    target_type = es('type')
+    # pid = int(es('pid'))
+    id = int(es('id'))
+
+    # title = es('title').strip()
+
+    content = es('content').strip()
+    content_length_check(content)
+
+    if target_type=='thread':
+        # check if tid exists
+        tid = id
+
+        thread = aql('for t in threads filter t.tid==@k return t',k=tid,silent=True)
+        if len(thread)==0:
+            raise Exception('tid not exist')
+
+        thread = thread[0]
+
+        # check if user repeatedly submitted the same content
+        lp = aql('for p in posts filter p.uid==@k sort p.t_c desc limit 1 return p',k=uid, silent=True)
+        if len(lp) == 1:
+            if lp[0]['content'] == content:
+                raise Exception('repeatedly posting same content')
+
+        newpost = dict(
+            uid=uid,
+            t_c=time_iso_now(),
+            content=content.strip(),
+            tid=tid,
+        )
+        inserted = aql('insert @p in posts return NEW', p=newpost)[0]
+        return inserted
+
+    else:
+        raise Exception('unsupported type:'+target_type)
+
+@register('render')
+def _(j):
+    if 'logged_in' not in j:
+        raise Exception('you are not logged in')
+
+    def es(k): return (str(j[k]) if (k in j) else None)
+
+    content = es('content').strip()
+    content_length_check(content, allow_short=True)
+
+    return {'html':convert_markdown(content)}
+
 # feedback regulated ping service
-# ensure 1 ping every 3 sec
+# average 1 ping every 3 sec
 lastping = time.time()
 pingtime = 1.
 durbuf = 0

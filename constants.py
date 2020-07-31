@@ -34,6 +34,11 @@ def check_hash_salt_pw(hashstr, saltstr, string):
 username_regex=r'^[0-9a-zA-Z\u4e00-\u9fff\-\_\.]{2,16}$'
 username_regex_string = str(username_regex).replace('\\\\','\\')
 
+# markdown renderer
+import markdown
+def convert_markdown(s):
+    return markdown.markdown(s)
+
 if __name__ == '__main__':
     h, s = hash_w_salt('1989')
     assert check_hash_salt_pw(h, s, '1989')
