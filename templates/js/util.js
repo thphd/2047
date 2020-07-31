@@ -99,6 +99,9 @@ function xhr(method, dest, data){
         if(resp.error){
           rej (this.status + ' '+this.statusText+ '\n' + resp.error)
         }else{
+          if(this.status==0){
+            this.statusText='Connection Failed'
+          }
           rej(this.status +' '+ this.statusText + '\n' + this.responseText.slice(100))
         }
       }
@@ -291,6 +294,7 @@ if (editor_target){
       // window.location.reload()
       print(j)
       // alert(j)
+      editor_text.value = "" // firefox didn't clear the box
       window.location.reload()
     })
     .catch(alert)
