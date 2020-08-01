@@ -23,7 +23,7 @@ from flask_cors import CORS
 
 from flask import Flask, session, g
 from flask import render_template, request, send_from_directory, make_response
-# from flask_gzip import Gzip
+from flask_gzip import Gzip
 
 def get_secret():
     fn = 'secret.bin'
@@ -37,21 +37,42 @@ def get_secret():
 app = Flask(__name__, static_url_path='')
 app.secret_key = get_secret()
 CORS(app)
-# gzip = Gzip(app,minimum_size=0)
+gzip = Gzip(app, minimum_size=500)
 
 def route(r):
     def rr(f):
         app.add_url_rule(r, str(random.random()), f)
     return rr
 
-def route_static(frompath, topath):
+# def route_static(frompath, topath):
+#     @route('/'+frompath+'/<path:path>')
+#     def _(path): return send_from_directory(topath, path)
+
+def route_static(frompath, topath, maxage=1800):
     @route('/'+frompath+'/<path:path>')
-    def _(path): return send_from_directory(topath, path)
+    def _(path):
+        cc = topath+'/'+path
+        if not os.path.exists(cc):
+            return make_response('File not found', 404)
+
+        with open(cc,'rb') as f:
+            b = f.read()
+
+        resp = make_response(b)
+        import mimetypes as mt
+        type, encoding = mt.guess_type(cc)
+        if encoding:
+            resp.headers['Content-Encoding'] = encoding
+        if type:
+            resp.headers['Content-Type'] = type
+        if maxage:
+            resp.headers['Cache-Control']= 'max-age='+str(maxage)
+        return resp
 
 route_static('static', 'static')
-route_static('images', 'templates/images')
-route_static('css', 'templates/css')
-route_static('js', 'templates/js')
+route_static('images', 'templates/images', 300)
+route_static('css', 'templates/css', 0)
+route_static('js', 'templates/js', 0)
 
 aqlc.create_index('threads',
     type='persistent', fields=['t_u','t_c'], unique=False, sparse=False)
