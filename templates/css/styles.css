@@ -394,3 +394,10 @@ img.headerbtn {
     text-decoration: line-through;
     color: #bfbfbf;
 }
+
+.post_content code {
+    margin: 0 3px;
+    background-color: #e9f3f7;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
