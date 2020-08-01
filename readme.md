@@ -27,3 +27,8 @@ No database file of 2049bbs.xyz available, using crawled backup from https://git
     python main.py
     ```
 4.  access from browser: `127.0.0.1:5000`
+
+## Special dependencies
+
+- tl;dr you can't install them from pypi
+- https://github.com/flavono123/identicon

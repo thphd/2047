@@ -737,6 +737,15 @@ def _(uid):
             resp.headers['Cache-Control']= 'max-age=1800'
             return resp
 
+    # render an identicon
+    import Identicon
+    identicon = Identicon.render(str(uid*uid))
+    resp = make_response(identicon, 200)
+    resp.headers['Content-Type'] = 'image/png'
+    resp.headers['Cache-Control']= 'max-age=1800'
+    return resp
+
+    # default: 307 to logo.png
     resp = make_response(
         'no avatar obj found for uid {}'.format(uid), 307)
     resp.headers['Location'] = '/images/logo.png'
