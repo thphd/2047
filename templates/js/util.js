@@ -229,7 +229,8 @@ if (loginbtn){
       if (document.referrer.match('/register')||document.referrer==""){
         window.location.href = '/'
       }else{
-        window.history.back()
+        // window.history.back()
+        window.location.href = document.referrer
       }
     })
     .catch(err=>{
