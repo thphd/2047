@@ -329,6 +329,12 @@ class Paginator:
 
             slots[0] = 1
             slots[-1]=total_pages
+            if len(slots)>5:
+                if slots[0]!=slots[2]-2:
+                    slots[1] = (slots[0]+slots[2]) // 2
+                if slots[-1]!=slots[-3]+2:
+                    slots[-2] = (slots[-1]+slots[-3]) // 2
+
         else:
             slots = []
 
