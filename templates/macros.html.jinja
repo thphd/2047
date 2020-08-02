@@ -3,36 +3,64 @@
 {# one line of post #}
 {%macro post(p, metas)%}
 
-<div class="threadlistitem" id="{{p._key}}">
+{% set _id = 'id="' ~ p._key ~ '"' if 'link_to' in metas %}
+{% set _id = 'id="' ~ p.tid ~ '"' if 'threadlist' in metas %}
+
+<div class="threadlistitem" {{_id}}>
   <div class="left">
-    <a href="/u/{{p.uid}}"><img class="avatar" src="/avatar/{{p.uid}}" alt=""></a>
+    {# editor avatar should be current logged in user's #}
+    {% set uid = g.logged_in.uid if 'editor' in metas else p.uid %}
+
+    <a href="/u/{{uid}}"><img class="avatar" src="/avatar/{{uid}}" alt=""></a>
   </div>
 
   <div class="right">
     <div class="details">
-      <div class="post_content">
-        {% set text = p.content or p.title or p.text or p.profile_string or p.name %}
-
-        {# content is title to a thread #}
-        {%if 'threadlist' in metas %}
-          <a href="/t/{{p.tid}}" class="threadlist_title">
-            {{text}}
-          </a>
-
-        {# content is name of an user #}
-        {%elif 'userlist' in metas %}
-          <a href='/u/{{p.uid}}' class='threadlist_title'>
-            {{text}}
-          </a>
-
+      <div class="{{'' if 'editor' in metas else 'post_content'}}">
+        {%if caller%}
+          {{caller()}}
         {%else%}
-          {{caller() if caller else convert_markdown(text)|safe}}
+          {% set text = p.content or p.title or p.text or p.profile_string or p.name %}
 
+          {# content is title to a thread #}
+          {%if 'threadlist' in metas %}
+            <a href="/t/{{p.tid}}" class="threadlist_title">
+              {{text}}
+            </a>
+
+          {# content is name of an user #}
+          {%elif 'userlist' in metas %}
+            <a href='/u/{{p.uid}}' class='threadlist_title'>
+              {{text}}
+            </a>
+
+          {# content is an editor #}
+          {%elif 'editor' in metas %}
+            <meta id="editor_target" _type="thread" _id="{{t.tid}}">
+            <div class="editor" id="editor_inline">
+              <div class="editor_left">
+                <textarea placeholder="支持markdown语法" id="editor_text"></textarea>
+                <div class="editor_button_row">
+                  <button type="button" id="editor_btnpreview">预览</button>
+                  <button type="button" id="editor_btnsubmit">提交</button>
+                </div>
+              </div>
+              <div class="editor_right" id="editor_right">
+                <div class="post_content" id="editor_preview">
+
+                </div>
+              </div>
+            </div>
+
+          {%else%}
+            {{convert_markdown(text)|safe}}
+          {%endif%}
+
+          {%if p.brief%}
+          <blockquote>{{convert_markdown(p.brief)|safe}}</blockquote>
+          {%endif%}
         {%endif%}
 
-        {%if p.brief%}
-        <blockquote>{{convert_markdown(p.brief)|safe}}</blockquote>
-        {%endif%}
       </div>
 
       <div class="meta">
@@ -129,6 +157,11 @@
 {# one line of user, used in userlist #}
 {%macro post_userlist(p)%}
   {{post(p, ['userpage_meta','userlist'])}}
+{%endmacro%}
+
+{# one line of editor, used in postlist #}
+{%macro post_postlist_editor(p)%}
+  {{post(p, ['editor'])}}
 {%endmacro%}
 
 {# titled header #}

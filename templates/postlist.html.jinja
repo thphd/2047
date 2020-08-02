@@ -21,21 +21,7 @@
 
 
 {%if t and g.logged_in%}
-<meta id="editor_target" _type="thread" _id="{{t.tid}}">
-<div class="editor" id="editor_inline">
-  <div class="editor_left">
-    <textarea placeholder="支持markdown语法" id="editor_text"></textarea>
-    <div class="editor_button_row">
-      <button type="button" id="editor_btnpreview">预览</button>
-      <button type="button" id="editor_btnsubmit">提交</button>
-    </div>
-  </div>
-  <div class="editor_right" id="editor_right">
-    <div class="post_content" id="editor_preview">
-
-    </div>
-  </div>
-</div>
+  {{macros.post_postlist_editor(t)}}
 {%endif%}
 
 {%endblock%}
