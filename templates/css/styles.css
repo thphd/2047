@@ -202,14 +202,10 @@ span.last_commented_date {
 }
 
 .right {
-    /* vertical-align: middle; */
-    /* height: 100%; */
-    /* width: 100%; */
     flex-grow: 1;
-    /* flex-shrink: 2; */
-    /* flex-direction: row; */
-    /* justify-content: end; */
-    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    display: flex;
 }
 
 .left .avatar {/* margin-right: 15px; */}
@@ -232,7 +228,7 @@ body>#content {
 .post_content p {
     margin: 0 0 10px 0;
     word-break: break-all;
-    line-height: 150%;
+    line-height: 120%;
 }
 
 .post_content p:last-child {
