@@ -229,7 +229,7 @@ body>#content {
 .post_content p {
     margin: 0 0 9px 0;
     word-break: break-all;
-    line-height: 120%;
+    line-height: 150%;
 }
 
 .post_content p:last-child {
@@ -319,7 +319,7 @@ img.headerbtn {
 }
 
 .post_content {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .leftalign > * {

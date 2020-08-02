@@ -168,7 +168,7 @@
 {# titled header #}
 {%macro header()%}
   {%if page_title%}
-    <div class="header">{{page_title}}</div>
+    <div class="header" onclick="window.location.href='{{request.path}}'">{{page_title}}</div>
   {%endif%}
 
   {%if page_subheader%}
