@@ -80,9 +80,9 @@ aqlc.create_index('threads',
     type='persistent', fields=['uid','t_u','t_c'], unique=False, sparse=False)
 
 aqlc.create_index('posts',
-    type='persistent', fields=['tid','t_c'], unique=False, sparse=False)
+    type='persistent', fields=['tid','t_c','_key'], unique=False, sparse=False)
 aqlc.create_index('posts',
-    type='persistent', fields=['uid','t_c'], unique=False, sparse=False)
+    type='persistent', fields=['uid','t_c','_key'], unique=False, sparse=False)
 
 aqlc.create_index('categories',
     type='persistent', fields=['cid'], unique=True, sparse=False)
@@ -138,18 +138,51 @@ class Paginator:
         '''.format(sortby=sortby, order=order,
         start=start, count=count,)
 
-        querystring_simple = 'return length({})'.format(querystring_complex)
+        querystring_simple = 'return length(for u in users return 1)'
 
-        count = aql(querystring_simple, silent=True)[0]
+        num_users = aql(querystring_simple, silent=True)[0]
         userlist = aql(querystring_complex, silent=True)
 
-        pagination_obj = self.get_pagination_obj(count, pagenumber, pagesize, order, path, sortby, mode=mode)
+        pagination_obj = self.get_pagination_obj(num_users, pagenumber, pagesize, order, path, sortby, mode=mode)
 
         for u in userlist:
             userfill(u)
             # u['profile_string'] = u['name']
 
         return userlist, pagination_obj
+
+    def get_url_to_post(self, pid):
+        # 1. get tid
+        pobj = aql('for p in posts filter p._key==@k return p',k=pid,silent=True)
+
+        if len(pobj)==0:
+            raise Exception('no such post')
+
+        pobj = pobj[0]
+        tid = pobj['tid']
+
+        # 2. check rank of post in thread
+
+        # see how much posts before this one in thread
+        rank = aql('''
+            return length(
+                for p in posts
+                filter p.tid==@tid and p.t_c <= @tc
+                return 1
+            )
+        ''', tid=tid, tc=pobj['t_c'])[0]
+
+        # 3. calculate page number
+        pnum = ((rank - 1) // post_list_defaults['pagesize']) + 1
+
+        # 4. assemble url
+        if pnum>1:
+            url = '/t/{}?page={}#{}'.format(tid, pnum, pid)
+        else:
+            url = '/t/{}#{}'.format(tid, pid)
+
+        return url
+
 
     def get_post_list(self,
         by='thread',
@@ -284,9 +317,11 @@ class Paginator:
         return threadlist, pagination_obj
 
     def get_pagination_obj(self, count, pagenumber, pagesize, order, path, sortby, mode='thread'):
+        # total number of pages
         total_pages = max(1, (count-1) // pagesize +1)
 
         if total_pages > 1:
+            # list of surrounding numbers
             slots = [pagenumber]
             for i in range(1,9):
                 if len(slots)>=9:
@@ -298,8 +333,11 @@ class Paginator:
                 if pagenumber-i >= 1:
                     slots.insert(0, pagenumber-i)
 
+            # first and last numbers
             slots[0] = 1
             slots[-1]=total_pages
+
+            # second first and second last numbers
             if len(slots)>5:
                 if slots[0]!=slots[2]-2:
                     slots[1] = (slots[0]+slots[2]) // 2
@@ -309,6 +347,9 @@ class Paginator:
         else:
             slots = []
 
+        defaults = None
+        # if a parameter is at its default value,
+        # don't put it into url query params
         if mode=='thread':
             defaults = thread_list_defaults
         elif mode=='post':
@@ -322,6 +363,7 @@ class Paginator:
         else:
             raise Exception('unsupported mode')
 
+        # querystring calculation for each of the paginator links.
         def querystring(pagenumber, pagesize, order, sortby):
             ql = [] # query list
 
@@ -337,7 +379,10 @@ class Paginator:
             if sortby!=defaults['sortby']:
                 ql.append(('sortby', sortby))
 
+            # join the kv pairs together
             qs = '&'.join(['='.join([str(j) for j in k]) for k in ql])
+
+            # question mark
             if len(qs)>0:
                 qs = path+'?'+qs
             else:
@@ -373,6 +418,7 @@ class Paginator:
             if pagenumber!=total_pages:
                 button_groups.append([('下一页',querystring(pagenumber+1, pagesize, order, sortby))])
 
+        # no need to sort if number of items < 2
         if count>1:
             button_groups.append(orders)
 
@@ -383,17 +429,7 @@ class Paginator:
             button_groups.append(sortbys2)
 
         return {
-            # 'slots':slots,
-            # 'orders':orders,
-            # 'sortbys':sortbys,
-
             'button_groups':button_groups,
-
-            'pagenumber':pagenumber,
-            'pagesize':pagesize,
-            'total_pages':total_pages,
-            'total_count':count,
-            'order':order,
         }
 
 pgnt = Paginator()
@@ -470,6 +506,14 @@ def alluser():
         # threadcount=count,
         **(globals())
     )
+
+@app.route('/p/<int:pid>')
+def getpost(pid):
+    url = pgnt.get_url_to_post(str(pid))
+    resp = make_response('', 307)
+    resp.headers['Location'] = url
+    resp.headers['Cache-Control']= 'max-age=86400'
+    return resp
 
 @app.route('/c/<int:cid>')
 def catspe(cid):
