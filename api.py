@@ -1,9 +1,7 @@
-from aql_defaults import *
 import re
-from constants import *
-from times import *
-
 import time
+
+from constants import *
 
 # json apis sharing a common endpoint
 

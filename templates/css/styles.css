@@ -405,3 +405,9 @@ img.headerbtn {
 .invitations {
     margin: 8px 0;
 }
+
+a.title {}
+
+a.threadlist_title {
+    color: black;
+}

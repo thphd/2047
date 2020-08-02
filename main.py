@@ -3,10 +3,8 @@ import re,base64
 from colors import *
 
 import requests as r
-from times import *
 
 from constants import *
-from aql_defaults import *
 
 def init_directory(d):
     try:

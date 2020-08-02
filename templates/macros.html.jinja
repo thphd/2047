@@ -12,7 +12,17 @@
     <div class="details">
       <div class="post_content">
         {% set text = p.content or p.title or p.text or p.profile_string or p.name %}
-        {{caller() if caller else convert_markdown(text)|safe}}
+
+        {# content is title to a thread #}
+        {%if 'threadlist' in metas%}
+          <a href="/t/{{p.tid}}" class="threadlist_title">
+            {{text}}
+          </a>
+
+        {%else%}
+          {{caller() if caller else convert_markdown(text)|safe}}
+
+        {%endif%}
 
         {%if p.brief%}
         <blockquote>{{convert_markdown(p.brief)|safe}}</blockquote>
@@ -96,7 +106,7 @@
 
 {# one line of thread, used in threadlist #}
 {%macro post_threadlist(p)%}
-  {{post(p, ['category','publish_date','publisher','last_commenter'])}}
+  {{post(p, ['category','publish_date','publisher','last_commenter','threadlist'])}}
 {%endmacro%}
 
 {# one line of user, used in userpage #}
