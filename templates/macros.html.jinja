@@ -47,6 +47,12 @@
             {# publish date #}
             <span>{{format_time_dateifnottoday(p.t_c)}}</span>
 
+          {%elif m=='publish_date_linkto'%}
+            {# publish date with a link to original post#}
+            <a class="date" href="/p/{{p._key}}">
+              {{format_time_dateifnottoday(p.t_c)}}
+            </a>
+
           {%elif m=='link_to'%}
             {%if not t%}
             {#link to original article#}
@@ -65,9 +71,9 @@
               <span class="response">{{p.count}} 个回复</span>
 
               {# last commented date #}
-              <span class="last_commented_date">
+              <a class="last_commented_date" href="/p/{{p.last._key}}">
                 {{format_time_dateifnottoday(p.last.t_c)}}
-              </span>
+              </a>
 
               {# last commenter #}
               <a class="user_name" href="/u/{{p.lastuser.uid}}">
@@ -102,7 +108,7 @@
 
 {# one line of post, used in postlist #}
 {%macro post_postlist(p)%}
-  {{post(p, ['publish_date','publisher','link_to'])}}
+  {{post(p, ['publish_date_linkto','publisher','link_to'])}}
 {%endmacro%}
 
 {# one line of post, used in postlist's thread header #}

@@ -1,6 +1,8 @@
 .pagination a {
-text-decoration: none;
-display: inline-block;
+
+text-decoration: none;
+
+display: inline-block;
 }
 
 img#site_logo {
@@ -30,7 +32,7 @@ body {
   justify-content: space-between;
 }
 
-div#site_name {color: #005bac;font-family: arial;/* display: inline-block; *//* font-weight: bold; *//* vertical-align: middle; */font-size: 26px;}
+div#site_name {color: #005bac;font-family: arial;/* display: inline-block; *//* font-weight: bold; */font-style: italic;/* vertical-align: middle; */font-size: 24px;letter-spacing: 5px;}
 
 .leftalign {
   /* justify-content: stretch; */
@@ -204,9 +206,6 @@ span.last_commented_date {
 }
 
 .left .avatar {/* margin-right: 15px; */}
-
-
-.threadlistitem:last-child {}
 
 
 .response {
@@ -419,4 +418,20 @@ a.threadlist_title {
 .post_content pre {
     background-color: #ebf3f7;
     padding: 5px 10px;
+}
+
+.chosen {
+    background-color: #fffff6;
+}
+
+.meta .date {
+    color: #b1b1b1;
+}
+
+.last_commented_date.date {
+    color: beige;
+}
+
+.last_commented_date {
+    color: #ce91c1;
 }

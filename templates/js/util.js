@@ -315,3 +315,14 @@ function generate_invitation_code(){
   })
   .catch(alert)
 }
+
+function highlight_hash(){
+  var hash = location.hash
+  if(hash[0]=='#'){
+    var _id = hash.substr(1)
+    var elem = geid(_id)
+    // print(elem)
+    elem.className+=' chosen'
+  }
+}
+highlight_hash()

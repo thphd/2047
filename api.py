@@ -3,6 +3,38 @@ import time
 
 from constants import *
 
+def get_url_to_post(pid):
+    # 1. get tid
+    pobj = aql('for p in posts filter p._key==@k return p',k=pid,silent=True)
+
+    if len(pobj)==0:
+        raise Exception('no such post')
+
+    pobj = pobj[0]
+    tid = pobj['tid']
+
+    # 2. check rank of post in thread
+
+    # see how much posts before this one in thread
+    rank = aql('''
+        return length(
+            for p in posts
+            filter p.tid==@tid and p.t_c <= @tc
+            return 1
+        )
+    ''', tid=tid, tc=pobj['t_c'])[0]
+
+    # 3. calculate page number
+    pnum = ((rank - 1) // post_list_defaults['pagesize']) + 1
+
+    # 4. assemble url
+    if pnum>1:
+        url = '/t/{}?page={}#{}'.format(tid, pnum, pid)
+    else:
+        url = '/t/{}#{}'.format(tid, pid)
+
+    return url
+
 # json apis sharing a common endpoint
 
 api_registry = {}
