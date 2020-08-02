@@ -198,6 +198,10 @@ def _(j):
         update t with {t_u:@now} in threads
         ''',silent=True,tid=tid,now=timenow)
 
+        # assemble url to the new post
+        url = '/p/{}'.format(inserted['_key'])
+        inserted['url'] = url
+
         return inserted
 
     else:

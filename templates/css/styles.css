@@ -181,6 +181,7 @@ span.last_commented_date {
     display: inline-block;
     width: 70px;
     text-decoration: none;
+    padding: 2px 0;
 }
 
 .details>.post_content {
@@ -421,7 +422,7 @@ a.threadlist_title {
     margin-left: 0;
     margin-right: 0;
     display: block;
-    margin-bottom: inherit;
+    /* margin-bottom: inherit; */
 }
 
 .post_content pre {

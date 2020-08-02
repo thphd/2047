@@ -296,7 +296,10 @@ if (editor_target){
       print(j)
       // alert(j)
       editor_text.value = "" // firefox didn't clear the box
-      window.location.reload()
+      window.location.href = j.url
+
+      // window.location.reload() // in case the previous doesn't work
+
     })
     .catch(alert)
     .then(()=>{

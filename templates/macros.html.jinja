@@ -3,11 +3,11 @@
 {# one line of post #}
 {%macro post(p, metas)%}
 
-{% set _id = 'id="' ~ p._key ~ '"' if 'link_to' in metas %}
-{% set _id = 'id="' ~ p.tid ~ '"' if 'threadlist' in metas %}
-{% set _id = 'id="editor"' if 'editor' in metas %}
+{% set _idt = 'id="' ~ p.tid ~ '"' if 'threadlist' in metas %}
+{% set _ide = 'id="editor"' if 'editor' in metas %}
+{% set _idp = 'id="' ~ p._key ~ '"' if 'postlist' in metas %}
 
-<div class="threadlistitem" {{_id}}>
+<div class="threadlistitem" {{_ide or _idt or _idp}}>
   <div class="left">
     {# editor avatar should be current logged in user's #}
     {% set uid = g.logged_in.uid if 'editor' in metas else p.uid %}
@@ -137,7 +137,7 @@
 
 {# one line of post, used in postlist #}
 {%macro post_postlist(p)%}
-  {{post(p, ['publish_date_linkto','publisher','link_to'])}}
+  {{post(p, ['publish_date_linkto','publisher','link_to','postlist'])}}
 {%endmacro%}
 
 {# one line of post, used in postlist's thread header #}
@@ -193,6 +193,12 @@
     {%endfor%}
   </div>
   {%endfor%}
+
+  <div class="group">
+    <div class="pagenumber">
+      共 {{pagination.count}}
+    </div>
+  </div>
 
 </div>
 {%endmacro%}

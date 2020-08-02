@@ -397,6 +397,7 @@ class Paginator:
 
         return {
             'button_groups':button_groups,
+            'count':count,
         }
 
 pgnt = Paginator()
