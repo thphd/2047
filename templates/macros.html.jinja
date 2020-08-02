@@ -5,6 +5,7 @@
 
 {% set _id = 'id="' ~ p._key ~ '"' if 'link_to' in metas %}
 {% set _id = 'id="' ~ p.tid ~ '"' if 'threadlist' in metas %}
+{% set _id = 'id="editor"' if 'editor' in metas %}
 
 <div class="threadlistitem" {{_id}}>
   <div class="left">
