@@ -104,34 +104,7 @@ aqlc.create_index('invitations',
 is_integer = lambda i:isinstance(i, int)
 class Paginator:
     def __init__(self,):
-        dfs = {}
-        dfs['pagenumber'] = 1
-        dfs['pagesize'] = 30
-        dfs['order']='desc'
-        dfs['sortby']='t_u'
-
-        self.thread_list_defaults = dfs
-
-        dfs = dfs.copy()
-        dfs['sortby']='t_c'
-
-        self.user_thread_list_defaults = dfs
-
-        dfs = dfs.copy()
-        dfs['order'] = 'asc'
-        dfs['sortby']='t_c'
-        dfs['pagesize'] = 50
-
-        self.post_list_defaults = dfs
-
-        dfs = dfs.copy()
-        dfs['order']='desc'
-        self.user_post_list_defaults = dfs
-
-        dfs = dfs.copy()
-        dfs['pagesize'] = 50
-        dfs['sortby'] = 'uid'
-        self.user_list_defaults = dfs
+        pass
 
     def get_user_list(self,
         sortby='uid',
@@ -337,15 +310,15 @@ class Paginator:
             slots = []
 
         if mode=='thread':
-            defaults = self.thread_list_defaults
+            defaults = thread_list_defaults
         elif mode=='post':
-            defaults = self.post_list_defaults
+            defaults = post_list_defaults
         elif mode=='user_thread':
-            defaults = self.user_thread_list_defaults
+            defaults = user_thread_list_defaults
         elif mode=='user_post':
-            defaults = self.user_post_list_defaults
+            defaults = user_post_list_defaults
         elif mode=='user':
-            defaults = self.user_list_defaults
+            defaults = user_list_defaults
         else:
             raise Exception('unsupported mode')
 

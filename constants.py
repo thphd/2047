@@ -90,6 +90,43 @@ from aql import AQLController
 aqlc = AQLController('http://127.0.0.1:8529', 'db2047',[])
 aql = aqlc.aql
 
+# site pagination defaults
+
+thread_list_defaults = dict(
+    pagenumber=1,
+    pagesize=30,
+    order='desc',
+    sortby='t_u',
+)
+
+user_thread_list_defaults = dict(
+    pagenumber=1,
+    pagesize=30,
+    order='desc',
+    sortby='t_c',
+)
+
+post_list_defaults = dict(
+    pagenumber=1,
+    pagesize=50,
+    order='asc',
+    sortby='t_c',
+)
+
+user_post_list_defaults = dict(
+    pagenumber=1,
+    pagesize=50,
+    order='desc',
+    sortby='t_c',
+)
+
+user_list_defaults = dict(
+    pagenumber=1,
+    pagesize=50,
+    order='desc',
+    sortby='uid',
+)
+
 if __name__ == '__main__':
     h, s = hash_w_salt('1989')
     assert check_hash_salt_pw(h, s, '1989')

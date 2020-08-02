@@ -395,7 +395,7 @@ img.headerbtn {
     color: #bfbfbf;
 }
 
-.post_content code {
+.post_content :not(pre) code {
     margin: 0 3px;
     background-color: #e9f3f7;
     padding: 2px 5px;
@@ -410,4 +410,13 @@ a.title {}
 
 a.threadlist_title {
     color: black;
+    margin-left: 0;
+    margin-right: 0;
+    display: block;
+    margin-bottom: inherit;
+}
+
+.post_content pre {
+    background-color: #ebf3f7;
+    padding: 5px 10px;
 }

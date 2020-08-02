@@ -14,8 +14,14 @@
         {% set text = p.content or p.title or p.text or p.profile_string or p.name %}
 
         {# content is title to a thread #}
-        {%if 'threadlist' in metas%}
+        {%if 'threadlist' in metas %}
           <a href="/t/{{p.tid}}" class="threadlist_title">
+            {{text}}
+          </a>
+
+        {# content is name of an user #}
+        {%elif 'userlist' in metas %}
+          <a href='/u/{{p.uid}}' class='threadlist_title'>
             {{text}}
           </a>
 
@@ -116,7 +122,7 @@
 
 {# one line of user, used in userlist #}
 {%macro post_userlist(p)%}
-  {{post(p, ['userpage_meta'])}}
+  {{post(p, ['userpage_meta','userlist'])}}
 {%endmacro%}
 
 {# titled header #}
