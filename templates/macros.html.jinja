@@ -90,9 +90,7 @@
 
           {%elif m=='category'%}
             {# category name #}
-            <a class="category_name c{{p.cid}}" href="/c/{{p.cid}}">
-              {{p.cname}}
-            </a>
+            {{category_bubble(p)}}
 
           {%elif m=='last_commenter'%}
             {% if p.lastuser %}
@@ -163,6 +161,17 @@
 {# one line of editor, used in postlist #}
 {%macro post_postlist_editor(p)%}
   {{post(p, ['editor'])}}
+{%endmacro%}
+
+{%macro category_bubble(c)%}
+  {# category name #}
+  <a class="category_name c{{c.cid}}" href="/c/{{c.cid}}">
+    {{c.cname if c.cname else c.name}}
+    {%if 0 and not(c.cname)%}
+      <br>
+      {{c.count}}
+    {%endif%}
+  </a>
 {%endmacro%}
 
 {# titled header #}

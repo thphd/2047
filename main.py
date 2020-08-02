@@ -450,6 +450,7 @@ def catall():
         page_title='所有分类',
         threadlist=threadlist,
         pagination=pagination,
+        categories=get_categories_info(),
         # threadcount=count,
         **(globals())
     )

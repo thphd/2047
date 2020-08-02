@@ -13,3 +13,25 @@
 
 
 {%endblock%}
+
+{%block navigator%}
+
+{%if categories%}
+
+<div class="box">
+  <div class="boxtitle">
+    板块分类
+  </div>
+
+  <div class="categories">
+  {%for c in categories%}
+  {{macros.category_bubble(c)}}
+  {%endfor%}
+  </div>
+</div>
+
+
+
+{%endif%}
+
+{%endblock%}

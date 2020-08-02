@@ -132,7 +132,10 @@ span.last_commented_date {
   display: inline-block;
   background-color: #bbbbbb;
   max-width: 60px;
+  width: 70px;
   text-align: center;
+  padding: 2px 0;
+  font-size: 12px;
   border-radius: 5px;
   margin-right: 4px;
 }
@@ -181,7 +184,7 @@ span.last_commented_date {
     display: inline-block;
     width: 70px;
     text-decoration: none;
-    padding: 2px 0;
+    /* padding: 2px 0; */
 }
 
 .details>.post_content {
@@ -217,8 +220,10 @@ span.last_commented_date {
     /* width: 70px; */
 }
 
-div#content {
-    /* margin-left: 20px; */
+#content {
+    display: flex;
+    flex-flow: column;
+    flex-grow: 1;
 }
 
 body>#content {
@@ -450,4 +455,98 @@ a.threadlist_title {
 
 .left > a {
     display: inline-block;
+}
+
+
+.lr {
+    margin: 0 20px;
+    display: flex;
+    flex-flow: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+}
+
+div#navigator {
+    display: flex;
+    flex-flow: column;
+    /* flex-direction: column; */
+    max-width: 200px;
+    flex-grow: 0;
+}
+
+.categories .category_name {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    margin: 5px 5px;
+    /* max-width: 70px; */
+    padding: 5px 3px;
+}
+
+.categories {
+    display: flex;
+    flex-flow: wrap;
+    align-items: center;
+    flex-flow: column;
+}
+
+.box {
+    padding: 10px;
+    margin: 10px;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+}
+.boxtitle {
+    padding: 10px 0;
+    display: flex;
+    align-items: center;
+    flex-flow: column;
+    justify-content: center;
+}
+
+
+.c2 {background-color: #f16666;}
+
+.c4 {
+    background-color: #4da0a0;
+}
+
+.c5, .c12 {
+    background-color: #379447;
+}
+
+.c1 {background-color: #97c12f;}
+
+.c6 {
+    background-color: #59b6cc;
+}
+
+.c9 {
+    background-color: #ad7fca;
+}
+
+.c16, .c13, .c14 {background-color: #2274bd;}
+
+.c7 {
+    background-color: #ef8aa1;
+}
+
+.c17 {
+    background-color: #cccc5e;
+}
+
+.c11 {
+    background-color: #f18bc8;
+}
+
+.c3, .c15 {
+    background-color: #7698c1;
+}
+
+.c13 {
+}
+
+.c10 {
+    background-color: #d8994a;
 }

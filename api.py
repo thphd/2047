@@ -35,6 +35,15 @@ def get_url_to_post(pid):
 
     return url
 
+def get_categories_info():
+    return aql('''
+        for i in threads collect cid = i.cid with count into cnt
+        sort cnt desc
+        let co = (for c in categories filter c.cid==cid return c)[0]
+        //return {cid, count:cnt, category:co}
+        return merge(co, {count:cnt})
+    ''', silent=True)
+
 # json apis sharing a common endpoint
 
 api_registry = {}

@@ -43,13 +43,14 @@
     </div>
 
   </div>
-
-  <div id="content" class="">
-    {{macros.header()}}
-    {%block content%} {%endblock%}
-  </div>
-  <div id="navigator" class="">
-
+  <div class="lr">
+    <div id="content" class="">
+      {{macros.header()}}
+      {%block content%}{%endblock%}
+    </div>
+    <div id="navigator" class="">
+      {%block navigator%}{%endblock%}
+    </div>
   </div>
   <div id="footer" class="">
     <div class="copyright">
