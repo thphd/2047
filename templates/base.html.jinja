@@ -1,4 +1,8 @@
 {# base template #}
+
+{# include all macros used by project #}
+{%import 'macros.html.jinja' as macros with context%}
+
 <!DOCTYPE html>
 <html lang="zh" dir="ltr">
 <head>
@@ -40,7 +44,8 @@
   </div>
 
   <div id="content" class="">
-    {%block content%}{%endblock%}
+    {{macros.header()}}
+    {%block content%} {%endblock%}
   </div>
   <div id="navigator" class="">
 

@@ -1,72 +1,21 @@
 {%extends 'base.html.jinja'%}
 {%block content%}
-<div class="header">{{page_title}}</div>
 
 {%if t%}{# if there is a thread object #}
-<div class="threadcontent">
-  <div class="threadlistitem">
-    <div class="left">
-      <a href="/u/{{t.uid}}"><img class="avatar" src="/avatar/{{t.uid}}" alt=""></a>
-    </div>
-    <div class="right">
-      <div class="details">
-        <div class="post_content">{{convert_markdown(t.content)|safe}}</div>
-        <div class="meta">
-
-          {# publish date #}
-          <span>{{format_time_dateifnottoday(t.t_c)}}</span>
-
-          {# publisher #}
-          <a class="user_name" href="/u/{{t.uid}}">{{t.user.name}}</a>
-
-        </div>
-      </div>
-    </div>
-  </div>
+<div class="threadlist">
+  {{macros.post_postlist_header(t)}}
 </div>
 {%endif%}
 
-{%include 'pagination.html.jinja'%}
+{{macros.paginate(pagination)}}
 
 <div class="threadlist">
 
   {%for u in userlist%}
-  <div class="threadlistitem">
-
-    <div class="left">
-      <a href="/u/{{u.uid}}"><img class="avatar" src="/avatar/{{u.uid}}" alt=""></a>
-    </div>
-
-    <div class="right">
-      <div class="details">
-        <div class="post_content">
-          <p>{{u.name}}</p>
-          {%if u.brief%}
-          <blockquote>{{convert_markdown(u.brief)|safe}}</blockquote>
-          {%endif%}
-        </div>
-        <div class="meta">
-
-          {# register date #}
-          <span>{{format_time_dateifnottoday(u.t_c)}}</span>
-          <span>uid: {{u.uid}}</span>
-
-          {%if u.nthreads%}
-          <a href='/u/{{u.uid}}/t' class="threads">{{u.nthreads}} 个帖子</a>
-          {%endif%}
-
-          {%if u.nposts%}
-          <a href='/u/{{u.uid}}/p' class="response">{{u.nposts}} 个回复</a>
-          {%endif%}
-
-        </div>
-      </div>
-    </div>
-
-  </div>
+    {{macros.post_userlist(u)}}
   {%endfor%}
 
 </div>
-{%include 'pagination.html.jinja'%}
+{{macros.paginate(pagination)}}
 
 {%endblock%}

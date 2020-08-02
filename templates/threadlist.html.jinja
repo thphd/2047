@@ -1,59 +1,15 @@
 {%extends 'base.html.jinja'%}
 {%block content%}
 
-<div class="header">{{page_title}}</div>
-{%if page_subheader%}
-<div class="subheader post_content">{{convert_markdown(page_subheader)|safe}}</div>
-{%endif%}
-
-{%include 'pagination.html.jinja.jinja'%}
+{{macros.paginate(pagination)}}
 
 <div class="threadlist">
-
-
   {%for t in threadlist%}
-  <div class="threadlistitem">
-
-    <div class="left">
-      <a href="/u/{{t.uid}}"><img class="avatar" src="/avatar/{{t.uid}}" alt=""></a>
-    </div>
-
-    <div class="right">
-      <div class="details">
-        <div class="title">
-          <a href="/t/{{t.tid}}">{{t.title}}</a>
-        </div>
-        <div class="meta">
-          {# category name #}
-
-          <a class="category_name" href="/c/{{t.cid}}">{{t.cname}}</a>
-
-          {# publish date #}
-          <span>{{format_time_dateifnottoday(t.t_c)}}</span>
-          {# publisher #}
-          <a class="user_name" href="/u/{{t.uid}}">{{t.user.name}}</a>
-
-
-          {% if t.lastuser %}
-          {# <span>最后回复</span> #}
-
-          <span class="response">{{t.count}} 个回复</span>
-
-          {# last commented date #}
-          <span class="last_commented_date">{{format_time_dateifnottoday(t.last.t_c)}}</span>
-          {# last commenter #}
-          <a class="user_name" href="/u/{{t.lastuser.uid}}">{{t.lastuser.name}}</a>
-
-          {%endif%}
-        </div>
-      </div>
-    </div>
-
-  </div>
+    {{macros.post_threadlist(t)}}
   {%endfor%}
-
 </div>
-{%include 'pagination.html.jinja.jinja'%}
+
+{{macros.paginate(pagination)}}
 
 
 {%endblock%}

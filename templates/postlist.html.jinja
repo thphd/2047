@@ -1,71 +1,24 @@
 {%extends 'base.html.jinja'%}
 {%block content%}
-<div class="header">{{page_title}}</div>
 
 {%if t%}{# if there is a thread object #}
-<div class="threadcontent">
-  <div class="threadlistitem">
-    <div class="left">
-      <a href="/u/{{t.uid}}"><img class="avatar" src="/avatar/{{t.uid}}" alt=""></a>
-    </div>
-    <div class="right">
-      <div class="details">
-        <div class="post_content">{{convert_markdown(t.content)|safe}}</div>
-        <div class="meta">
-
-          {# publish date #}
-          <span>{{format_time_dateifnottoday(t.t_c)}}</span>
-
-          {# publisher #}
-          <a class="user_name" href="/u/{{t.uid}}">{{t.user.name}}</a>
-
-        </div>
-      </div>
-    </div>
-  </div>
+<div class="threadlist">
+  {{macros.post_postlist_header(t)}}
 </div>
 {%endif%}
 
-{%include 'pagination.html.jinja'%}
+{{macros.paginate(pagination)}}
 
 <div class="threadlist">
 
   {%for p in postlist%}
-  <div class="threadlistitem" id="{{p._key}}">
-
-    <div class="left">
-      <a href="/u/{{p.uid}}"><img class="avatar" src="/avatar/{{p.uid}}" alt=""></a>
-    </div>
-
-    <div class="right">
-      <div class="details">
-        <div class="post_content">{{convert_markdown(p.content)|safe}}</div>
-        <div class="meta">
-
-          {# floor no #}
-          {#
-          <span class='floor_num'>#{{p.floor_num}}</span>
-          #}
-          {# publish date #}
-          <span>{{format_time_dateifnottoday(p.t_c)}}</span>
-
-          {# publisher #}
-          <a class="user_name" href="/u/{{p.uid}}">{{p.user.name}}</a>
-
-          {%if not t%}
-          {#link to original article#}
-          <a href="/t/{{p.tid}}#{{p._key}}">/t/{{p.tid}}</a>
-          {%endif%}
-
-        </div>
-      </div>
-    </div>
-
-  </div>
+  {{macros.post_postlist(p)}}
   {%endfor%}
 
 </div>
-{%include 'pagination.html.jinja'%}
+
+{{macros.paginate(pagination)}}
+
 
 {%if t and g.logged_in%}
 <meta id="editor_target" _type="thread" _id="{{t.tid}}">

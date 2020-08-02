@@ -1,0 +1,142 @@
+<!-- all template macros of this project -->
+
+{# one line of post #}
+{%macro post(p, metas)%}
+
+<div class="threadlistitem" id="{{p._key}}">
+  <div class="left">
+    <a href="/u/{{p.uid}}"><img class="avatar" src="/avatar/{{p.uid}}" alt=""></a>
+  </div>
+
+  <div class="right">
+    <div class="details">
+      <div class="post_content">
+        {% set text = p.content or p.title or p.text or p.profile_string or p.name %}
+        {{caller() if caller else convert_markdown(text)|safe}}
+
+        {%if p.brief%}
+        <blockquote>{{convert_markdown(p.brief)|safe}}</blockquote>
+        {%endif%}
+      </div>
+
+      <div class="meta">
+        {% set metas = metas or []%}
+        {%for m in metas%}
+
+          {%if m=='publisher'%}
+            {# publisher #}
+            <a class="user_name" href="/u/{{p.uid}}">{{p.user.name}}</a>
+
+          {%elif m=='publish_date'%}
+            {# publish date #}
+            <span>{{format_time_dateifnottoday(p.t_c)}}</span>
+
+          {%elif m=='link_to'%}
+            {%if not t%}
+            {#link to original article#}
+            <a href="/p/{{p._key}}">/t/{{p.tid}}</a>
+            {%endif%}
+
+          {%elif m=='category'%}
+            {# category name #}
+            <a class="category_name c{{p.cid}}" href="/c/{{p.cid}}">
+              {{p.cname}}
+            </a>
+
+          {%elif m=='last_commenter'%}
+            {% if p.lastuser %}
+              {# number of comments #}
+              <span class="response">{{p.count}} 个回复</span>
+
+              {# last commented date #}
+              <span class="last_commented_date">
+                {{format_time_dateifnottoday(p.last.t_c)}}
+              </span>
+
+              {# last commenter #}
+              <a class="user_name" href="/u/{{p.lastuser.uid}}">
+                {{p.lastuser.name}}
+              </a>
+
+            {%endif%}
+
+          {%elif m=='userpage_meta'%}
+
+            {# register date #}
+            <span>{{format_time_dateifnottoday(p.t_c)}}</span>
+            <span>uid: {{p.uid}}</span>
+
+            {%if p.nthreads%}
+            <a href='/u/{{p.uid}}/t' class="threads">{{p.nthreads}} 个帖子</a>
+            {%endif%}
+
+            {%if p.nposts%}
+            <a href='/u/{{p.uid}}/p' class="response">{{p.nposts}} 个回复</a>
+            {%endif%}
+
+          {%endif%}
+
+        {%endfor%}
+      </div>
+    </div>
+  </div>
+</div>
+
+{%endmacro%}
+
+{# one line of post, used in postlist #}
+{%macro post_postlist(p)%}
+  {{post(p, ['publish_date','publisher','link_to'])}}
+{%endmacro%}
+
+{# one line of post, used in postlist's thread header #}
+{%macro post_postlist_header(p)%}
+  {{post(p, ['publish_date','publisher'])}}
+{%endmacro%}
+
+{# one line of thread, used in threadlist #}
+{%macro post_threadlist(p)%}
+  {{post(p, ['category','publish_date','publisher','last_commenter'])}}
+{%endmacro%}
+
+{# one line of user, used in userpage #}
+{%macro post_userpage(p)%}
+  {{post(p, [])}}
+{%endmacro%}
+
+{# one line of user, used in userlist #}
+{%macro post_userlist(p)%}
+  {{post(p, ['userpage_meta'])}}
+{%endmacro%}
+
+{# titled header #}
+{%macro header()%}
+  {%if page_title%}
+    <div class="header">{{page_title}}</div>
+  {%endif%}
+
+  {%if page_subheader%}
+    <div class="subheader post_content">
+      {{convert_markdown(page_subheader)|safe}}
+    </div>
+  {%endif%}
+
+{%endmacro%}
+
+{# pagination #}
+{%macro paginate(pagination)%}
+<div class="pagination">
+
+  {%for group in pagination.button_groups%}
+  <div class="group">
+    {%for item in group%}{# item -> [label, link, selected] #}
+    <a href="{{item[1]}}">
+      <div class="pagenumber {{' current' if item[2] else ''}}">{{item[0]}}</div>
+    </a>
+
+    {%endfor%}
+  </div>
+  {%endfor%}
+
+</div>
+{%endmacro%}
