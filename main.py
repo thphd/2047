@@ -471,7 +471,7 @@ def catall():
         pagenumber=pagenumber, pagesize=pagesize,
         path = rpath)
 
-    return render_template('threadlist.html',
+    return render_template('threadlist.html.jinja',
         page_title='所有分类',
         threadlist=threadlist,
         pagination=pagination,
@@ -491,7 +491,7 @@ def alluser():
         pagenumber=pagenumber, pagesize=pagesize,
         path = rpath)
 
-    return render_template('userlist.html',
+    return render_template('userlist.html.jinja',
         page_title='所有用户',
         # threadlist=threadlist,
         userlist = userlist,
@@ -524,7 +524,7 @@ def catspe(cid):
         pagenumber=pagenumber, pagesize=pagesize,
         path = rpath)
 
-    return render_template('threadlist.html',
+    return render_template('threadlist.html.jinja',
         page_title=catobj['name'],
         page_subheader=(catobj['brief'] or '').replace('\\',''),
         threadlist=threadlist,
@@ -560,7 +560,7 @@ def userthreads(uid):
         pagenumber=pagenumber, pagesize=pagesize,
         path = rpath)
 
-    return render_template('threadlist.html',
+    return render_template('threadlist.html.jinja',
         # page_title=catobj['name'],
         page_title='帖子 - '+uobj['name'],
         threadlist=threadlist,
@@ -598,7 +598,7 @@ def thrd(tid):
         pagenumber=pagenumber, pagesize=pagesize,
         path = rpath)
 
-    return render_template('postlist.html',
+    return render_template('postlist.html.jinja',
         page_title=thobj['title'],
         # threadlist=threadlist,
         postlist=postlist,
@@ -638,7 +638,7 @@ def uposts(uid):
         pagenumber=pagenumber, pagesize=pagesize,
         path = rpath)
 
-    return render_template('postlist.html',
+    return render_template('postlist.html.jinja',
         page_title='回复 - '+uobj['name'],
         # threadlist=threadlist,
         postlist=postlist,
@@ -696,7 +696,7 @@ UID {}
             k = aql('for i in invitations filter i.uid==@k sort i.t_c desc limit 50 return i',k=uid,silent=True)
             invitations = k
 
-    return render_template('userpage.html',
+    return render_template('userpage.html.jinja',
         page_title=uobj['name'],
         u=uobj,
         invitations=invitations,
@@ -707,7 +707,7 @@ UID {}
 def regpage():
     invitation = ras('code') or ''
 
-    return render_template('register.html',
+    return render_template('register.html.jinja',
         invitation=invitation,
         page_title='注册',
         **(globals())
@@ -717,7 +717,7 @@ def regpage():
 def loginpage():
     username = ras('username') or ''
 
-    return render_template('login.html',
+    return render_template('login.html.jinja',
         username=username,
         page_title='登录',
         **(globals())

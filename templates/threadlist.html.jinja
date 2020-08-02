@@ -1,4 +1,4 @@
-{%extends 'base.html'%}
+{%extends 'base.html.jinja'%}
 {%block content%}
 
 <div class="header">{{page_title}}</div>
@@ -6,7 +6,7 @@
 <div class="subheader post_content">{{convert_markdown(page_subheader)|safe}}</div>
 {%endif%}
 
-{%include 'pagination.html'%}
+{%include 'pagination.html.jinja.jinja'%}
 
 <div class="threadlist">
 
@@ -53,7 +53,7 @@
   {%endfor%}
 
 </div>
-{%include 'pagination.html'%}
+{%include 'pagination.html.jinja.jinja'%}
 
 
 {%endblock%}

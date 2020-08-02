@@ -1,4 +1,4 @@
-{%extends 'base.html'%}
+{%extends 'base.html.jinja'%}
 {%block content%}
 <div class="header">{{page_title}}</div>
 
@@ -26,7 +26,7 @@
 </div>
 {%endif%}
 
-{%include 'pagination.html'%}
+{%include 'pagination.html.jinja'%}
 
 <div class="threadlist">
 
@@ -65,7 +65,7 @@
   {%endfor%}
 
 </div>
-{%include 'pagination.html'%}
+{%include 'pagination.html.jinja'%}
 
 {%if t and g.logged_in%}
 <meta id="editor_target" _type="thread" _id="{{t.tid}}">
