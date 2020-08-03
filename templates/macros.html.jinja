@@ -37,21 +37,7 @@
 
           {# content is an editor #}
           {%elif 'editor' in metas %}
-            <meta id="editor_target" _type="thread" _id="{{t.tid}}">
-            <div class="editor" id="editor_inline">
-              <div class="editor_left">
-                <textarea placeholder="支持markdown语法" id="editor_text"></textarea>
-                <div class="editor_button_row">
-                  <button type="button" id="editor_btnpreview">预览</button>
-                  <button type="button" id="editor_btnsubmit">提交</button>
-                </div>
-              </div>
-              <div class="editor_right" id="editor_right">
-                <div class="post_content" id="editor_preview">
-
-                </div>
-              </div>
-            </div>
+            {{editor('thread/'~p.tid)}}
 
           {%else%}
             {{convert_markdown(text)|safe}}
@@ -172,6 +158,24 @@
       {{c.count}}
     {%endif%}
   </a>
+{%endmacro%}
+
+{%macro editor(target, content)%}
+  <meta id="editor_target" _target="{{target}}">
+  <div class="editor" id="editor_inline">
+    <div class="editor_left">
+      <textarea placeholder="支持markdown语法" id="editor_text">{{content if content}}</textarea>
+      <div class="editor_button_row">
+        <button type="button" id="editor_btnpreview">预览</button>
+        <button type="button" id="editor_btnsubmit">提交</button>
+      </div>
+    </div>
+    <div class="editor_right" id="editor_right">
+      <div class="post_content" id="editor_preview">
+
+      </div>
+    </div>
+  </div>
 {%endmacro%}
 
 {# titled header #}

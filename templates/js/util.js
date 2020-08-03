@@ -282,13 +282,13 @@ if (editor_target){
     bsubmit.disabled = true
     bpreview.disabled = true
 
-    _type = editor_target.getAttribute('_type')
-    _id = editor_target.getAttribute('_id')
+    // _type = editor_target.getAttribute('_type')
+    // _id = editor_target.getAttribute('_id')
+    _target = editor_target.getAttribute('_target')
 
     api({
       action:'post',
-      type:_type,
-      id:_id,
+      target:_target,
       content:editor_text.value,
     })
     .then(j=>{
@@ -324,7 +324,7 @@ function highlight_hash(){
   if(hash[0]=='#'){
     var _id = hash.substr(1)
     var elem = geid(_id)
-    // print(elem)
+    print(elem)
     elem.className+=' chosen'
   }
 }

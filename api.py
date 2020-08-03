@@ -166,9 +166,14 @@ def _(j):
 
     def es(k): return (str(j[k]) if (k in j) else None)
 
-    target_type = es('type')
+    target = es('target')
+    target = target.split('/')
+    if len(target)!=2:
+        raise Exception('target unsupported')
+
+    target_type = target[0]
     # pid = int(es('pid'))
-    id = int(es('id'))
+    _id = int(target[1])
 
     # title = es('title').strip()
 
@@ -177,7 +182,7 @@ def _(j):
 
     if target_type=='thread':
         # check if tid exists
-        tid = id
+        tid = _id
 
         thread = aql('for t in threads filter t.tid==@k return t',k=tid,silent=True)
         if len(thread)==0:
@@ -214,7 +219,7 @@ def _(j):
         return inserted
 
     else:
-        raise Exception('unsupported type:'+target_type)
+        raise Exception('unsupported target type:'+target_type)
 
 @register('render')
 def _(j):
