@@ -45,6 +45,7 @@ div#site_name {color: #005bac;font-family: arial;/* display: inline-block; *//* 
   font-size: 12px;
   color: #b3b3b3;
   vertical-align: middle;
+  overflow: visible;
 }
 
 .avatar{
@@ -87,14 +88,18 @@ span.last_commented_date {
 }
 
 .meta .user_name {
-  /* display: inline-block; */
+  display: inline-flex;
   width: 100px;
   text-align: left;
   color: #567ab1;
   font-weight: bold;
   text-decoration: none;
   margin-left: 5px;
+  padding-top: 2px;
+  padding-bottom: 2px;
   white-space: nowrap;
+  /* overflow-x: hidden; */
+  /* overflow-y: visible; */
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -129,8 +134,8 @@ span.last_commented_date {
 }
 
 .category_name {
-  display: inline-block;
-  background-color: #bbbbbb;
+  display: inline-flex;
+  background-color: #989898;
   max-width: 60px;
   width: 70px;
   text-align: center;
@@ -138,6 +143,7 @@ span.last_commented_date {
   font-size: 12px;
   border-radius: 5px;
   margin-right: 4px;
+  flex-flow: column;
 }
 
 .threadlistitem:last-child:not(#editor) {
@@ -180,11 +186,12 @@ span.last_commented_date {
 
 
 .meta > * {
-    vertical-align: middle;
-    display: inline-block;
+    vertical-align: baseline;
+    display: inline-flex;
+    /* overflow: visible; */
     width: 70px;
     text-decoration: none;
-    /* padding: 2px 0; */
+    /* padding-bottom: 2px; */
 }
 
 .details>.post_content {
@@ -356,9 +363,10 @@ img.headerbtn {
     /* width: 500px; */
     height: 100px;
     display: flex;
-    padding: 5px;
+    padding: 7px;
     resize: both;
     /* flex-grow: 1; */
+    font-size: 80%;
 }
 
 .editor_button_row {

@@ -22,7 +22,7 @@ def get_url_to_post(pid):
             filter p.tid==@tid and p.t_c <= @tc
             return 1
         )
-    ''', tid=tid, tc=pobj['t_c'])[0]
+    ''', tid=tid, tc=pobj['t_c'], silent=True)[0]
 
     # 3. calculate page number
     pnum = ((rank - 1) // post_list_defaults['pagesize']) + 1
