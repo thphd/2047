@@ -395,6 +395,9 @@ class Paginator:
         if mode=='user':
             button_groups.append(sortbys2)
 
+        if count>1:
+            button_groups.append([('共 {:d}'.format(count), '')])
+
         return {
             'button_groups':button_groups,
             'count':count,

@@ -199,19 +199,17 @@
   {%for group in pagination.button_groups%}
   <div class="group">
     {%for item in group%}{# item -> [label, link, selected] #}
-    <a href="{{item[1]}}">
+    
+      {%if item[1]%}
+      <a href="{{item[1]}}">
+        <div class="pagenumber {{' current' if item[2] else ''}}">{{item[0]}}</div>
+      </a>
+      {%else%}
       <div class="pagenumber {{' current' if item[2] else ''}}">{{item[0]}}</div>
-    </a>
+      {%endif%}
 
     {%endfor%}
   </div>
   {%endfor%}
-
-  <div class="group">
-    <div class="pagenumber">
-      共 {{pagination.count}}
-    </div>
-  </div>
-
 </div>
 {%endmacro%}

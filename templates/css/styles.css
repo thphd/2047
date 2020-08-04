@@ -311,6 +311,9 @@ img.headerbtn {
     width: 36px;
     height: 36px;
     /* margin-left: 12px; */
+    border-style: dashed;
+    border-width: 1px;
+    border-color: #80808054;
 }
 
 .rightalign {
@@ -367,6 +370,7 @@ img.headerbtn {
     resize: both;
     /* flex-grow: 1; */
     font-size: 80%;
+    line-height: 150%;
 }
 
 .editor_button_row {
@@ -418,7 +422,7 @@ img.headerbtn {
     color: #bfbfbf;
 }
 
-.post_content :not(pre) code {
+.post_content :not(pre)> code {
     margin: 0 3px;
     background-color: #e9f3f7;
     padding: 2px 5px;
@@ -440,9 +444,9 @@ a.threadlist_title {
 }
 
 .post_content pre {
-    background-color: #ebf3f7;
+    background-color: #f1f1f1;
     padding: 5px 10px;
-    /* display: inline-block; */
+    display: inline-block;
     margin: 0 0 7px 0;
     /* display: block; */
     white-space: pre-wrap;       /* Since CSS 2.1 */
@@ -566,4 +570,21 @@ div#navigator {
 
 .c10 {
     background-color: #d8994a;
+}
+
+
+code {
+    font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,ubuntu, source code pro, monospace;
+}
+
+code .k, code .kd {
+    color: #0e57fb;
+}
+
+code .nf {
+    color: #773b24;
+}
+
+.threadlistitem#editor {
+    border-style: none;
 }

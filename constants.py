@@ -81,9 +81,38 @@ username_regex=r'^[0-9a-zA-Z\u4e00-\u9fff\-\_\.]{2,16}$'
 username_regex_string = str(username_regex).replace('\\\\','\\')
 
 # markdown renderer
-import markdown
-def convert_markdown(s):
-    return markdown.markdown(s)
+
+if 0:
+    import markdown
+    def convert_markdown(s):
+        return markdown.markdown(s)
+else:
+
+    import re
+    pattern = (
+        r'((([A-Za-z]{3,9}:(?:\/\/)?)'  # scheme
+        r'(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+(:\[0-9]+)?'  # user@hostname:port
+        r'|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)'  # www.|user@hostname
+        r'((?:\/[\+~%\/\.\w\-_]*)?'  # path
+        r'\??(?:[\-\+=&;%@\.\w_]*)'  # query parameters
+        r'#?(?:[\.\!\/\\\w]*))?)'  # fragment
+        r'(?![^<]*?(?:<\/\w+>|\/?>))'  # ignore anchor HTML tags
+        r'(?![^\(]*?\))'  # ignore links in brackets (Markdown links and images)
+    )
+    link_patterns = [(re.compile(pattern),r'\1')]
+    import markdown2 as markdown
+    from markdown2 import Markdown
+    md = Markdown(
+        extras=[
+            'link-patterns','fenced-code-blocks',
+            'header-ids','nofollow',
+            'tag-friendly',
+        ],
+        link_patterns = link_patterns,
+    )
+
+    def convert_markdown(s):
+        return md.convert(s)
 
 # database connection
 from aql import AQLController
