@@ -160,11 +160,14 @@
   </a>
 {%endmacro%}
 
-{%macro editor(target, content)%}
+{%macro editor(target, content=None, title=None, has_title=False)%}
   <meta id="editor_target" _target="{{target}}">
   <div class="editor" id="editor_inline">
     <div class="editor_left">
-      <textarea placeholder="支持markdown语法" id="editor_text">{{content if content}}</textarea>
+      {%if has_title%}
+        <input placeholder="标题" type='text' id="editor_title">{{title if title}}</textarea>
+      {%endif%}
+      <textarea placeholder="支持markdown语法，拖动右下角缩放" id="editor_text">{{content if content}}</textarea>
       <div class="editor_button_row">
         <button type="button" id="editor_btnpreview">预览</button>
         <button type="button" id="editor_btnsubmit">提交</button>
@@ -181,7 +184,15 @@
 {# titled header #}
 {%macro header()%}
   {%if page_title%}
-    <div class="header" onclick="window.location.href='{{request.path}}'">{{page_title}}</div>
+    <div class="header">
+      <span onclick="window.location.href='{{request.full_path if ('editor' in request.full_path) else request.path}}'">{{page_title}}</span>
+
+      {{category_bubble(t.category) if (t and t.category) else ''}}
+
+      {%if g.logged_in and category%}
+        <a class='makepost' href="/editor?target=category/{{category.cid}}">发帖</a>
+      {%endif%}
+    </div>
   {%endif%}
 
   {%if page_subheader%}
@@ -199,7 +210,7 @@
   {%for group in pagination.button_groups%}
   <div class="group">
     {%for item in group%}{# item -> [label, link, selected] #}
-    
+
       {%if item[1]%}
       <a href="{{item[1]}}">
         <div class="pagenumber {{' current' if item[2] else ''}}">{{item[0]}}</div>

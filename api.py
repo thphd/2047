@@ -120,10 +120,7 @@ def _(j):
     hashstr, saltstr = hash_w_salt(pwh)
 
     # obtain a new uid
-    uid = aql('''
-        let c = document('counters/counters')
-        update c with {uid:c.uid+1} in counters return NEW.uid
-    ''')[0]
+    uid = obtain_new_id('uid')
 
     newuser = dict(
         uid=uid,
@@ -147,6 +144,14 @@ def _(j):
 
     return newuser
 
+def obtain_new_id(name):
+    # obtain a new uid
+    uid = aql('''
+        let c = document('counters/counters')
+        update c with {{ {d}:c.{d}+1}} in counters return NEW.{d}
+    '''.format(d=name))[0]
+    return uid
+
 @register('logout')
 def _(j):
     return {'logout':True}
@@ -156,6 +161,12 @@ def content_length_check(content, allow_short=False):
         raise Exception('content too long')
     if len(content)<4 and allow_short==False:
         raise Exception('content too short')
+
+def title_length_check(title):
+    if len(title)>35:
+        raise Exception('title too long')
+    if len(title)<3:
+        raise Exception('title too short')
 
 @register('post')
 def _(j):
@@ -169,7 +180,7 @@ def _(j):
     target = es('target')
     target = target.split('/')
     if len(target)!=2:
-        raise Exception('target unsupported')
+        raise Exception('target format not correct')
 
     target_type = target[0]
     # pid = int(es('pid'))
@@ -192,7 +203,7 @@ def _(j):
 
         # check if user repeatedly submitted the same content
         lp = aql('for p in posts filter p.uid==@k sort p.t_c desc limit 1 return p',k=uid, silent=True)
-        if len(lp) == 1:
+        if len(lp) >= 1:
             if lp[0]['content'] == content:
                 raise Exception('repeatedly posting same content')
 
@@ -218,8 +229,50 @@ def _(j):
 
         return inserted
 
+    elif target_type=='category':
+        title = es('title').strip()
+        title_length_check(title)
+
+        # check if cat exists
+        cid = _id
+        cat = aql('for c in categories filter c.cid==@k return c',k=cid,silent=True)
+
+        if len(cat)==0:
+            raise Exception('cid not exist')
+
+        cat = cat[0]
+
+        # check if user repeatedly submitted the same content
+        lp = aql('for t in threads filter t.uid==@k sort t.t_c desc limit 1 return t',k=uid, silent=True)
+        if len(lp) >= 1:
+            if lp[0]['content'] == content:
+                raise Exception('repeatedly posting same content')
+
+        # ask for a new tid
+        tid = obtain_new_id('tid')
+
+        timenow = time_iso_now()
+
+        newthread = dict(
+            uid = uid,
+            t_c = timenow,
+            t_u = timenow,
+            content = content,
+            tid = tid,
+            cid = cid,
+            title = title,
+        )
+
+        inserted = aql('insert @p in threads return NEW', p=newthread)[0]
+
+        # assemble url to the new thread
+        url = '/t/{}'.format(inserted['tid'])
+        inserted['url'] = url
+
+        return inserted
+
     else:
-        raise Exception('unsupported target type:'+target_type)
+        raise Exception('unsupported target type')
 
 @register('render')
 def _(j):

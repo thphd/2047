@@ -257,6 +257,7 @@ if (editor_target){
   var bsubmit = geid('editor_btnsubmit')
   var preview = geid('editor_preview')
   var editor_text = geid('editor_text')
+  var editor_title = geid('editor_title')
   var editor_right = geid('editor_right')
 
   editor_right.style.display = 'none'
@@ -290,6 +291,7 @@ if (editor_target){
       action:'post',
       target:_target,
       content:editor_text.value,
+      title:editor_title?editor_title.value:null
     })
     .then(j=>{
       // window.location.reload()

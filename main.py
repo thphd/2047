@@ -14,8 +14,8 @@ def init_directory(d):
     else:
         print_info('directory {} created.'.format(d))
 
-init_directory('./static/')
-init_directory('./static/upload/')
+# init_directory('./static/')
+# init_directory('./static/upload/')
 
 from flask_cors import CORS
 
@@ -516,6 +516,7 @@ def catspe(cid):
         page_subheader=(catobj['brief'] or '').replace('\\',''),
         threadlist=threadlist,
         pagination=pagination,
+        category=catobj,
         # threadcount=count,
         **(globals())
     )
@@ -563,12 +564,17 @@ def thrd(tid):
     for t in threads filter t.tid==@tid
     let u = (for u in users filter u.uid==t.uid return u)[0]
     return merge(t, {user:u})
-    ''',tid=tid, silent=True)
+    ''', tid=tid, silent=True)
 
     if len(thobj)!=1:
         return make_response('thread not exist', 404)
 
     thobj = thobj[0]
+
+    catobj = aql('''
+    for c in categories filter c.cid==@cid return c
+    ''', cid=thobj['cid'], silent=True)[0]
+    thobj['category'] = catobj
 
     pagenumber = rai('page') or 1
     pagesize = rai('pagesize') or 50
@@ -633,6 +639,16 @@ def uposts(uid):
         # t=thobj,
         u=uobj,
         # threadcount=count,
+        **(globals())
+    )
+
+@app.route('/editor')
+def editor_handler():
+    target = ras('target') or ''
+
+    return render_template('editor.html.jinja',
+        page_title = '发帖 - {}'.format(target),
+        target=target,
         **(globals())
     )
 

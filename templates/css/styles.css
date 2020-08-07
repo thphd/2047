@@ -176,6 +176,11 @@ span.last_commented_date {
     font-size: 22px;
     margin: 5px 0;
     color: #7392ad;
+    display: flex;
+    justify-items: center;
+    align-items: center;
+    align-content: center;
+    flex-direction: row;
 }
 
 
@@ -360,6 +365,7 @@ img.headerbtn {
     margin-bottom: 10px;
     min-width: 400px;
     max-width: 600px;
+    justify-content: stretch;
 }
 
 #editor_text {
@@ -587,4 +593,26 @@ code .nf {
 
 .threadlistitem#editor {
     border-style: none;
+}
+
+#editor_title {
+    padding: 7px;
+    font-size: 80%;
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.header > * {
+    margin-right: 10px;
+    display: flex;
+    text-decoration: none;
+}
+
+.header > .makepost {
+    font-size: 16px;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 3px;
+    padding: 2px 7px;
+    color: #b9b9b9;
 }
