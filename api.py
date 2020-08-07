@@ -3,6 +3,9 @@ import time
 
 from constants import *
 
+aqlc.create_collection('admins')
+aqlc.create_collection('operations')
+
 def get_url_to_post(pid):
     # 1. get tid
     pobj = aql('for p in posts filter p._key==@k return p',k=pid,silent=True)
@@ -273,6 +276,55 @@ def _(j):
 
     else:
         raise Exception('unsupported target type')
+
+@register('mark_delete')
+def _(j):
+    if 'logged_in' not in j:
+        raise Exception('you are not logged in')
+
+    uid = j['logged_in']['uid']
+
+    if 'admin' not in j['logged_in']:
+        raise Exception('you are not admin')
+
+    if not j['logged_in']['admin']:
+        raise Exception('you are not admin')
+
+    def es(k): return (str(j[k]) if (k in j) else None)
+
+    target = es('target')
+    target = target.split('/')
+    if len(target)!=2:
+        raise Exception('target format not correct')
+
+    target_type = target[0]
+    # pid = int(es('pid'))
+    _id = int(target[1])
+
+    if target_type=='thread':
+        upd = aql('for i in threads filter i.tid==@_id\
+            update i with {delete:true} in threads return NEW',_id=_id)
+
+        if len(upd)<1:
+            raise Exception('tid not found')
+
+    elif target_type=='post':
+        upd = aql('for i in posts filter i._key==@_id\
+            update i with {delete:true} in posts return NEW',_id=_id)
+
+        if len(upd)<1:
+            raise Exception('pid not found')
+
+    else:
+        raise Exception('target type not supported')
+
+    aql('insert @k in operations',k={
+        'uid':uid,
+        'op':'mark_delete',
+        'target':target,
+    })
+
+    return upd[0]
 
 @register('render')
 def _(j):

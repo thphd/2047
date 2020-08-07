@@ -76,6 +76,12 @@ aqlc.create_index('threads',
     type='persistent', fields=['t_u','t_c'], unique=False, sparse=False)
 aqlc.create_index('threads',
     type='persistent', fields=['cid','t_u','t_c'], unique=False, sparse=False)
+
+aqlc.create_index('threads',
+    type='persistent', fields=['delete','t_u','t_c'], unique=False, sparse=False)
+aqlc.create_index('threads',
+    type='persistent', fields=['delete','cid','t_u','t_c'], unique=False, sparse=False)
+
 aqlc.create_index('threads',
     type='persistent', fields=['uid','t_u','t_c'], unique=False, sparse=False)
 
@@ -227,7 +233,7 @@ class Paginator:
         ts = time.time()
 
         assert by in ['category', 'user']
-        assert category=='all' or is_integer(category)
+        assert category=='all' or category=='deleted' or is_integer(category)
         assert is_integer(uid)
         assert sortby in ['t_u', 't_c']
         assert order in ['desc', 'asc']
@@ -239,9 +245,11 @@ class Paginator:
 
         if by=='category':
             if category=='all':
-                filter = ''
+                filter = 'filter i.delete!=true'
+            elif category=='deleted':
+                filter = 'filter i.delete==true'
             else:
-                filter = 'filter i.cid == {}'.format(category)
+                filter = 'filter i.cid == {} and i.delete!=true'.format(category)
             mode='thread'
         else: # filter by user
             filter = 'filter i.uid == {}'.format(uid)
@@ -422,8 +430,12 @@ def ras(k):
 site_name='2047'
 
 def get_user(uid):
-    return aql('for i in users filter i.uid==@k return i',
+    uo = aql('for i in users filter i.uid==@k \
+        let admin = length(for a in admins filter a.name==i.name return a)\
+        return merge(i, {admin})',
         k=uid, silent=True)[0]
+
+    return uo
 
 # logged_in = False
 @app.before_request
@@ -436,10 +448,10 @@ def befr():
 @app.route('/')
 @app.route('/c/all')
 def catall():
-    pagenumber = rai('page') or 1
-    pagesize = rai('pagesize') or 30
-    order = ras('order') or 'desc'
-    sortby = ras('sortby') or 't_u'
+    pagenumber = rai('page') or thread_list_defaults['pagenumber']
+    pagesize = rai('pagesize') or thread_list_defaults['pagesize']
+    order = ras('order') or thread_list_defaults['order']
+    sortby = ras('sortby') or thread_list_defaults['sortby']
 
     rpath = request.path
     # print(request.args)
@@ -457,6 +469,30 @@ def catall():
         # threadcount=count,
         **(globals())
     )
+
+@app.route('/c/deleted')
+def delall():
+    pagenumber = rai('page') or thread_list_defaults['pagenumber']
+    pagesize = rai('pagesize') or thread_list_defaults['pagesize']
+    order = ras('order') or thread_list_defaults['order']
+    sortby = ras('sortby') or thread_list_defaults['sortby']
+
+    rpath = request.path
+
+    threadlist, pagination = pgnt.get_thread_list(
+        by='category', category='deleted', sortby=sortby, order=order,
+        pagenumber=pagenumber, pagesize=pagesize,
+        path = rpath)
+
+    return render_template('threadlist.html.jinja',
+        page_title='所有分类',
+        threadlist=threadlist,
+        pagination=pagination,
+        categories=get_categories_info(),
+        # threadcount=count,
+        **(globals())
+    )
+
 @app.route('/u/all')
 def alluser():
     pagenumber = rai('page') or 1

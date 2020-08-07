@@ -331,3 +331,14 @@ function highlight_hash(){
   }
 }
 highlight_hash()
+
+function mark_delete(targ){
+  api({
+    action:'mark_delete',
+    target:targ,
+  })
+  .then(res=>{
+    alert('已标记为删除'+JSON.stringify(res))
+  })
+  .catch(alert)
+}

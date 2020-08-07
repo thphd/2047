@@ -446,7 +446,7 @@ a.threadlist_title {
     margin-left: 0;
     margin-right: 0;
     display: block;
-    /* margin-bottom: inherit; */
+    margin-bottom: 3px;
 }
 
 .post_content pre {
@@ -460,6 +460,7 @@ a.threadlist_title {
     white-space: -pre-wrap;      /* Opera 4-6 */
     white-space: -o-pre-wrap;    /* Opera 7 */
     word-wrap: break-word;       /* Internet Explorer 5.5+ */
+    font-size: 14px;
 }
 
 

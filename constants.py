@@ -90,7 +90,7 @@ else:
 
     import re
     pattern = (
-        r'((([A-Za-z]{3,9}:(?:\/\/)?)'  # scheme
+        r'((((http|https|ftp):(?:\/\/)?)'  # scheme
         r'(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+(:\[0-9]+)?'  # user@hostname:port
         r'|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)'  # www.|user@hostname
         r'((?:\/[\+~%\/\.\w\-_]*)?'  # path
@@ -104,8 +104,9 @@ else:
     from markdown2 import Markdown
     md = Markdown(
         extras=[
-            'link-patterns','fenced-code-blocks',
-            'header-ids','nofollow',
+            'link-patterns',
+            'fenced-code-blocks',
+            'nofollow',
             'tag-friendly',
         ],
         link_patterns = link_patterns,
@@ -155,6 +156,11 @@ user_list_defaults = dict(
     order='desc',
     sortby='uid',
 )
+
+common_links = [
+    {'text':'花名册', 'url':'/u/all'},
+    {'text':'删帖', 'url':'/c/deleted'},
+]
 
 if __name__ == '__main__':
     h, s = hash_w_salt('1989')

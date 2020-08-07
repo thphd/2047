@@ -32,4 +32,19 @@
 
 {%endif%}
 
+{%if common_links %}
+<div class="box">
+  <div class="boxtitle">
+    常用链接
+  </div>
+  <div class="categories">
+    {%for l in common_links%}
+    {{macros.link_bubble(l)}}
+    {%endfor%}
+  </div>
+
+</div>
+
+{%endif%}
+
 {%endblock%}

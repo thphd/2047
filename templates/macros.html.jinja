@@ -26,7 +26,7 @@
           {# content is title to a thread #}
           {%if 'threadlist' in metas %}
             <a href="/t/{{p.tid}}" class="threadlist_title">
-              {{text}}
+              {{'[已标记为删除] ' if p.delete else ''}}{{text}}
             </a>
 
           {# content is name of an user #}
@@ -109,6 +109,11 @@
             <a href='/u/{{p.uid}}/p' class="response">{{p.nposts}} 个回复</a>
             {%endif%}
 
+          {%elif m=='delete_thread'%}
+            {%if g.logged_in and g.logged_in.admin%}
+              <a href="javascript:mark_delete('{{'thread/'~p.tid}}')">标记为删除</a>
+            {%endif%}
+
           {%endif%}
 
         {%endfor%}
@@ -131,7 +136,8 @@
 
 {# one line of thread, used in threadlist #}
 {%macro post_threadlist(p)%}
-  {{post(p, ['category','publish_date','publisher','last_commenter','threadlist'])}}
+  {{post(p, ['category','publish_date','publisher','last_commenter',
+  'threadlist','delete_thread'])}}
 {%endmacro%}
 
 {# one line of user, used in userpage #}
@@ -153,6 +159,17 @@
   {# category name #}
   <a class="category_name c{{c.cid}}" href="/c/{{c.cid}}">
     {{c.cname if c.cname else c.name}}
+    {%if 0 and not(c.cname)%}
+      <br>
+      {{c.count}}
+    {%endif%}
+  </a>
+{%endmacro%}
+
+{%macro link_bubble(linkobj)%}
+  {# category name #}
+  <a class="category_name" href="{{linkobj.url}}">
+    {{linkobj.text}}
     {%if 0 and not(c.cname)%}
       <br>
       {{c.count}}
