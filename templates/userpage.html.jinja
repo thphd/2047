@@ -27,7 +27,7 @@
   </div>
   {%endif%}
 
-  {%if g.logged_in%}
+  {%if g.logged_in and g.logged_in.uid==u.uid%}
   <form class="register">
     <label>用户名</label>
     <input type="text" id="username" value="{{g.logged_in.name}}" disabled="true">
