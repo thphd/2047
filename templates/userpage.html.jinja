@@ -27,6 +27,24 @@
   </div>
   {%endif%}
 
+  {%if g.logged_in%}
+  <form class="register">
+    <label>用户名</label>
+    <input type="text" id="username" value="{{g.logged_in.name}}" disabled="true">
+    <br>
+    <label>原密码</label>
+    <input type="password" id="old_password" value="">
+    <br>
+    <label>新密码</label>
+    <input type="password" id="new_password" value="">
+    <br>
+    <label>再输入一次</label>
+    <input type="password" id="password2" value="">
+    <br>
+    <label></label>
+    <button type="button" id="change_password">修改密码</button>
+  </form>
+  {%endif%}
 </div>
 
 {%endblock%}

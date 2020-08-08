@@ -188,6 +188,11 @@ if (regbtn){
       return false
     }
 
+    if (password.length<6){
+      alert('密码太短')
+      return false
+    }
+
     regbtn.disabled=true
 
     api({
@@ -201,6 +206,44 @@ if (regbtn){
       alert('注册成功，请登录')
 
       window.location.href = '/login?username='+username
+    })
+    .catch(err=>{
+      alert(err)
+      regbtn.disabled=false
+    })
+  }
+}
+
+// change password
+var cpwbtn = geid('change_password')
+
+if (cpwbtn){
+
+  cpwbtn.onclick = function(){
+    var username = geid('username').value
+    var pwo = geid('old_password').value
+    var pwn = geid('new_password').value
+    var pw2 = geid('password2').value
+    if (pwn!=pw2){
+      alert('两次密码不一致')
+      return false
+    }
+    if (pwn.length<6){
+      alert('密码太短')
+      return false
+    }
+
+    cpwbtn.disabled=true
+
+    api({
+      action:'change_password',
+      old_password_hash:hash_user_pass(username, pwo),
+      new_password_hash:hash_user_pass(username, pwn),
+    })
+    .then(res=>{
+      print(JSON.stringify(res))
+      alert('修改成功')
+      window.location.reload()
     })
     .catch(err=>{
       alert(err)
@@ -341,4 +384,8 @@ function mark_delete(targ){
     alert('已标记为删除'+JSON.stringify(res))
   })
   .catch(alert)
+}
+
+function change_password(){
+
 }

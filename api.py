@@ -366,6 +366,31 @@ def _(j):
 
     return {'error':False}
 
+@register('change_password')
+def _(j):
+    if 'logged_in' not in j: raise Exception('you are not logged in')
+    uid = j['logged_in']['uid']
+
+    pwo = j['old_password_hash']
+    pwn = j['new_password_hash']
+
+    # find password object
+    p = aql('for p in passwords filter p.uid==@uid return p', uid=uid)
+    if len(p)==0:
+        raise Exception('password record for the user not found')
+    p = p[0]
+
+    res = check_hash_salt_pw(p['hashstr'],p['saltstr'],pwo)
+    if not res:
+        raise Exception('password incorrect')
+
+    hash,salt = hash_w_salt(pwn)
+
+    aql('for p in passwords filter p.uid==@uid update p with \
+        {hashstr:@h, saltstr:@s} in passwords',uid=uid,h=hash,s=salt)
+
+    return {'error':False}
+
 # feedback regulated ping service
 # average 1 ping every 3 sec
 lastping = time.time()
