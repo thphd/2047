@@ -105,6 +105,18 @@ def _(j):
 
     return {'error':False, 'message':'login success', 'setuid':u['uid']}
 
+def insert_new_password_object(uid, pwh):
+    # generate salt, hash the pw
+    hashstr, saltstr = hash_w_salt(pwh)
+
+    pwobj = dict(
+        uid=uid,
+        hashstr=hashstr,
+        saltstr=saltstr,
+    )
+
+    aql('''insert @i into passwords''', i=pwobj)
+
 @register('register')
 def _(j):
     def k(s): return j[s]
@@ -133,9 +145,6 @@ def _(j):
     if len(invitation) == 0:
         raise Exception('invitation code not exist or expired')
 
-    # generate salt, hash the pw
-    hashstr, saltstr = hash_w_salt(pwh)
-
     # obtain a new uid
     uid = obtain_new_id('uid')
 
@@ -147,14 +156,20 @@ def _(j):
         invitation=ik,
     )
 
-    pwobj = dict(
-        uid=uid,
-        hashstr=hashstr,
-        saltstr=saltstr,
-    )
+    # generate salt, hash the pw
+    insert_new_password_object(uid, pwh)
+
+    # hashstr, saltstr = hash_w_salt(pwh)
+    #
+    # pwobj = dict(
+    #     uid=uid,
+    #     hashstr=hashstr,
+    #     saltstr=saltstr,
+    # )
+    #
+    # aql('''insert @i into passwords''', i=pwobj)
 
     aql('''insert @i into users''', i=newuser)
-    aql('''insert @i into passwords''', i=pwobj)
 
     aql('''for i in invitations filter i._key==@ik
         update i with {active:false} in invitations''', ik=ik)
@@ -391,7 +406,15 @@ def _(j):
     # find password object
     p = aql('for p in passwords filter p.uid==@uid return p', uid=uid)
     if len(p)==0:
-        raise Exception('password record for the user not found')
+        # generate salt, hash the pw
+        insert_new_password_object(uid, pwo)
+        time.sleep(0.5)
+
+        p = aql('for p in passwords filter p.uid==@uid return p', uid=uid)
+
+        if len(p)==0:
+            raise Exception('password record for the user not found')
+            
     p = p[0]
 
     res = check_hash_salt_pw(p['hashstr'],p['saltstr'],pwo)

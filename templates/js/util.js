@@ -247,7 +247,7 @@ if (cpwbtn){
     })
     .catch(err=>{
       alert(err)
-      regbtn.disabled=false
+      cpwbtn.disabled=false
     })
   }
 }
