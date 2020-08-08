@@ -108,6 +108,7 @@ else:
             'fenced-code-blocks',
             'nofollow',
             'tag-friendly',
+            'strike',
         ],
         link_patterns = link_patterns,
     )

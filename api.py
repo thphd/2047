@@ -5,6 +5,7 @@ from constants import *
 
 aqlc.create_collection('admins')
 aqlc.create_collection('operations')
+aqlc.create_collection('aliases')
 
 def get_url_to_post(pid):
     # 1. get tid
@@ -77,7 +78,7 @@ def _(j):
     # find password object
     p = aql('for p in passwords filter p.uid==@uid return p', uid=u['uid'])
     if len(p)==0:
-        raise Exception('password record for the user not found')
+        raise Exception('password record not found')
 
     p = p[0]
     hashstr = p['hashstr']
@@ -88,6 +89,19 @@ def _(j):
 
     if not verified:
         raise Exception('wrong password')
+
+    # there's one more possibility: user has alias
+    alias = aql('for i in aliases filter i.is==@n return i', n=u['name'])
+
+    if len(alias)>=1:
+        alias = alias[0]['name']
+        au = aql('for u in users filter u.name==@n return u',n=alias)
+
+        if len(au)==0:
+            # raise Exception('alias for user not found')
+            pass
+        else:
+            u = au[0]
 
     return {'error':False, 'message':'login success', 'setuid':u['uid']}
 

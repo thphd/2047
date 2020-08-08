@@ -385,7 +385,3 @@ function mark_delete(targ){
   })
   .catch(alert)
 }
-
-function change_password(){
-
-}
