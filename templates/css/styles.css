@@ -90,7 +90,7 @@ span.last_commented_date {
 .meta .user_name {
   display: inline-flex;
   width: 100px;
-  text-align: left;
+  justify-content: left;
   color: #567ab1;
   font-weight: bold;
   text-decoration: none;
@@ -119,10 +119,10 @@ span.last_commented_date {
   border-style: solid;
   border-width: 1px 0 0 0;
   padding: 7px 0;
-  border-color: #efefef;
+  border-color: #e8e8e8;
   /* border-radius: 0; */
   /* background: rgb(245 245 245); */
-  /* background: linear-gradient(0deg, hsl(0deg 0% 94%) 0%,  rgba(255,255,255,1) 100%); */
+  /* background: linear-gradient(0deg, hsl(0 0% 96% / 1) 0%,  rgba(255,255,255,1) 100%); */
 }
 
 .category_name {
@@ -194,8 +194,9 @@ span.last_commented_date {
     vertical-align: baseline;
     display: inline-flex;
     /* overflow: visible; */
-    width: 70px;
+    width: 80px;
     text-decoration: none;
+    justify-content: center;
     /* padding-bottom: 2px; */
 }
 
@@ -229,7 +230,8 @@ span.last_commented_date {
 
 .response {
     color: #2da226;
-    /* width: 70px; */
+    width: 70px;
+    justify-content: left;
 }
 
 #content {
