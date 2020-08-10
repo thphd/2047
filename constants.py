@@ -161,6 +161,7 @@ user_list_defaults = dict(
 common_links = [
     {'text':'花名册', 'url':'/u/all'},
     {'text':'删帖', 'url':'/c/deleted'},
+    {'text':'老用户', 'url':'/t/7108'}
 ]
 
 if __name__ == '__main__':
