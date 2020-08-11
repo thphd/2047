@@ -4,7 +4,20 @@ from colors import *
 
 import requests as r
 
+import Identicon
+import mimetypes as mt
+
 from constants import *
+
+from flask_cors import CORS
+
+from flask import Flask, session, g
+from flask import render_template, request, send_from_directory, make_response
+from flask_gzip import Gzip
+
+from api import api_registry
+from api import *
+
 
 def init_directory(d):
     try:
@@ -17,11 +30,7 @@ def init_directory(d):
 # init_directory('./static/')
 # init_directory('./static/upload/')
 
-from flask_cors import CORS
 
-from flask import Flask, session, g
-from flask import render_template, request, send_from_directory, make_response
-from flask_gzip import Gzip
 
 def get_secret():
     fn = 'secret.bin'
@@ -46,6 +55,7 @@ def route(r):
 #     @route('/'+frompath+'/<path:path>')
 #     def _(path): return send_from_directory(topath, path)
 
+
 def route_static(frompath, topath, maxage=1800):
     @route('/'+frompath+'/<path:path>')
     def _(path):
@@ -57,7 +67,6 @@ def route_static(frompath, topath, maxage=1800):
             b = f.read()
 
         resp = make_response(b)
-        import mimetypes as mt
         type, encoding = mt.guess_type(cc)
         if encoding:
             resp.headers['Content-Encoding'] = encoding
@@ -783,7 +792,6 @@ def _(uid):
             return resp
 
     # render an identicon
-    import Identicon
     identicon = Identicon.render(str(uid*uid))
     resp = make_response(identicon, 200)
     resp.headers['Content-Type'] = 'image/png'
@@ -808,9 +816,6 @@ def _(name):
     resp = make_response('user found', 307)
     resp.headers['Location'] = '/u/{}'.format(u['uid'])
     return resp
-
-from api import api_registry
-from api import *
 
 @app.route('/api', methods=['GET', 'POST'])
 def apir():
