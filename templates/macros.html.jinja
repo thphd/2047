@@ -81,7 +81,7 @@
           {%elif m=='last_commenter'%}
             {% if p.lastuser %}
               {# number of comments #}
-              <span class="response">{{p.count}} 个回复</span>
+              <a class="response" href="/p/{{p.last._key}}">{{p.count}} 个回复</span>
 
               {# last commented date #}
               <a class="last_commented_date" href="/p/{{p.last._key}}">
