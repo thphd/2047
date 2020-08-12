@@ -16,10 +16,13 @@ img#site_logo {
 
 body {
   display: block;
-  margin: 0 0 20px 0;
-  /* margin-bottom: 20px; */
+  margin: auto;
+  margin-bottom: 20px;
   /* min-width: 600px; */
   width: 100%;
+  max-width: 1024px;
+  background-color: #8a8a8a;
+  /* background-clip: content-box; */
 }
 
 #header {
@@ -42,7 +45,7 @@ div#site_name {color: #005bac;font-family: arial;/* display: inline-block; *//* 
 }
 
 .details .meta {
-  font-size: 12px;
+  font-size: 77%;
   color: #b3b3b3;
   vertical-align: middle;
   overflow: visible;
@@ -78,10 +81,11 @@ div#site_name {color: #005bac;font-family: arial;/* display: inline-block; *//* 
 
 div#footer {
   margin-top: 0px;
-  padding: 8px 20px;
+  padding: 14px 20px;
   border-style: solid;
   border-width: 1px 0 0 0;
   border-color: #efefef;
+  background-color: white;
 }
 
 span.last_commented_date {
@@ -119,7 +123,7 @@ span.last_commented_date {
   margin: 0px 0;
   border-style: solid;
   border-width: 1px 0 0 0;
-  padding: 7px 0;
+  padding: 9px 0;
   border-color: #e8e8e8;
   /* border-radius: 0; */
   /* background: rgb(245 245 245); */
@@ -175,7 +179,7 @@ span.last_commented_date {
 
 .header {
     font-size: 22px;
-    margin: 5px 0;
+    margin: 9px 0;
     color: #7392ad;
     display: flex;
     justify-items: center;
@@ -451,8 +455,8 @@ a.threadlist_title {
     margin-left: 0;
     margin-right: 0;
     display: block;
-    margin-bottom: 3px;
-    font-size: 94%;
+    /* margin-bottom: 3px; */
+    font-size: 100%;
 }
 
 .post_content pre {
@@ -492,11 +496,12 @@ a.threadlist_title {
 
 
 .lr {
-    margin: 0 20px;
+    padding: 0 20px;
     display: flex;
     flex-flow: row;
     flex-wrap: nowrap;
     justify-content: space-between;
+    background-color: white;
 }
 
 div#navigator {
