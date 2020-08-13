@@ -381,7 +381,8 @@ function mark_delete(targ){
     target:targ,
   })
   .then(res=>{
-    alert('已标记为删除'+JSON.stringify(res))
+    var note = (targ.startsWith('u')?'已取消删除':'已标记为删除')
+    alert(note+JSON.stringify(res))
   })
   .catch(alert)
 }

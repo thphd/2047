@@ -7,7 +7,7 @@
 {% set _ide = 'id="editor"' if 'editor' in metas %}
 {% set _idp = 'id="' ~ p._key ~ '"' if 'postlist' in metas %}
 
-<div class="threadlistitem" {{_ide or _idt or _idp}}>
+<div class="threadlistitem{{ ' deleted' if p.delete else ''}}" {{_ide or _idt or _idp}}>
   <div class="left">
     {# editor avatar should be current logged in user's #}
     {% set uid = g.logged_in.uid if 'editor' in metas else p.uid %}
@@ -40,7 +40,7 @@
             {{editor('thread/'~p.tid)}}
 
           {%else%}
-            {{convert_markdown(text)|safe}}
+            {{(convert_markdown(text)|safe) if not p.delete else ('<s>内容被删除</s>'|safe)}}
           {%endif%}
 
           {%if p.brief%}
@@ -110,8 +110,21 @@
             {%endif%}
 
           {%elif m=='delete_thread'%}
-            {%if g.logged_in and g.logged_in.admin%}
+            {%if g.logged_in and (g.logged_in.admin)%}
+              {%if not p.delete%}
               <a href="javascript:mark_delete('{{'thread/'~p.tid}}')">标记为删除</a>
+              {%else%}
+              <a href="javascript:mark_delete('{{'uthread/'~p.tid}}')">取消删除</a>
+              {%endif%}
+            {%endif%}
+
+          {%elif m=='delete_post'%}
+            {%if g.logged_in and (g.logged_in.admin)%}
+              {%if not p.delete%}
+              <a href="javascript:mark_delete('{{'post/'~p._key}}')">标记为删除</a>
+              {%else%}
+              <a href="javascript:mark_delete('{{'upost/'~p._key}}')">取消删除</a>
+              {%endif%}
             {%endif%}
 
           {%endif%}
@@ -126,7 +139,7 @@
 
 {# one line of post, used in postlist #}
 {%macro post_postlist(p)%}
-  {{post(p, ['publisher','publish_date_linkto','link_to','postlist'])}}
+  {{post(p, ['publisher','publish_date_linkto','link_to','postlist','delete_post'])}}
 {%endmacro%}
 
 {# one line of post, used in postlist's thread header #}

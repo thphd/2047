@@ -14,58 +14,64 @@
   {%block meta%}{%endblock%}
 </head>
 <body>
-  <div id="header" class="">
-    {# left 2 right: logo, [links], search, [uavatar, uname, login/logout] #}
-    <a class="leftalign" href="/">
-      <img id="site_logo" src="/images/logo.png" alt=""><div id="site_name">{{site_name}}</div>
-    </a>
-
-    <div class="rightalign">
-
-      {%if g.logged_in%}
-
-      <a href="javascript:void(0)" onclick="logout();">退出</a>
-      <a href="/u/{{g.logged_in.uid}}">
-        <div class="headerbtn">
-          {{g.logged_in.name}}
-        </div>
-      </a>
-      <a href="/u/{{g.logged_in.uid}}">
-        <img class="headerbtn" src="/avatar/{{g.logged_in.uid}}" alt="">
+  <div class="outerbox">
+    <div id="header" class="">
+      {# left 2 right: logo, [links], search, [uavatar, uname, login/logout] #}
+      <a class="leftalign" href="/">
+        <img id="site_logo" src="/images/logo.png" alt=""><div id="site_name">{{site_name}}</div>
       </a>
 
-      {%else%}
+      <div class="rightalign">
 
-      <a class="headerbtn" href="/login">登录</a>
+        {%if g.logged_in%}
 
-      {%endif%}
+        <a href="javascript:void(0)" onclick="logout();">退出</a>
+        <a href="/u/{{g.logged_in.uid}}">
+          <div class="headerbtn">
+            {{g.logged_in.name}}
+          </div>
+        </a>
+        <a href="/u/{{g.logged_in.uid}}">
+          <img class="headerbtn" src="/avatar/{{g.logged_in.uid}}" alt="">
+        </a>
+
+        {%else%}
+
+        <a class="headerbtn" href="/login">登录</a>
+
+        {%endif%}
+
+      </div>
 
     </div>
-
+    <div class="lr">
+      <div id="content" class="">
+        {{macros.header()}}
+        {%block content%}{%endblock%}
+      </div>
+      <div id="navigator" class="">
+        {%block navigator%}{%endblock%}
+      </div>
+    </div>
+    <div id="footer" class="">
+      <div class="copyright">
+        ©1989 Tsinghua University
+      </div>
+      <br>
+      <div class="copyright">
+        ©2047 Beijing Wudaokou Computing Technology LLC
+      </div>
+      <br>
+      <div class="copyright">
+        <a href="https://github.com/thphd/2047">GitHub</a>
+      </div>
+      <br>
+      <div class="copyright" onclick="window.location.href='/';">
+        回到首页
+      </div>
+    </div>
+    <script src="/js/md5.js" charset="utf-8"></script>
+    <script src="/js/util.js" charset="utf-8"></script>
   </div>
-  <div class="lr">
-    <div id="content" class="">
-      {{macros.header()}}
-      {%block content%}{%endblock%}
-    </div>
-    <div id="navigator" class="">
-      {%block navigator%}{%endblock%}
-    </div>
-  </div>
-  <div id="footer" class="">
-    <div class="copyright">
-      ©1989 Tsinghua University
-    </div>
-    <br>
-    <div class="copyright">
-      ©2047 Beijing Wudaokou Computing Technology LLC
-    </div>
-    <br>
-    <div class="copyright" onclick="window.location.href='/';">
-      回到首页
-    </div>
-  </div>
-  <script src="/js/md5.js" charset="utf-8"></script>
-  <script src="/js/util.js" charset="utf-8"></script>
 </body>
 </html>

@@ -326,9 +326,14 @@ def _(j):
     if len(target)!=2:
         raise Exception('target format not correct')
 
+    revert = es('revert')
+
     target_type = target[0]
     # pid = int(es('pid'))
     _id = int(target[1])
+
+    if 'post' in target_type:
+        _id = str(_id)
 
     if target_type=='thread':
         upd = aql('for i in threads filter i.tid==@_id\
@@ -340,6 +345,22 @@ def _(j):
     elif target_type=='post':
         upd = aql('for i in posts filter i._key==@_id\
             update i with {delete:true} in posts return NEW',_id=_id)
+
+        if len(upd)<1:
+            raise Exception('pid not found')
+
+    # prefix 'u' means to un-mark an entity of deleted status
+
+    elif target_type=='uthread':
+        upd = aql('for i in threads filter i.tid==@_id\
+            update i with {delete:null} in threads return NEW',_id=_id)
+
+        if len(upd)<1:
+            raise Exception('tid not found')
+
+    elif target_type=='upost':
+        upd = aql('for i in posts filter i._key==@_id\
+            update i with {delete:null} in posts return NEW',_id=_id)
 
         if len(upd)<1:
             raise Exception('pid not found')
@@ -414,7 +435,7 @@ def _(j):
 
         if len(p)==0:
             raise Exception('password record for the user not found')
-            
+
     p = p[0]
 
     res = check_hash_salt_pw(p['hashstr'],p['saltstr'],pwo)
