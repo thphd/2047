@@ -46,6 +46,7 @@ div#site_name {color: #005bac;font-family: arial;/* display: inline-block; *//* 
   color: #b3b3b3;
   vertical-align: middle;
   overflow: visible;
+  opacity: 50%;
 }
 
 .avatar{
@@ -94,7 +95,7 @@ span.last_commented_date {
   color: #567ab1;
   font-weight: bold;
   text-decoration: none;
-  margin-left: 5px;
+  margin-right: 5px;
   padding-top: 2px;
   padding-bottom: 2px;
   white-space: nowrap;
@@ -344,6 +345,7 @@ img.headerbtn {
 
 .post_content {
     margin-bottom: 6px;
+    font-size: 90%;
 }
 
 .leftalign > * {
@@ -445,11 +447,12 @@ img.headerbtn {
 a.title {}
 
 a.threadlist_title {
-    color: black;
+    color: #0c234e;
     margin-left: 0;
     margin-right: 0;
     display: block;
     margin-bottom: 3px;
+    font-size: 94%;
 }
 
 .post_content pre {
@@ -463,7 +466,7 @@ a.threadlist_title {
     white-space: -pre-wrap;      /* Opera 4-6 */
     white-space: -o-pre-wrap;    /* Opera 7 */
     word-wrap: break-word;       /* Internet Explorer 5.5+ */
-    font-size: 14px;
+    font-size: 90%;
 }
 
 
@@ -619,4 +622,8 @@ code .nf {
     border-radius: 3px;
     padding: 2px 7px;
     color: #b9b9b9;
+}
+
+.meta .category_name {
+    /* opacity: 40%; */
 }
