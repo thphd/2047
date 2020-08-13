@@ -644,3 +644,13 @@ code .nf {
     overflow: hidden;
     box-shadow: 0 0 10px #00000059;
 }
+
+
+.post_content br {
+    /* height: 3px; */
+    display: block;
+    content:"";
+    margin-top: .5em;
+    /* line-height:190%; */
+    /* vertical-align:top; */
+}
