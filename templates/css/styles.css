@@ -15,14 +15,7 @@ img#site_logo {
 
 
 body {
-  display: block;
-  margin: auto;
-  margin-bottom: 20px;
-  /* min-width: 600px; */
-  width: 100%;
-  max-width: 1024px;
-  background-color: #8a8a8a;
-  /* background-clip: content-box; */
+  background-color: #808080;
 }
 
 #header {
@@ -86,7 +79,7 @@ div#footer {
   border-style: solid;
   border-width: 1px 0 0 0;
   border-color: #efefef;
-  background-color: white;
+  /* background-color: white; */
 }
 
 span.last_commented_date {
@@ -502,7 +495,7 @@ a.threadlist_title {
     flex-flow: row;
     flex-wrap: nowrap;
     justify-content: space-between;
-    background-color: white;
+    /* background-color: white; */
 }
 
 div#navigator {
@@ -640,4 +633,14 @@ code .nf {
 
 .deleted {
     opacity: 30%;
+}
+
+.outerbox {
+    display: block;
+    margin: 10px auto 20px auto;
+    max-width: 1024px;
+    background-color: white;
+    border-radius: 3px;
+    overflow: hidden;
+    box-shadow: 0 0 10px #00000059;
 }
