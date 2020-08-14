@@ -264,12 +264,12 @@ body>#content {
 }
 
 .post_content blockquote {
-    background: #f3f3d3;
+    background: #f3f3ac80;
     margin: 0 0 8px 0;
     padding: 10px;
     border-style: solid;
-    border-width: 0 0 0 2px;
-    border-color: #b7b760;
+    border-width: 0 0 0 3px;
+    border-color: #b7b76061;
     display: inline-block;
 }
 
