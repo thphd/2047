@@ -310,14 +310,8 @@ def _(j):
 def _(j):
     if 'logged_in' not in j:
         raise Exception('you are not logged in')
-
-    uid = j['logged_in']['uid']
-
-    if 'admin' not in j['logged_in']:
-        raise Exception('you are not admin')
-
-    if not j['logged_in']['admin']:
-        raise Exception('you are not admin')
+    uobj = j['logged_in']
+    uid = uobj['uid']
 
     def es(k): return (str(j[k]) if (k in j) else None)
 
@@ -326,14 +320,25 @@ def _(j):
     if len(target)!=2:
         raise Exception('target format not correct')
 
-    revert = es('revert')
-
     target_type = target[0]
     # pid = int(es('pid'))
     _id = int(target[1])
 
+    # get target obj
     if 'post' in target_type:
         _id = str(_id)
+        pobj = aql('for i in posts filter i._key==@_id\
+            return i',_id=_id)[0]
+
+    elif 'thread' in target_type:
+        pobj = aql('for i in threads filter i.tid==@_id\
+            return i',_id=_id)[0]
+            
+    else:
+        raise Exception('target type not supported')
+
+    if not can_do_to(uobj,'delete',pobj['uid']):
+        raise Exception('you don\'t have the required permissions for this operation')
 
     if target_type=='thread':
         upd = aql('for i in threads filter i.tid==@_id\

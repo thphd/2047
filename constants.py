@@ -165,6 +165,25 @@ common_links = [
     {'text':'邀请码', 'url':'/t/7109'},
 ]
 
+# priviledge: who can do what to whom
+
+def can_do_to(u1, operation, u2id):
+    if not u1:
+        return False
+
+    is_self = True if u1['uid'] == u2id else False
+    is_admin = True if (('admin' in u1) and u1['admin']) else False
+
+    if operation == 'delete':
+        if is_self or is_admin:
+            return True
+
+    elif operation == 'edit':
+        if is_self or is_admin:
+            return True
+
+    return False
+
 if __name__ == '__main__':
     h, s = hash_w_salt('1989')
     assert check_hash_salt_pw(h, s, '1989')

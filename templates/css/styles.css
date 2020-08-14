@@ -638,7 +638,7 @@ code .nf {
 .outerbox {
     display: block;
     margin: 10px auto 20px auto;
-    max-width: 1024px;
+    max-width: 960px;
     background-color: white;
     border-radius: 3px;
     overflow: hidden;

@@ -110,18 +110,18 @@
             {%endif%}
 
           {%elif m=='delete_thread'%}
-            {%if g.logged_in and (g.logged_in.admin)%}
+            {%if can_do_to(g.logged_in, 'delete', p.uid)%}
               {%if not p.delete%}
-              <a href="javascript:mark_delete('{{'thread/'~p.tid}}')">标记为删除</a>
+              <a href="javascript:mark_delete('{{'thread/'~p.tid}}')">标为删除</a>
               {%else%}
               <a href="javascript:mark_delete('{{'uthread/'~p.tid}}')">取消删除</a>
               {%endif%}
             {%endif%}
 
           {%elif m=='delete_post'%}
-            {%if g.logged_in and (g.logged_in.admin)%}
+            {%if can_do_to(g.logged_in, 'delete', p.uid)%}
               {%if not p.delete%}
-              <a href="javascript:mark_delete('{{'post/'~p._key}}')">标记为删除</a>
+              <a href="javascript:mark_delete('{{'post/'~p._key}}')">标为删除</a>
               {%else%}
               <a href="javascript:mark_delete('{{'upost/'~p._key}}')">取消删除</a>
               {%endif%}
