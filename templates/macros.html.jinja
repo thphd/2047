@@ -83,14 +83,14 @@
               {# number of comments #}
               <a class="response" href="/p/{{p.last._key}}">{{p.count}} 个回复</span>
 
-              {# last commented date #}
-              <a class="last_commented_date" href="/p/{{p.last._key}}">
-                {{format_time_dateifnottoday(p.last.t_c)}}
-              </a>
-
               {# last commenter #}
               <a class="user_name" href="/u/{{p.lastuser.uid}}">
                 {{p.lastuser.name}}
+              </a>
+
+              {# last commented date #}
+              <a class="last_commented_date" href="/p/{{p.last._key}}">
+                {{format_time_dateifnottoday(p.last.t_c)}}
               </a>
 
             {%endif%}
@@ -109,21 +109,22 @@
             <a href='/u/{{p.uid}}/p' class="response">{{p.nposts}} 个回复</a>
             {%endif%}
 
+          {# admin stuff #}
           {%elif m=='delete_thread'%}
             {%if can_do_to(g.logged_in, 'delete', p.uid)%}
               {%if not p.delete%}
-              <a href="javascript:mark_delete('{{'thread/'~p.tid}}')">标为删除</a>
+              <a class='adminstuff' href="javascript:mark_delete('{{'thread/'~p.tid}}')">删除</a>
               {%else%}
-              <a href="javascript:mark_delete('{{'uthread/'~p.tid}}')">取消删除</a>
+              <a class='adminstuff' href="javascript:mark_delete('{{'uthread/'~p.tid}}')">取消删除</a>
               {%endif%}
             {%endif%}
 
           {%elif m=='delete_post'%}
             {%if can_do_to(g.logged_in, 'delete', p.uid)%}
               {%if not p.delete%}
-              <a href="javascript:mark_delete('{{'post/'~p._key}}')">标为删除</a>
+              <a class='adminstuff' href="javascript:mark_delete('{{'post/'~p._key}}')">删除</a>
               {%else%}
-              <a href="javascript:mark_delete('{{'upost/'~p._key}}')">取消删除</a>
+              <a class='adminstuff' href="javascript:mark_delete('{{'upost/'~p._key}}')">取消删除</a>
               {%endif%}
             {%endif%}
 
@@ -144,12 +145,12 @@
 
 {# one line of post, used in postlist's thread header #}
 {%macro post_postlist_header(p)%}
-  {{post(p, ['publish_date','publisher'])}}
+  {{post(p, ['publisher','publish_date'])}}
 {%endmacro%}
 
 {# one line of thread, used in threadlist #}
 {%macro post_threadlist(p)%}
-  {{post(p, ['category','publish_date','publisher','last_commenter',
+  {{post(p, ['category','publisher','publish_date','last_commenter',
   'threadlist','delete_thread'])}}
 {%endmacro%}
 

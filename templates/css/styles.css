@@ -40,9 +40,12 @@ div#site_name {color: #005bac;font-family: arial;/* display: inline-block; *//* 
 .details .meta {
   font-size: 77%;
   color: #b3b3b3;
-  vertical-align: middle;
+  justify-content: end;
+  align-items: center;
+  flex-flow: row;
   overflow: visible;
   opacity: 50%;
+  display: flex;
 }
 
 .avatar{
@@ -88,18 +91,18 @@ span.last_commented_date {
 
 .meta .user_name {
   display: inline-flex;
-  width: 100px;
-  justify-content: left;
+  width: 90px;
+  justify-content: flex-end;
   color: #567ab1;
   font-weight: bold;
   text-decoration: none;
   margin-right: 5px;
-  padding-top: 2px;
-  padding-bottom: 2px;
+  /* padding-top: 2px; */
+  /* padding-bottom: 2px; */
   white-space: nowrap;
   /* overflow-x: hidden; */
-  /* overflow-y: visible; */
-  overflow: hidden;
+  /* overflow-y: auto; */
+  /* overflow: hidden; */
   text-overflow: ellipsis;
 }
 
@@ -195,7 +198,7 @@ span.last_commented_date {
     /* overflow: visible; */
     width: 80px;
     text-decoration: none;
-    justify-content: center;
+    justify-content: flex-start;
     /* padding-bottom: 2px; */
 }
 
@@ -230,7 +233,7 @@ span.last_commented_date {
 .response {
     color: #2da226;
     width: 70px;
-    justify-content: left;
+    justify-content: flex-end;
 }
 
 #content {
@@ -653,4 +656,8 @@ code .nf {
     margin-top: .5em;
     /* line-height:190%; */
     /* vertical-align:top; */
+}
+
+.meta .adminstuff {
+    color: #e00000;
 }
