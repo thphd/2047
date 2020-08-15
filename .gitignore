@@ -7,4 +7,4 @@ sand.js
 secret.bin
 jinja_test/
 dump
-*deploy.sh
+*?deploy.sh

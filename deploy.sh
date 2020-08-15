@@ -1,4 +1,4 @@
-# this script should be run on an instance of ubuntu 1604
+# this script should be run on an instance of ubuntu 1604/1804
 
 # install arangodb
 
