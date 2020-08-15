@@ -39,9 +39,9 @@ git clone https://github.com/flavono123/identicon
 python3.7 -m pip install -e ./identicon
 
 # upload the backup to ./2047/dump
+# cd 2047
 # run ./database_restore.bat to load data from the backup
 
-# cd 2047
 # python3.7 main.py
 
 # access from browser @ localhost:5000

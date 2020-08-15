@@ -77,9 +77,9 @@ def route_static(frompath, topath, maxage=1800):
         return resp
 
 route_static('static', 'static')
-route_static('images', 'templates/images', 300)
-route_static('css', 'templates/css', 0)
-route_static('js', 'templates/js', 0)
+route_static('images', 'templates/images', 1800)
+route_static('css', 'templates/css', 300)
+route_static('js', 'templates/js', 300)
 
 aqlc.create_index('threads',
     type='persistent', fields=['t_u','t_c'], unique=False, sparse=False)
