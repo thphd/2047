@@ -1,29 +1,28 @@
-# this script has been tested on ubuntu 1604
+# this script should be run on an instance of ubuntu 1604
 
 # install arangodb
 
 wget https://download.arangodb.com/arangodb37/Community/Linux/arangodb3_3.7.1-1_amd64.deb
 
-wget https://download.arangodb.com/arangodb37/Community/Linux/arangodb3-client_3.7.1-1_amd64.deb
+# wget https://download.arangodb.com/arangodb37/Community/Linux/arangodb3-client_3.7.1-1_amd64.deb
 
-apt install ./arango*.deb
-apt install ./arango*client*.deb
+dpkg -i arangodb3_3.7.1-1_amd64.deb
 
 systemctl unmask arangodb3
 systemctl start arangodb3
 
 # install screen
 
-apt-get update
-apt-get install screen
+apt update
+apt --assume-yes install screen
 
 # install python
 
 apt update
-add-apt-repository ppa:deadsnakes/ppa
+add-apt-repository --yes ppa:deadsnakes/ppa
 apt update
-apt install python3.7
-apt install python3-pip
+apt --assume-yes install python3.7
+apt --assume-yes install python3-pip
 
 # code
 git clone https://github.com/thphd/2047
