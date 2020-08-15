@@ -661,3 +661,7 @@ code .nf {
 .meta .adminstuff {
     color: #e00000;
 }
+
+.meta .user_name:first-child {
+    justify-content: flex-start;
+}
