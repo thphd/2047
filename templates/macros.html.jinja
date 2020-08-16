@@ -124,29 +124,29 @@
           {%elif m=='delete_thread'%}
             {%if can_do_to(g.logged_in, 'delete', p.uid)%}
               {%if not p.delete%}
-              <a class='adminstuff' href="javascript:mark_delete('{{'thread/'~p.tid}}')">删除</a>
+              <a class='adminstuff delete' href="javascript:mark_delete('{{'thread/'~p.tid}}')">删除</a>
               {%else%}
-              <a class='adminstuff' href="javascript:mark_delete('{{'uthread/'~p.tid}}')">取消删除</a>
+              <a class='adminstuff undelete' href="javascript:mark_delete('{{'uthread/'~p.tid}}')">取消删除</a>
               {%endif%}
             {%endif%}
 
           {%elif m=='delete_post'%}
             {%if can_do_to(g.logged_in, 'delete', p.uid)%}
               {%if not p.delete%}
-              <a class='adminstuff' href="javascript:mark_delete('{{'post/'~p._key}}')">删除</a>
+              <a class='adminstuff delete' href="javascript:mark_delete('{{'post/'~p._key}}')">删除</a>
               {%else%}
-              <a class='adminstuff' href="javascript:mark_delete('{{'upost/'~p._key}}')">取消删除</a>
+              <a class='adminstuff undelete' href="javascript:mark_delete('{{'upost/'~p._key}}')">取消删除</a>
               {%endif%}
             {%endif%}
 
           {%elif m=='edit_thread'%}
             {%if can_do_to(g.logged_in, 'edit', p.uid)%}
-              <a class='adminstuff' href="/editor?target=edit_thread/{{p.tid}}">编辑</a>
+              <a class='adminstuff edit' href="/editor?target=edit_thread/{{p.tid}}">编辑</a>
             {%endif%}
 
           {%elif m=='edit_post'%}
             {%if can_do_to(g.logged_in, 'edit', p.uid)%}
-              <a class='adminstuff' href="/editor?target=edit_post/{{p._key}}">编辑</a>
+              <a class='adminstuff edit' href="/editor?target=edit_post/{{p._key}}">编辑</a>
             {%endif%}
 
           {%endif%}

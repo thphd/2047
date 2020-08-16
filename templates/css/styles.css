@@ -39,12 +39,12 @@ div#site_name {color: #005bac;font-family: arial;/* display: inline-block; *//* 
 
 .details .meta {
   font-size: 77%;
-  color: #616161;
+  color: #cacaca;
   justify-content: end;
   align-items: center;
   flex-flow: row;
   overflow: visible;
-  opacity: 60%;
+  /* opacity: 60%; */
   display: flex;
 }
 
@@ -93,7 +93,7 @@ span.last_commented_date {
   /* display: inline-flex; */
   /* width: 90px; */
   /* justify-content: flex-end; */
-  color: #567ab1;
+  color: #797979;
   /* font-weight: bold; */
   text-decoration: none;
   /* margin-right: 5px; */
@@ -233,7 +233,7 @@ span.last_commented_date {
 
 
 .response {
-    color: #2da226;
+    color: #089600;
     /* width: 70px; */
     justify-content: flex-end;
 }
@@ -450,13 +450,13 @@ img.headerbtn {
 a.title {}
 
 a.threadlist_title {
-    color: #0c58a5;
+    color: #03396f;
     margin-left: 0;
     margin-right: 0;
     display: block;
     /* margin-bottom: 3px; */
     font-size: 100%;
-    font-weight: bold;
+    /* font-weight: bold; */
 }
 
 .post_content pre {
@@ -479,7 +479,7 @@ a.threadlist_title {
 }
 
 .meta .date {
-    color: #565656;
+    color: #bfbfbf;
 }
 
 .last_commented_date.date {
@@ -487,7 +487,7 @@ a.threadlist_title {
 }
 
 .last_commented_date {
-    color: #a7157a;
+    color: #b1b1b1;
 }
 
 .left > a {
@@ -630,7 +630,7 @@ code .nf {
 }
 
 .meta .category_name {
-    /* opacity: 40%; */
+    opacity: 50%;
     width: 60px;
 }
 
@@ -663,7 +663,10 @@ code .nf {
 }
 
 .meta .adminstuff {
-    color: #e00000;
+    color: #ff5252;
+    /* background: #ffe2e2; */
+    /* padding: 0.2em; */
+    opacity: .2;
 }
 
 .meta .user_name:first-child {
@@ -702,4 +705,16 @@ form.register {
 
 h1 {
     margin: .5em 0 .5em 0;
+}
+
+body {
+    font-family: helvetica neue,Helvetica,Arial,sans-serif;
+}
+
+.meta .adminstuff:hover {
+    opacity: 1;
+}
+
+.adminstuff.edit {
+    color: #009800;
 }
