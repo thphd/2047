@@ -898,4 +898,9 @@ def apir():
     else:
         return e('action function not registered')
 
-app.run(host='0.0.0.0', port='5000', debug=True)
+if __name__ == '__main__':
+    import os
+    if 'DEBUG' in os.environ and os.environ['DEBUG']:
+        app.run(host='0.0.0.0', port='5000', debug=True)
+    else:
+        app.run(host='0.0.0.0', port='5000')
