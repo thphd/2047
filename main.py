@@ -865,6 +865,10 @@ def _(name):
     resp.headers['Location'] = '/u/{}'.format(u['uid'])
     return resp
 
+@route('/m')
+def _():
+    return '这功能还没做好'
+
 @app.route('/api', methods=['GET', 'POST'])
 def apir():
     # global logged_in

@@ -196,6 +196,17 @@ def parse_target(s):
 
     return targ, _id
 
+password_warning = convert_markdown('''
+# 密码安全警告
+
+2047不接收明文密码，因此无法帮助用户判断其密码是否符合安全要求。
+
+密码太简单（少于13位纯数字、少于8位数字+字母、[最常见的一百万个密码](https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10-million-password-list-top-1000000.txt)）将导致你的密码被人用计算机在短时间内猜解。
+
+2047建议您使用浏览器提供的随机密码。
+
+''')
+
 if __name__ == '__main__':
     h, s = hash_w_salt('1989')
     assert check_hash_salt_pw(h, s, '1989')

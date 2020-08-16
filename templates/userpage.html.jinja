@@ -41,9 +41,13 @@
     <label>再输入一次</label>
     <input type="password" id="password2" value="">
     <br>
-    <label></label>
     <button type="button" id="change_password">修改密码</button>
   </form>
+
+  <div class="post_content warning">
+    {{password_warning|safe}}
+  </div>
+  
   {%endif%}
 </div>
 
