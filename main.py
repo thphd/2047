@@ -16,10 +16,8 @@ from flask import Flask, session, g
 from flask import render_template, request, send_from_directory, make_response
 from flask_gzip import Gzip
 
-from api import api_registry
-from api import *
-
-
+from api import api_registry, get_categories_info, setj
+# from api import *
 
 def init_directory(d):
     try:
@@ -447,10 +445,12 @@ def key(d, k):
     else:
         return None
 
+# return requests.args[k] as int or 0
 def rai(k):
     v = key(request.args,k)
     return int(v) if v else 0
 
+# return requests.args[k] as string or ''
 def ras(k):
     v = key(request.args,k)
     return str(v) if v else ''
@@ -708,7 +708,7 @@ def uposts(uid):
 
 @app.route('/editor')
 def editor_handler():
-    target = ras('target') or ''
+    target = ras('target')
 
     return render_template('editor.html.jinja',
         page_title = '发帖 - {}'.format(target),
@@ -880,7 +880,9 @@ def apir():
         if action != 'ping':
             print_up(j)
         try:
-            answer = api_registry[action](j)
+            setj(j)
+            answer = api_registry[action]()
+            setj(None)
         except Exception as ex:
             traceback.print_exc()
             errstr = ex.__class__.__name__+'/{}'.format(str(ex))

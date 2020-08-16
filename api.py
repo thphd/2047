@@ -56,13 +56,19 @@ def register(name):
         api_registry[name] = f
     return k
 
+# global variable representing json input
+j = None
+def setj(k):
+    global j
+    j = k
+
 @register('test')
-def _(j):
+def _():
     # raise Exception('ouch')
     return {'double':int(j['a'])*2}
 
 @register('login')
-def _(j):
+def _():
     def k(s): return j[s]
     uname = k('username')
     pwh = k('password_hash')
@@ -118,7 +124,7 @@ def insert_new_password_object(uid, pwh):
     aql('''insert @i into passwords''', i=pwobj)
 
 @register('register')
-def _(j):
+def _():
     def k(s): return j[s]
 
     uname = k('username')
@@ -185,7 +191,7 @@ def obtain_new_id(name):
     return uid
 
 @register('logout')
-def _(j):
+def _():
     return {'logout':True}
 
 def content_length_check(content, allow_short=False):
@@ -201,7 +207,7 @@ def title_length_check(title):
         raise Exception('title too short')
 
 @register('post')
-def _(j):
+def _():
     if 'logged_in' not in j:
         raise Exception('you are not logged in')
 
@@ -209,14 +215,7 @@ def _(j):
 
     def es(k): return (str(j[k]) if (k in j) else None)
 
-    target = es('target')
-    target = target.split('/')
-    if len(target)!=2:
-        raise Exception('target format not correct')
-
-    target_type = target[0]
-    # pid = int(es('pid'))
-    _id = int(target[1])
+    target_type, _id = parse_target(es('target'))
 
     # title = es('title').strip()
 
@@ -307,7 +306,7 @@ def _(j):
         raise Exception('unsupported target type')
 
 @register('mark_delete')
-def _(j):
+def _():
     if 'logged_in' not in j:
         raise Exception('you are not logged in')
     uobj = j['logged_in']
@@ -316,13 +315,7 @@ def _(j):
     def es(k): return (str(j[k]) if (k in j) else None)
 
     target = es('target')
-    target = target.split('/')
-    if len(target)!=2:
-        raise Exception('target format not correct')
-
-    target_type = target[0]
-    # pid = int(es('pid'))
-    _id = int(target[1])
+    target_type,_id = parse_target(target)
 
     # get target obj
     if 'post' in target_type:
@@ -333,7 +326,7 @@ def _(j):
     elif 'thread' in target_type:
         pobj = aql('for i in threads filter i.tid==@_id\
             return i',_id=_id)[0]
-            
+
     else:
         raise Exception('target type not supported')
 
@@ -382,7 +375,7 @@ def _(j):
     return upd[0]
 
 @register('render')
-def _(j):
+def _():
     if 'logged_in' not in j: raise Exception('you are not logged in')
 
     def es(k): return (str(j[k]) if (k in j) else None)
@@ -396,7 +389,7 @@ import os, base64
 def r8():return os.urandom(8)
 
 @register('generate_invitation_code')
-def _(j):
+def _():
     if 'logged_in' not in j: raise Exception('you are not logged in')
     uid = j['logged_in']['uid']
 
@@ -422,7 +415,7 @@ def _(j):
     return {'error':False}
 
 @register('change_password')
-def _(j):
+def _():
     if 'logged_in' not in j: raise Exception('you are not logged in')
     uid = j['logged_in']['uid']
 
@@ -460,7 +453,7 @@ lastping = time.time()
 pingtime = 1.
 durbuf = 0
 @register('ping')
-def _(args):
+def _():
     global lastping,durbuf,pingtime
     now = time.time()
     dur = now - lastping

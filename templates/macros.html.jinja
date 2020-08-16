@@ -7,7 +7,7 @@
 {% set _ide = 'id="editor"' if 'editor' in metas %}
 {% set _idp = 'id="' ~ p._key ~ '"' if 'postlist' in metas %}
 
-<div class="threadlistitem{{ ' deleted' if p.delete else ''}}" {{_ide or _idt or _idp}}>
+<div class="threadlistitem{{ ' deleted' if p.delete and t else ''}}" {{_ide or _idt or _idp}}>
   <div class="left">
     {# editor avatar should be current logged in user's #}
     {% set uid = g.logged_in.uid if 'editor' in metas else p.uid %}

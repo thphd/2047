@@ -184,6 +184,18 @@ def can_do_to(u1, operation, u2id):
 
     return False
 
+# parse string of form "target_type/target_id"
+
+def parse_target(s):
+    s = s.split('/')
+    if len(s)!=2:
+        raise Exception('target string failed to split')
+
+    targ = s[0]
+    _id = int(s[1])
+
+    return targ, _id
+
 if __name__ == '__main__':
     h, s = hash_w_salt('1989')
     assert check_hash_salt_pw(h, s, '1989')
