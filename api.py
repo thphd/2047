@@ -1,11 +1,12 @@
 import re
 import time
 
-from constants import *
+from commons import *
 
 aqlc.create_collection('admins')
 aqlc.create_collection('operations')
 aqlc.create_collection('aliases')
+aqlc.create_collection('histories')
 
 def get_url_to_post(pid):
     # 1. get tid
@@ -58,9 +59,13 @@ def register(name):
 
 # global variable representing json input
 j = None
+current_user = None
 def setj(k):
-    global j
+    global j,current_user
     j = k
+    current_user = j['logged_in'] if ((j is not None) and ('logged_in' in j)) else None
+
+def es(k): return (str(j[k]) if (k in j) else None)
 
 @register('test')
 def _():
@@ -69,9 +74,8 @@ def _():
 
 @register('login')
 def _():
-    def k(s): return j[s]
-    uname = k('username')
-    pwh = k('password_hash')
+    uname = es('username')
+    pwh = es('password_hash')
 
     # find user
     u = aql('for u in users filter u.name==@n return u', n=uname)
@@ -125,11 +129,9 @@ def insert_new_password_object(uid, pwh):
 
 @register('register')
 def _():
-    def k(s): return j[s]
-
-    uname = k('username')
-    pwh = k('password_hash')
-    ik = k('invitation_code')
+    uname = es('username')
+    pwh = es('password_hash')
+    ik = es('invitation_code')
 
     # check if user name is legal
     m = re.fullmatch(username_regex, uname)
@@ -208,12 +210,11 @@ def title_length_check(title):
 
 @register('post')
 def _():
-    if 'logged_in' not in j:
+    if not current_user:
         raise Exception('you are not logged in')
 
-    uid = j['logged_in']['uid']
+    uid = current_user['uid']
 
-    def es(k): return (str(j[k]) if (k in j) else None)
 
     target_type, _id = parse_target(es('target'))
 
@@ -222,15 +223,22 @@ def _():
     content = es('content').strip()
     content_length_check(content)
 
-    if target_type=='thread':
-        # check if tid exists
-        tid = _id
-
+    def get_thread(tid):
         thread = aql('for t in threads filter t.tid==@k return t',k=tid,silent=True)
         if len(thread)==0:
             raise Exception('tid not exist')
+        return thread[0]
 
-        thread = thread[0]
+    def get_post(pid):
+        post = aqlc.from_filter('posts','i._key==@k', k=str(pid), silent=True)
+        if len(post) == 0:
+            raise Exception('pid not found')
+        return post[0]
+
+    if target_type=='thread':
+        # check if tid exists
+        tid = _id
+        thread = get_thread(tid)
 
         # check if user repeatedly submitted the same content
         lp = aql('for p in posts filter p.uid==@k sort p.t_c desc limit 1 return p',k=uid, silent=True)
@@ -302,17 +310,68 @@ def _():
 
         return inserted
 
+    elif target_type == 'edit_thread':
+        title = es('title').strip()
+        title_length_check(title)
+
+        thread = get_thread(_id)
+        if not can_do_to(current_user,'edit',thread['uid']):
+            raise Exception('insufficient priviledge')
+
+        timenow = time_iso_now()
+
+        # update the current thread object
+        newthread = dict(
+            title = title,
+            content = content,
+            editor = current_user['uid'],
+            t_e = timenow,
+        )
+
+        aql('for t in threads filter t.tid==@_id update t with @k in threads',
+            _id=_id, k=newthread)
+
+        # push the old thread object into histories
+        del thread['_key']
+        thread['type']='thread'
+        thread['t_h']=timenow
+
+        inserted = aql('insert @i into histories return NEW',i=thread)[0]
+        inserted['url'] = '/t/{}'.format(_id)
+        return inserted
+
+    elif target_type == 'edit_post':
+        post = get_post(_id)
+        if not can_do_to(current_user, 'edit', post['uid']):
+            raise Exception('insufficient priviledge')
+
+        timenow = time_iso_now()
+
+        newpost = dict(
+            content = content,
+            editor = current_user['uid'],
+            t_e = timenow,
+        )
+
+        aql('for p in posts filter p._key==@_id update p with @k in posts',
+            _id=str(_id), k=newpost)
+
+        del post['_key']
+        post['type']='post'
+        post['t_h']=timenow
+
+        inserted = aql('insert @i into histories return NEW',i=post)[0]
+        inserted['url'] = '/p/{}'.format(_id)
+        return inserted
     else:
         raise Exception('unsupported target type')
 
 @register('mark_delete')
 def _():
-    if 'logged_in' not in j:
+    if not current_user:
         raise Exception('you are not logged in')
-    uobj = j['logged_in']
+    uobj = current_user
     uid = uobj['uid']
-
-    def es(k): return (str(j[k]) if (k in j) else None)
 
     target = es('target')
     target_type,_id = parse_target(target)
@@ -376,9 +435,7 @@ def _():
 
 @register('render')
 def _():
-    if 'logged_in' not in j: raise Exception('you are not logged in')
-
-    def es(k): return (str(j[k]) if (k in j) else None)
+    if not current_user: raise Exception('you are not logged in')
 
     content = es('content').strip()
     content_length_check(content, allow_short=True)
@@ -390,8 +447,8 @@ def r8():return os.urandom(8)
 
 @register('generate_invitation_code')
 def _():
-    if 'logged_in' not in j: raise Exception('you are not logged in')
-    uid = j['logged_in']['uid']
+    if not current_user: raise Exception('you are not logged in')
+    uid = current_user['uid']
 
     invs = aql('''for i in invitations
         filter i.uid==@k and i.active == true
@@ -416,8 +473,8 @@ def _():
 
 @register('change_password')
 def _():
-    if 'logged_in' not in j: raise Exception('you are not logged in')
-    uid = j['logged_in']['uid']
+    if not current_user: raise Exception('you are not logged in')
+    uid = current_user['uid']
 
     pwo = j['old_password_hash']
     pwn = j['new_password_hash']

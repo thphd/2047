@@ -50,6 +50,17 @@
 
       </div>
 
+      {# if object has been edited #}
+      {%if 'display_edit_status' in metas and p.editor and p.t_e %}
+        <div class='edited_by'>
+          <span>[ 由</span>
+          <a href="/u/{{p.editor}}">{{p.editor}}</a>
+          <span>于</span>
+          <a href="/p/{{p._key}}">{{format_time_dateonly(p.t_e)}}</a>
+          <span>编辑 ]</span>
+        </div>
+      {%endif%}
+
       <div class="meta">
         {% set metas = metas or []%}
         {%for m in metas%}
@@ -128,6 +139,16 @@
               {%endif%}
             {%endif%}
 
+          {%elif m=='edit_thread'%}
+            {%if can_do_to(g.logged_in, 'edit', p.uid)%}
+              <a class='adminstuff' href="/editor?target=edit_thread/{{p.tid}}">编辑</a>
+            {%endif%}
+
+          {%elif m=='edit_post'%}
+            {%if can_do_to(g.logged_in, 'edit', p.uid)%}
+              <a class='adminstuff' href="/editor?target=edit_post/{{p._key}}">编辑</a>
+            {%endif%}
+
           {%endif%}
 
         {%endfor%}
@@ -140,12 +161,12 @@
 
 {# one line of post, used in postlist #}
 {%macro post_postlist(p)%}
-  {{post(p, ['publisher','publish_date_linkto','link_to','postlist','delete_post'])}}
+  {{post(p, ['publisher','publish_date_linkto','link_to','postlist','delete_post','edit_post','display_edit_status'])}}
 {%endmacro%}
 
 {# one line of post, used in postlist's thread header #}
 {%macro post_postlist_header(p)%}
-  {{post(p, ['publisher','publish_date'])}}
+  {{post(p, ['publisher','publish_date','delete_thread','edit_thread','display_edit_status'])}}
 {%endmacro%}
 
 {# one line of thread, used in threadlist #}
@@ -196,9 +217,9 @@
   <div class="editor" id="editor_inline">
     <div class="editor_left">
       {%if has_title%}
-        <input placeholder="标题" type='text' id="editor_title">{{title if title}}</textarea>
+        <input placeholder="标题" type='text' id="editor_title" value="{{title if title}}">
       {%endif%}
-      <textarea placeholder="支持markdown语法，拖动右下角缩放" id="editor_text">{{content if content}}</textarea>
+      <textarea placeholder="支持markdown语法，拖动右下角缩放" id="editor_text" class="{{'has_title' if title else ''}}">{{content if content}}</textarea>
       <div class="editor_button_row">
         <button type="button" id="editor_btnpreview">预览</button>
         <button type="button" id="editor_btnsubmit">提交</button>

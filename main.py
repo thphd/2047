@@ -8,7 +8,7 @@ import requests as r
 import Identicon
 import mimetypes as mt
 
-from constants import *
+from commons import *
 
 from flask_cors import CORS
 
@@ -16,7 +16,7 @@ from flask import Flask, session, g
 from flask import render_template, request, send_from_directory, make_response
 from flask_gzip import Gzip
 
-from api import api_registry, get_categories_info, setj
+from api import api_registry, get_categories_info, setj, get_url_to_post
 # from api import *
 
 def init_directory(d):
@@ -708,11 +708,32 @@ def uposts(uid):
 
 @app.route('/editor')
 def editor_handler():
+    details = dict()
+    details['has_title'] = True
+
     target = ras('target')
+    target_type, _id = parse_target(target)
+
+    if target_type=='edit_post':
+        details['has_title'] = False
+        post_original = aqlc.from_filter('posts', 'i._key==@_id', _id=str(_id))[0]
+
+        details['content'] = post_original['content']
+
+    if target_type == 'edit_thread':
+        thread_original = aqlc.from_filter('threads', 'i.tid==@id',id=_id)[0]
+
+        details['content'] = thread_original['content']
+        details['title'] = thread_original['title']
+
+    page_title = '{} - {}'.format(
+        '发表' if 'edit' not in target_type else '编辑',
+        target)
 
     return render_template('editor.html.jinja',
-        page_title = '发帖 - {}'.format(target),
+        page_title = page_title,
         target=target,
+        details=details,
         **(globals())
     )
 
@@ -889,6 +910,8 @@ def apir():
             print_err('Exception in api "{}":'.format(action), errstr)
             return e(errstr)
         else:
+            if answer is None:
+                raise Exception('return value is None, what the fuck?')
             if action != 'ping':
                 print_down(answer)
             if 'setuid' in answer:

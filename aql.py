@@ -56,6 +56,9 @@ class AQLController:
         if not silent: print_down('AQL <<', str(res))
         return res
 
+    def from_filter(self, _from, _filter, **kw):
+        return self.aql('for i in {} filter {} return i'.format(_from, _filter), **kw)
+
 if __name__ == '__main__':
 
     aqlc = AQLController('http://127.0.0.1:8529', 'test',[

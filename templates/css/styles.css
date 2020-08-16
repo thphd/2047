@@ -39,7 +39,7 @@ div#site_name {color: #005bac;font-family: arial;/* display: inline-block; *//* 
 
 .details .meta {
   font-size: 77%;
-  color: #b3b3b3;
+  color: #616161;
   justify-content: end;
   align-items: center;
   flex-flow: row;
@@ -69,9 +69,9 @@ div#site_name {color: #005bac;font-family: arial;/* display: inline-block; *//* 
 }
 
 .copyright {
-  font-size: 10px;
+  font-size: 80%;
   color: gray;
-  margin: 2px 0;
+  margin: 0.2em 0;
   display: inline-block;
   text-decoration: none;
 }
@@ -478,7 +478,7 @@ a.threadlist_title {
 }
 
 .meta .date {
-    color: #b1b1b1;
+    color: #565656;
 }
 
 .last_commented_date.date {
@@ -486,7 +486,7 @@ a.threadlist_title {
 }
 
 .last_commented_date {
-    color: #ce91c1;
+    color: #a7157a;
 }
 
 .left > a {
@@ -667,4 +667,21 @@ code .nf {
 
 .meta .user_name:first-child {
     justify-content: flex-start;
+}
+
+#editor_text.has_title {
+    height: 400px;
+}
+
+.edited_by {
+    font-size: 70%;
+    font-style: italic;
+    margin: 0 0 .5em 0;
+    opacity: 30%;
+    text-decoration: none;
+}
+
+.edited_by * {
+    color: black;
+    text-decoration: none;
 }
