@@ -1,5 +1,6 @@
 import time,os,sched,random,threading,traceback,datetime
 import re,base64
+import zlib
 from colors import *
 
 import requests as r
@@ -17,6 +18,7 @@ from flask_gzip import Gzip
 
 from api import api_registry
 from api import *
+
 
 
 def init_directory(d):
@@ -55,6 +57,10 @@ def route(r):
 #     @route('/'+frompath+'/<path:path>')
 #     def _(path): return send_from_directory(topath, path)
 
+def calculate_etag(bin):
+    checksum = zlib.adler32(bin)
+    chksum_encoded = base64.b64encode(checksum.to_bytes(4,'big')).decode('ascii')
+    return chksum_encoded
 
 def route_static(frompath, topath, maxage=1800):
     @route('/'+frompath+'/<path:path>')
@@ -63,21 +69,34 @@ def route_static(frompath, topath, maxage=1800):
         if not os.path.exists(cc):
             return make_response('File not found', 404)
 
+        supplied_etags = request.if_none_match
+
         with open(cc,'rb') as f:
             b = f.read()
 
-        resp = make_response(b)
-        type, encoding = mt.guess_type(cc)
-        if encoding:
-            resp.headers['Content-Encoding'] = encoding
-        if type:
-            resp.headers['Content-Type'] = type
-        if maxage:
+        etag = calculate_etag(b)
+
+        if etag in supplied_etags: # 304 not changed
+            resp = make_response('', 304)
+
+        else:
+            resp = make_response(b)
+
+            resp.set_etag(etag)
+
+            type, encoding = mt.guess_type(cc)
+            if encoding:
+                resp.headers['Content-Encoding'] = encoding
+            if type:
+                resp.headers['Content-Type'] = type
+
+        if maxage!=0:
             resp.headers['Cache-Control']= 'max-age='+str(maxage)
+
         return resp
 
 route_static('static', 'static')
-route_static('images', 'templates/images', 1800)
+route_static('images', 'templates/images', 3600)
 route_static('css', 'templates/css', 300)
 route_static('js', 'templates/js', 300)
 
@@ -774,27 +793,35 @@ def loginpage():
 
 @route('/avatar/<int:uid>')
 def _(uid):
+    supplied_etags = request.if_none_match
+
     # first check db
     res = aql('for a in avatars filter a.uid==@uid return a', uid=uid, silent=True)
     # print(res)
-    if len(res)>0:
+    if len(res)>0 and 'data' in res[0]:
         res = res[0]
-        if 'data' in res:
-            d = res['data']
-            match = re.match(r'^data:(.*?);base64,(.*)$',d)
-            mime,b64data = match[1],match[2]
 
-            rawdata = base64.b64decode(b64data)
+        d = res['data']
+        match = re.match(r'^data:(.*?);base64,(.*)$',d)
+        mime,b64data = match[1],match[2]
 
-            resp = make_response(rawdata, 200)
-            resp.headers['Content-Type'] = 'image/jpeg'
-            resp.headers['Cache-Control']= 'max-age=1800'
-            return resp
+        rawdata = base64.b64decode(b64data)
 
-    # render an identicon
-    identicon = Identicon.render(str(uid*uid))
-    resp = make_response(identicon, 200)
-    resp.headers['Content-Type'] = 'image/png'
+        resp = make_response(rawdata, 200)
+        resp.headers['Content-Type'] = 'image/jpeg'
+
+    else: # db no match
+        # render an identicon
+        identicon = Identicon.render(str(uid*uid))
+        resp = make_response(identicon, 200)
+        resp.headers['Content-Type'] = 'image/png'
+
+    etag = calculate_etag(resp.data)
+    if etag in supplied_etags:
+        resp = make_response('', 304)
+    else:
+        resp.set_etag(etag)
+
     resp.headers['Cache-Control']= 'max-age=1800'
     return resp
 
