@@ -21,7 +21,7 @@
         {%if caller%}
           {{caller()}}
         {%else%}
-          {% set text = p.content or p.title or p.text or p.profile_string or p.name %}
+          {% set text = p.content or p.title or p.text or p.profile_string or p.name or '' %}
 
           {# content is title to a thread #}
           {%if 'threadlist' in metas %}
@@ -54,7 +54,7 @@
       {%if 'display_edit_status' in metas and p.editor and p.t_e %}
         <div class='edited_by'>
           <span>[ 由</span>
-          <a href="/u/{{p.editor}}">{{p.editor}}</a>
+          <a href="/u/{{p.editor}}">{{'本人' if p.editor==p.uid else '其他人'}}</a>
           <span>于</span>
           <a href="/p/{{p._key}}">{{format_time_dateonly(p.t_e)}}</a>
           <span>编辑 ]</span>
