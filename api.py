@@ -318,6 +318,10 @@ def _():
         if not can_do_to(current_user,'edit',thread['uid']):
             raise Exception('insufficient priviledge')
 
+        if 'title' in thread and title==thread['title']:
+            if 'content' in thread and content==thread['content']:
+                return {'url':'/t/{}'.format(_id)}
+
         timenow = time_iso_now()
 
         # update the current thread object
@@ -344,6 +348,9 @@ def _():
         post = get_post(_id)
         if not can_do_to(current_user, 'edit', post['uid']):
             raise Exception('insufficient priviledge')
+
+        if 'content' in post and content==post['content']:
+            return {'url':'/p/{}'.format(_id)}
 
         timenow = time_iso_now()
 

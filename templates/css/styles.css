@@ -176,7 +176,7 @@ span.last_commented_date {
 
 .header {
     font-size: 22px;
-    margin: 9px 0;
+    margin: .6em 0;
     color: #7392ad;
     display: flex;
     justify-items: center;
@@ -518,7 +518,7 @@ div#navigator {
     display: flex;
     align-items: center;
     flex-direction: column;
-    margin: 5px 5px;
+    margin: 0 0 5px 0;
     /* max-width: 70px; */
     padding: 5px 3px;
 }
@@ -726,4 +726,8 @@ body {
     border-width: 1px 0 0 0;
     margin: 1em 0;
     border-color: #e4e4e4;
+}
+
+.rightalign a {
+    color: #005bac;
 }
