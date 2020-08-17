@@ -466,12 +466,67 @@ def get_user(uid):
     return uo
 
 # logged_in = False
+
+# filter bots/DOSes that use a fixed UA
+class UAFilter:
+    def __init__(self):
+        self.d = {}
+        self.dt = {}
+        self.blacklist = '''
+        Mozilla / 5.0(Windows NT 6.1; rv:52.0) Gecko / 20170101 Firefox / 52.0
+        '''
+
+    def judge(self, uastring):
+        ua = uastring
+        if g.logged_in:
+            return True
+        else:
+            if ua in self.d:
+                self.d[ua]+=1
+            else:
+                self.d[ua]=1
+
+            this_time = time.time()
+
+            if ua in self.dt:
+                last_time = self.dt[ua]
+            else:
+                last_time = this_time
+
+            if this_time - last_time > 20:
+                # at least 20 seconds between 2 consecutive requests
+                self.d[ua] //= 2
+
+            self.dt[ua] = this_time
+            # print_err(self.d[ua])
+            if self.d[ua]>50 or (ua in self.blacklist):
+                if self.d[ua] % 10 == 0:
+                    print_err('UA ['+ua+']got a behavior problem ({})'.format(self.d[ua]))
+                return False
+            else:
+                return True
+
+uaf = UAFilter()
+
 @app.before_request
 def befr():
     if 'uid' in session:
         g.logged_in = get_user(int(session['uid']))
+        return
     else:
         g.logged_in = False
+
+    if 'action' in request.args and request.args['action']=='ping':
+        return
+
+    # filter bot/dos requests
+    allowed = uaf.judge(str(request.user_agent))
+    if not allowed:
+        time.sleep(random.random()*20+20)
+        if random.random()>0:
+            return ('rate limit exceeded', 500)
+        else:
+            return (base64.b64encode(os.urandom(int(random.random()*256))), 200)
 
 @app.route('/')
 @app.route('/c/all')
