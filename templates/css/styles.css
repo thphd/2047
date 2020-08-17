@@ -74,6 +74,7 @@ div#site_name {color: #005bac;font-family: arial;/* display: inline-block; *//* 
   margin: 0.2em 0;
   display: inline-block;
   text-decoration: none;
+  /* vertical-align: baseline; */
 }
 
 div#footer {
@@ -638,6 +639,8 @@ code .nf {
 
 .copyright * {
     text-decoration: none;
+    color: gray;
+    vertical-align: middle;
 }
 
 .deleted {

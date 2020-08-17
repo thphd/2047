@@ -163,6 +163,7 @@ common_links = [
     {'text':'删帖', 'url':'/c/deleted'},
     {'text':'老用户', 'url':'/t/7108'},
     {'text':'邀请码', 'url':'/t/7109'},
+    {'text':'服务条款', 'url':'/t/7110'},
 ]
 
 # priviledge: who can do what to whom

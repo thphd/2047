@@ -8,3 +8,5 @@ secret.bin
 jinja_test/
 dump
 *?deploy.sh
+j*b/
+ga.png

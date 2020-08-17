@@ -26,8 +26,8 @@
         {%if g.logged_in%}
 
         <a href="/m">私信</a>
-        <a href="javascript:void(0)" onclick="logout();">退出</a>
-        
+        <a href="javascript:void(0)" onclick="logout();">登出</a>
+
         <a href="/u/{{g.logged_in.uid}}">
           <div class="headerbtn">
             {{g.logged_in.name}}
@@ -66,7 +66,19 @@
       </div>
       <br>
       <div class="copyright">
-        <a href="https://github.com/thphd/2047">GitHub</a>
+        版权所有 北京市五道口计算机技术有限公司 地址：北京市海淀区中关村东路1号院3号
+      </div>
+      <br>
+      {%if 0%}
+      <div class="copyright">
+        <img src="/images/ga.png">
+        <a href="/jgawb/全国互联网安全管理服务平台.html">京公网安备 11040102700068号</a>
+        <a href="/jicpb/ICP_IP地址_域名信息备案管理系统.html">京ICP备 04000001号</a>
+      </div>
+      <br>
+      {%endif%}
+      <div class="copyright">
+        <a rel='noreferrer' href="https://github.com/thphd/2047">GitHub</a>
       </div>
       <br>
       <div class="copyright" onclick="window.location.href='/';">
