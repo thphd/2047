@@ -437,6 +437,12 @@ foreach(upvote_buttons)(e=>{
       .then(res=>{
         var ih = parseInt(innerspan.innerHTML)||0
         innerspan.innerHTML = (ih+1).toString()
+
+        if(!has_vote){
+          cl.add('has_vote')
+          has_vote = true
+        }
+        cl.add('self_voted')
         self_voted = true
       })
       .catch(alert)
@@ -452,6 +458,12 @@ foreach(upvote_buttons)(e=>{
       .then(res=>{
         var ih = parseInt(innerspan.innerHTML)||0
         innerspan.innerHTML = (ih-1).toString()
+
+        if(ih==1){
+          has_vote=false
+          cl.remove('has_vote')
+        }
+        cl.remove('self_voted')
         self_voted = false
       })
       .catch(alert)
