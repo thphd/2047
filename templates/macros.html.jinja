@@ -8,6 +8,23 @@
 {% set _idp = 'id="' ~ p._key ~ '"' if 'postlist' in metas %}
 
 <div class="threadlistitem{{ ' deleted' if p.delete and t else ''}}" {{_ide or _idt or _idp}}>
+
+    {%if 'thread_votes' in metas%}
+    <div class="leftmost">
+
+      {%set targ_type = 'thread' if 'thread' in metas else 'post'%}
+      {%set targ_id = p.tid if 'thread' in metas else p._key%}
+      {%set num_votes = p.votes or 0 %}
+
+      <div class="vote_section enabled">
+        <div class="upvote enabled {{'has_vote' if num_votes}}">
+          <span class='votenumber triangle'>▲</span>
+          <span class="votenumber">{{ num_votes or '' }}</span>
+        </div>
+      </div>
+    </div>
+    {%endif%}
+
   <div class="left">
     {# editor avatar should be current logged in user's #}
     {% set uid = g.logged_in.uid if 'editor' in metas else p.uid %}
@@ -97,7 +114,7 @@
               <a class="response" href="/p/{{p.last._key}}">{{p.count}} 个回复</span>
 
               {# last commenter #}
-              <a class="user_name" href="/u/{{p.lastuser.uid}}">
+              <a class="user_name" href="/p/{{p.last._key}}">
                 {{p.lastuser.name}}
               </a>
 
@@ -195,7 +212,7 @@
 {# one line of thread, used in threadlist #}
 {%macro post_threadlist(p)%}
   {{post(p, ['category','publisher','publish_date_thread','last_commenter',
-  'threadlist','delete_thread'])}}
+  'threadlist','delete_thread','thread_votes'])}}
 {%endmacro%}
 
 {# one line of user, used in userpage #}

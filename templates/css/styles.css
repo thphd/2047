@@ -775,3 +775,26 @@ body {
 .self_voted {background-color: #00800024;}
 
 .self_voted {}
+
+.leftmost .vote_section {display: flex;flex-direction: column;}
+
+.leftmost {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 2em;
+}
+
+.leftmost .upvote {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+}
+
+.votenumber.triangle {
+    font-size: .5em;
+    opacity: .6;
+}
+
+.votenumber {}
