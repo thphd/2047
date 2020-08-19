@@ -69,9 +69,11 @@
             {# publisher #}
             <a class="user_name" href="/u/{{p.uid}}">{{p.user.name}}</a>
 
-          {%elif m=='publish_date'%}
+          {%elif m=='publish_date_thread'%}
             {# publish date #}
-            <span>{{format_time_dateifnottoday(p.t_c)}}</span>
+            <a class="last_commented_date" href="/t/{{p.tid}}">
+              {{format_time_dateifnottoday(p.t_c)}}
+            </a>
 
           {%elif m=='publish_date_linkto'%}
             {# publish date with a link to original post#}
@@ -149,6 +151,27 @@
               <a class='adminstuff edit' href="/editor?target=edit_post/{{p._key}}">编辑</a>
             {%endif%}
 
+          {%elif m=='under_vote'%}
+
+            {%set targ_type = 'thread' if 'thread' in metas else 'post'%}
+            {%set targ_id = p.tid if 'thread' in metas else p._key%}
+            {%set num_votes = p.votes or 0 %}
+
+            {%set can = can_do_to(g.logged_in,'vote',p.uid)%}
+            {%set self_voted = p.self_voted or False %}
+
+            <div class="vote_section {{'enabled' if can}}">
+
+              <div class="upvote {{'enabled' if can}} {{'has_vote' if num_votes}} {{'self_voted' if self_voted}}" target="{{targ_type~'/'~targ_id}}">
+                ▲ <span class="votenumber">{{ num_votes or '' }}</span>
+              </div>
+
+              {%if can_do_to(g.logged_in, 'update_votecount',p.uid)%}
+                <a href="javascript:update_votecount('{{targ_type}}/{{targ_id}}')">更新数据</a>
+              {%endif%}
+
+            </div>
+
           {%endif%}
 
         {%endfor%}
@@ -161,17 +184,17 @@
 
 {# one line of post, used in postlist #}
 {%macro post_postlist(p)%}
-  {{post(p, ['publisher','publish_date_linkto','link_to','postlist','delete_post','edit_post','display_edit_status'])}}
+  {{post(p, ['publisher','publish_date_linkto','link_to','postlist','under_vote','delete_post','edit_post','display_edit_status','post'])}}
 {%endmacro%}
 
 {# one line of post, used in postlist's thread header #}
 {%macro post_postlist_header(p)%}
-  {{post(p, ['publisher','publish_date','delete_thread','edit_thread','display_edit_status'])}}
+  {{post(p, ['publisher','publish_date_thread','under_vote','delete_thread','edit_thread','display_edit_status','thread'])}}
 {%endmacro%}
 
 {# one line of thread, used in threadlist #}
 {%macro post_threadlist(p)%}
-  {{post(p, ['category','publisher','publish_date','last_commenter',
+  {{post(p, ['category','publisher','publish_date_thread','last_commenter',
   'threadlist','delete_thread'])}}
 {%endmacro%}
 
@@ -257,22 +280,24 @@
 
 {# pagination #}
 {%macro paginate(pagination)%}
-<div class="pagination">
+{%if pagination.button_groups%}
+  <div class="pagination">
 
-  {%for group in pagination.button_groups%}
-  <div class="group">
-    {%for item in group%}{# item -> [label, link, selected] #}
+    {%for group in pagination.button_groups%}
+    <div class="group">
+      {%for item in group%}{# item -> [label, link, selected] #}
 
-      {%if item[1]%}
-      <a href="{{item[1]}}">
+        {%if item[1]%}
+        <a href="{{item[1]}}">
+          <div class="pagenumber {{' current' if item[2] else ''}}">{{item[0]}}</div>
+        </a>
+        {%else%}
         <div class="pagenumber {{' current' if item[2] else ''}}">{{item[0]}}</div>
-      </a>
-      {%else%}
-      <div class="pagenumber {{' current' if item[2] else ''}}">{{item[0]}}</div>
-      {%endif%}
+        {%endif%}
 
+      {%endfor%}
+    </div>
     {%endfor%}
   </div>
-  {%endfor%}
-</div>
+{%endif%}
 {%endmacro%}

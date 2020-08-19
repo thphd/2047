@@ -86,6 +86,12 @@ if 0:
     import markdown
     def convert_markdown(s):
         return markdown.markdown(s)
+
+elif 1:
+    import mistletoe
+    def convert_markdown(s):
+        return mistletoe.markdown(s)
+
 else:
 
     import re
@@ -181,6 +187,14 @@ def can_do_to(u1, operation, u2id):
 
     elif operation == 'edit':
         if is_self or is_admin:
+            return True
+
+    elif operation == 'vote':
+        if not is_self:
+            return True
+
+    elif operation == 'update_votecount':
+        if is_admin:
             return True
 
     return False

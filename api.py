@@ -7,6 +7,7 @@ aqlc.create_collection('admins')
 aqlc.create_collection('operations')
 aqlc.create_collection('aliases')
 aqlc.create_collection('histories')
+aqlc.create_collection('votes')
 
 def get_url_to_post(pid):
     # 1. get tid
@@ -208,6 +209,19 @@ def title_length_check(title):
     if len(title)<3:
         raise Exception('title too short')
 
+def get_thread(tid):
+    thread = aql('for t in threads filter t.tid==@k return t',
+    k=int(tid),silent=True)
+    if len(thread)==0:
+        raise Exception('tid not exist')
+    return thread[0]
+
+def get_post(pid):
+    post = aqlc.from_filter('posts','i._key==@k', k=str(pid), silent=True)
+    if len(post) == 0:
+        raise Exception('pid not found')
+    return post[0]
+
 @register('post')
 def _():
     if not current_user:
@@ -222,18 +236,6 @@ def _():
 
     content = es('content').strip()
     content_length_check(content)
-
-    def get_thread(tid):
-        thread = aql('for t in threads filter t.tid==@k return t',k=tid,silent=True)
-        if len(thread)==0:
-            raise Exception('tid not exist')
-        return thread[0]
-
-    def get_post(pid):
-        post = aqlc.from_filter('posts','i._key==@k', k=str(pid), silent=True)
-        if len(post) == 0:
-            raise Exception('pid not found')
-        return post[0]
 
     if target_type=='thread':
         # check if tid exists
@@ -373,6 +375,144 @@ def _():
     else:
         raise Exception('unsupported target type')
 
+def update_thread_votecount(tid):
+    res = aql('''
+let t = (for i in threads filter i.tid==@_id return i)[0]
+let upv= length(for v in votes filter v.id==t.tid and v.vote==1 return v)
+update t with {votes:upv} in threads return NEW
+    ''', _id=int(tid), silent=True)
+
+    return res[0]
+
+def update_post_votecount(pid):
+    res = aql('''
+let t = (for i in posts filter i._key==@_id return i)[0]
+let upv= length(for v in votes filter to_string(v.id)==t._key and v.vote==1 return v)
+update t with {votes:upv} in posts return NEW
+    ''', _id=str(pid), silent=True)
+
+    return res[0]
+
+@register('update_votecount')
+def _():
+    if not current_user: raise Exception('you are not logged in')
+    target_type,_id = parse_target(es('target'))
+
+    if target_type=='thread':
+        update_thread_votecount(_id)
+    elif target_type=='post':
+        update_post_votecount(_id)
+    else:
+        raise Exception('target_type not supported')
+    return {'ok':'done'}
+
+@register('cast_vote')
+def _():
+    if not current_user: raise Exception('you are not logged in')
+    target_type,_id = parse_target(es('target'))
+    vote_number = int(es('vote'))
+
+    # assert vote_number in [0, 1, -1]
+    assert vote_number in [0, 1]
+
+    if target_type=='thread':
+        thread = get_thread(_id)
+
+        if not can_do_to(current_user, 'vote', thread['uid']):
+            raise Exception('insufficient priviledge')
+
+        # see if you already voted
+        votes = aqlc.from_filter('votes','i.uid==@k and i.type=="thread" and i.id==@_id',k=current_user['uid'],_id=_id)
+
+        timenow = time_iso_now()
+
+        # if you havent voted
+        if not votes:
+            if vote_number==0:
+                return {'ok':'no-op'}
+
+            # make vote
+            vobj = dict(
+                uid=current_user['uid'],
+                to_uid=thread['uid'],
+                type='thread',
+                id=_id,
+                vote=vote_number,
+                t_c=timenow,
+                t_u=timenow,
+            )
+            # put in db
+            n = aql('insert @i into votes return NEW',i=vobj)[0]
+            n = update_thread_votecount(_id)
+            return n
+
+        #if you voted before
+        else:
+            vote = votes[0]
+            if vote['vote'] == vote_number:
+                return {'ok':'no-op'}
+
+            # make vote
+            vobj = dict(
+                vote=vote_number,
+                t_u=timenow,
+            )
+
+            # put in db
+            n = aql('update @k with @o in votes return NEW',k=vote,o=vobj)[0]
+            n = update_thread_votecount(_id)
+            return n
+
+    elif target_type=='post':
+        post = get_post(_id)
+
+        if not can_do_to(current_user, 'vote', post['uid']):
+            raise Exception('insufficient priviledge')
+
+        # see if you already voted
+        votes = aqlc.from_filter('votes','i.uid==@k and i.type=="post" and i.id==@_id',k=current_user['uid'],_id=_id)
+
+        timenow = time_iso_now()
+
+        # if you havent voted
+        if not votes:
+            if vote_number==0:
+                return {'ok':'no-op'}
+
+            # make vote
+            vobj = dict(
+                uid=current_user['uid'],
+                to_uid=post['uid'],
+                type='post',
+                id=_id,
+                vote=vote_number,
+                t_c=timenow,
+            )
+            # put in db
+            n = aql('insert @i into votes return NEW',i=vobj)[0]
+            n = update_post_votecount(_id)
+            return n
+
+        #if you voted before
+        else:
+            vote = votes[0]
+            if vote['vote'] == vote_number:
+                return {'ok':'no-op'}
+
+            # make vote
+            vobj = dict(
+                vote=vote_number,
+                t_u=timenow,
+            )
+
+            # put in db
+            n = aql('update @k with @o in votes return NEW',k=vote,o=vobj)[0]
+            n = update_post_votecount(_id)
+            return n
+
+    else:
+        raise Exception('target type unsupported')
+
 @register('mark_delete')
 def _():
     if not current_user:
@@ -386,12 +526,10 @@ def _():
     # get target obj
     if 'post' in target_type:
         _id = str(_id)
-        pobj = aql('for i in posts filter i._key==@_id\
-            return i',_id=_id)[0]
+        pobj = get_post(_id)
 
     elif 'thread' in target_type:
-        pobj = aql('for i in threads filter i.tid==@_id\
-            return i',_id=_id)[0]
+        pobj = get_thread(_id)
 
     else:
         raise Exception('target type not supported')

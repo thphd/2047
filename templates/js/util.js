@@ -100,9 +100,9 @@ function xhr(method, dest, data){
           rej (this.status + ' '+this.statusText+ '\n' + resp.error)
         }else{
           if(this.status==0){
-            this.statusText='Connection Failed'
+            var statusText='(Connection Failed, maybe try again)'
           }
-          rej(this.status +' '+ this.statusText + '\n' + this.responseText.slice(100))
+          rej(this.status +' '+ (this.statusText||statusText) + '\n' + this.responseText.slice(100))
         }
       }
       // print(this)
@@ -386,3 +386,78 @@ function mark_delete(targ){
   })
   .catch(alert)
 }
+
+function update_votecount(targ){
+  api({
+    action:'update_votecount',
+    target:targ,
+  })
+  .then(res=>{
+    window.location.reload()
+  })
+  .catch(alert)
+}
+
+var upvote_buttons = gebcn(document)('upvote')
+
+foreach(upvote_buttons)(e=>{
+  var cl = e.classList
+  var enabled = cl.contains('enabled')
+  var has_vote = cl.contains('has_vote')
+  var self_voted = cl.contains('self_voted')
+  var innerspan = gebtn(e)('span')[0]
+
+  var target = e.getAttribute('target')
+
+  if(!target){
+    return
+  }
+
+  // print(innerspan)
+
+  var clickable = true
+
+  e.onclick = function(){
+    if(!clickable){
+      return
+    }
+
+    if(!enabled){
+      return
+    }
+
+    clickable = false
+
+    if(!self_voted){
+      api({
+        action:'cast_vote',
+        target:target.trim(),
+        vote:1,
+      })
+      .then(res=>{
+        var ih = parseInt(innerspan.innerHTML)||0
+        innerspan.innerHTML = (ih+1).toString()
+        self_voted = true
+      })
+      .catch(alert)
+      .then(()=>{
+        clickable = true
+      })
+    }else{
+      api({
+        action:'cast_vote',
+        target:target.trim(),
+        vote:0,
+      })
+      .then(res=>{
+        var ih = parseInt(innerspan.innerHTML)||0
+        innerspan.innerHTML = (ih-1).toString()
+        self_voted = false
+      })
+      .catch(alert)
+      .then(()=>{
+        clickable = true
+      })
+    }
+  }
+})

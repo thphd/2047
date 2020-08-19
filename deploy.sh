@@ -1,4 +1,6 @@
 # this script should be run on an instance of ubuntu 1604/1804
+# assume you already cloned the repo
+# assume you start this script via ./2047/deploy.sh
 
 # install arangodb
 

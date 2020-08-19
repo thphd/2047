@@ -30,8 +30,6 @@ def init_directory(d):
 # init_directory('./static/')
 # init_directory('./static/upload/')
 
-
-
 def get_secret():
     fn = 'secret.bin'
     if os.path.exists(fn):
@@ -112,6 +110,8 @@ aqlc.create_index('threads',
 
 aqlc.create_index('threads',
     type='persistent', fields=['uid','t_u','t_c'], unique=False, sparse=False)
+aqlc.create_index('threads',
+    type='persistent', fields=['tid'], unique=True, sparse=False)
 
 aqlc.create_index('posts',
     type='persistent', fields=['tid','t_c','_key'], unique=False, sparse=False)
@@ -133,6 +133,20 @@ aqlc.create_index('users',
 aqlc.create_index('invitations',
     type='persistent', fields=['uid','active','t_c'], unique=False, sparse=False)
 aqlc.create_index('invitations',
+    type='persistent', fields=['uid','t_c'], unique=False, sparse=False)
+
+aqlc.create_index('votes',
+    type='persistent', fields=['type','id','vote','uid'], unique=False, sparse=False)
+aqlc.create_index('votes',
+    type='persistent', fields=['type','id','uid','vote'], unique=False, sparse=False)
+aqlc.create_index('votes',
+    type='persistent', fields=['to_uid','vote','t_c'], unique=False, sparse=False)
+aqlc.create_index('votes',
+    type='persistent', fields=['uid','vote','t_c'], unique=False, sparse=False)
+
+aqlc.create_index('votes',
+    type='persistent', fields=['to_uid','t_c'], unique=False, sparse=False)
+aqlc.create_index('votes',
     type='persistent', fields=['uid','t_c'], unique=False, sparse=False)
 
 is_integer = lambda i:isinstance(i, int)
@@ -217,17 +231,21 @@ class Paginator:
             filter = 'filter i.uid == {}'.format(uid)
             mode='user_post'
 
+        selfuid = g.logged_in['uid'] if g.logged_in else -1
+
         querystring_complex = '''
         for i in posts
         {filter}
 
         let u = (for u in users filter u.uid==i.uid return u)[0]
+        let self_voted = length(for v in votes filter v.uid=={selfuid} and v.id==to_number(i._key) and v.type=='post' and v.vote==1 return v)
 
         sort i.{sortby} {order}
         limit {start},{count}
-        return merge(i, {{user:u}})
+        return merge(i, {{user:u}},{{self_voted}})
         '''.format(
-            sortby=sortby,order=order,start=start,count=count,filter=filter,
+            selfuid = selfuid,
+            sortby = sortby,order=order,start=start,count=count,filter=filter,
         )
 
         querystring_simple = '''
@@ -501,7 +519,7 @@ class UAFilter:
 
             self.dt[ua] = this_time
             # print_err(self.d[ua])
-            if self.d[ua]>50 or (ua in self.blacklist):
+            if self.d[ua]>100 or (ua in self.blacklist):
                 if self.d[ua] % 10 == 0:
                     print_err('UA ['+ua+']got a behavior problem ({})'.format(self.d[ua]))
                 return False
@@ -681,11 +699,17 @@ def userthreads(uid):
 # thread, list of posts
 @app.route('/t/<int:tid>')
 def thrd(tid):
+
+    selfuid = g.logged_in['uid'] if g.logged_in else -1
+
     thobj = aql('''
     for t in threads filter t.tid==@tid
     let u = (for u in users filter u.uid==t.uid return u)[0]
-    return merge(t, {user:u})
-    ''', tid=tid, silent=True)
+
+    let self_voted = length(for v in votes filter v.uid==@selfuid and v.id==to_number(t.tid) and v.type=='thread' and v.vote==1 return v)
+
+    return merge(t, {user:u},{self_voted:self_voted})
+    ''', tid=tid, selfuid=selfuid, silent=True)
 
     if len(thobj)!=1:
         return make_response('thread not exist', 404)
@@ -831,7 +855,7 @@ UID {}
 发帖 [{}](/u/{}/t)
 
 回复 [{}](/u/{}/p)
-    '''.format(u['name'], u['uid'], format_time_datetime(u['t_c']),
+    '''.strip().format(u['name'], u['uid'], format_time_datetime(u['t_c']),
         stats['nthreads'], u['uid'], stats['nposts'], u['uid']
     )
 
