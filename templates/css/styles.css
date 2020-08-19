@@ -2,7 +2,19 @@
 text-decoration: none;
 display: inline-block;
 }
-
+.reply_count {
+    display: inline-flex;
+    justify-content: flex-end;
+    align-self: flex-end;
+    font-size: 90%;
+    color: white;
+    background-color: #989898;
+    padding: 0.1em 0.6em;
+    border-radius: 0.9em;
+    opacity: 0.5;
+    color: white;
+    text-decoration: none;
+}
 img#site_logo {
   /* width: 100px; */
   /* display: inline-block; */

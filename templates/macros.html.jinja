@@ -195,6 +195,14 @@
       </div>
     </div>
   </div>
+
+  {%if 'last_commenter' in metas and p.count %}
+  {# small circle indicating num replies #}
+  <div class="leftmost">
+      <a class="reply_count c{{p.cid}}" href="/p/{{p.last._key}}">{{p.count}}</a>
+  </div>
+  {%endif%}
+
 </div>
 
 {%endmacro%}
