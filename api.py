@@ -442,7 +442,7 @@ def _():
                 t_u=timenow,
             )
             # put in db
-            n = aql('insert @i into votes return NEW',i=vobj)[0]
+            n = aql('insert @i into votes return NEW',i=vobj,silent=True)[0]
             n = update_thread_votecount(_id)
             return n
 
@@ -459,7 +459,7 @@ def _():
             )
 
             # put in db
-            n = aql('update @k with @o in votes return NEW',k=vote,o=vobj)[0]
+            n = aql('update @k with @o in votes return NEW',k=vote,o=vobj,silent=True)[0]
             n = update_thread_votecount(_id)
             return n
 
@@ -489,7 +489,7 @@ def _():
                 t_c=timenow,
             )
             # put in db
-            n = aql('insert @i into votes return NEW',i=vobj)[0]
+            n = aql('insert @i into votes return NEW',i=vobj,silent=True)[0]
             n = update_post_votecount(_id)
             return n
 
@@ -506,7 +506,7 @@ def _():
             )
 
             # put in db
-            n = aql('update @k with @o in votes return NEW',k=vote,o=vobj)[0]
+            n = aql('update @k with @o in votes return NEW',k=vote,o=vobj,silent=True)[0]
             n = update_post_votecount(_id)
             return n
 
