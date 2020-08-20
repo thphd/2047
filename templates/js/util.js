@@ -126,6 +126,10 @@ function api(j){
     display_notice('')
     return r
   })
+  .catch(e=>{
+    display_notice('')
+    throw e
+  })
 }
 
 //  generate timed pings

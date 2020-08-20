@@ -17,8 +17,11 @@
       {%for i in invitations%}
       <div class="invitation{{'' if i.active else ' inactive'}}">
         <a href="/register?code={{i._key}}">{{i._key}}</a>
-        <span>{{format_time_datetime(i.t_c)}}</span>
+        <span>{{format_time_datetime(i.t_c) if i.t_c}}</span>
         <span>{{'未使用' if i.active else '已使用'}}</span>
+        {%if i.users%}
+          <a href="/u/{{i.users[0].uid}}">{{i.users[0].name}}</a>
+        {%endif%}
       </div>
       {%endfor%}
 
@@ -47,7 +50,7 @@
   <div class="post_content warning">
     {{password_warning|safe}}
   </div>
-  
+
   {%endif%}
 </div>
 

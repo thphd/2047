@@ -863,3 +863,7 @@ span.votenumber {}
     box-shadow: 0 0 11px #00000061;
     -ms-transform: translate(-50%,-50%);
 }
+
+#editor_text::placeholder {
+    color: gray;
+}

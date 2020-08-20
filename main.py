@@ -589,7 +589,7 @@ def befr():
         (uaf.judge(ipstr) if ipstr[0:8]!='192.168.' else True)
 
     if not allowed:
-        print_err('[{}][{}][{}][{:.2f}][{:.2f}][{:.2f}]'.format(uas, acceptstr, ipstr, uaf.d[uas], uaf.d[acceptstr], uaf.d[ipstr]))
+        print_err('[{}][{}][{}][{:.2f}][{:.2f}][{:.2f}]'.format(uas, acceptstr, ipstr, uaf.d[uas], uaf.d[acceptstr], uaf.d[ipstr] if ipstr in uaf.d else -1))
 
         if random.random()>1:
             return ('rate limit exceeded', 500)
@@ -914,7 +914,9 @@ UID {}
     invitations = None
     if g.logged_in:
         if g.logged_in['uid']==uid:
-            k = aql('for i in invitations filter i.uid==@k sort i.t_c desc limit 50 return i',k=uid,silent=True)
+            k = aql('for i in invitations filter i.uid==@k\
+            let users = (for u in users filter u.invitation==i._key return u)\
+            sort i.t_c desc limit 25 return merge(i,{users})',k=uid,silent=True)
             invitations = k
 
     return render_template('userpage.html.jinja',
