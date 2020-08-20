@@ -768,6 +768,7 @@ body {
 .upvote {
     color: #038603;
     padding: 0 .2em;
+    /* cursor: pointer; */
 }
 
 .downvote {
@@ -824,4 +825,41 @@ a {
 
 .editor_button_row a {
     color: #7a9bc3;
+}
+
+span.votenumber {}
+
+.meta .upvote {
+    cursor: pointer;
+}
+
+#overlay {
+    position: fixed; /* Sit on top of the page content */
+    display: none; /* Hidden by default */
+    width: 100%; /* Full width (cover the whole page) */
+    height: 100%; /* Full height (cover the whole page) */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* background-color: rgb(189 140 0 / 5%); */ /* Black background with opacity */
+    z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
+    /* cursor: pointer; */ /* Add a pointer on hover */
+    pointer-events: none;
+}
+
+#overlay text {}
+
+#overlay_text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: .5em;
+    /* font-size: 1em; */
+    background: white;
+    padding: 1em;
+    color: #000000;
+    transform: translate(-50%,-50%);
+    box-shadow: 0 0 11px #00000061;
+    -ms-transform: translate(-50%,-50%);
 }

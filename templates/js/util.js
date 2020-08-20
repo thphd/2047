@@ -120,7 +120,12 @@ function xhr(method, dest, data){
 
 // access api
 function api(j){
-  return xhr('post', '/api', JSON.stringify(j))
+  display_notice('连接服务器...')
+  var p = xhr('post', '/api', JSON.stringify(j))
+  return p.then(r=>{
+    display_notice('')
+    return r
+  })
 }
 
 //  generate timed pings
@@ -428,6 +433,10 @@ foreach(upvote_buttons)(e=>{
 
     clickable = false
 
+    function reset_things(){
+      clickable = true
+    }
+
     if(!self_voted){
       api({
         action:'cast_vote',
@@ -446,9 +455,7 @@ foreach(upvote_buttons)(e=>{
         self_voted = true
       })
       .catch(alert)
-      .then(()=>{
-        clickable = true
-      })
+      .then(reset_things)
     }else{
       api({
         action:'cast_vote',
@@ -467,9 +474,16 @@ foreach(upvote_buttons)(e=>{
         self_voted = false
       })
       .catch(alert)
-      .then(()=>{
-        clickable = true
-      })
+      .then(reset_things)
     }
   }
 })
+
+function display_notice(str){
+  if(str){
+    geid('overlay_text').innerText = str
+    geid('overlay').style.display = 'block'
+  }else{
+    geid('overlay').style.display = 'none'
+  }
+}
