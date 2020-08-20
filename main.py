@@ -1,3 +1,20 @@
+import threading, builtins
+printlock = threading.Lock()
+
+vanilla_print = print
+def orderly_print(*a, **k):
+    printlock.acquire()
+    try:
+        vanilla_print(*a, **k)
+    except Exception as ex:
+        printlock.release()
+        raise ex
+    else:
+        printlock.release()
+
+builtins.print = orderly_print
+
+
 import time,os,sched,random,threading,traceback,datetime
 import re,base64
 import zlib
@@ -488,13 +505,14 @@ def get_user(uid):
 # logged_in = False
 
 # filter bots/DOSes that use a fixed UA
+'''
+不是我说你们，你们要是真会写代码，也不至于过来干这个，我都替你们着急啊
+'''
 class UAFilter:
     def __init__(self):
         self.d = {}
         self.dt = {}
-        self.blacklist = '''
-        Mozilla / 5.0(Windows NT 6.1; rv:52.0) Gecko / 20170101 Firefox / 52.0
-        '''
+        self.blacklist = ''
 
     def judge(self, uastring):
         ua = uastring
@@ -503,6 +521,8 @@ class UAFilter:
         else:
             if ua in self.d:
                 self.d[ua]+=1
+                if ua in self.blacklist:
+                    self.d[ua]+=3
             else:
                 self.d[ua]=1
 
@@ -513,25 +533,38 @@ class UAFilter:
             else:
                 last_time = this_time
 
-            if this_time - last_time > 20:
-                # at least 20 seconds between 2 consecutive requests
-                self.d[ua] //= 2
+            duration = max(0.001, this_time - last_time)
+            factor = 0.98 ** duration
+
+            self.d[ua] *= factor
+            # print(self.d[ua])
 
             self.dt[ua] = this_time
             # print_err(self.d[ua])
-            if self.d[ua]>100 or (ua in self.blacklist):
-                if self.d[ua] % 10 == 0:
-                    print_err('UA ['+ua+']got a behavior problem ({})'.format(self.d[ua]))
+            if self.d[ua]>45:
+                self.d[ua]+=3
+
+                if self.d[ua]>75 and (ua not in self.blacklist):
+                    self.blacklist+=ua
+
                 return False
             else:
                 return True
+
+    def get_max(self):
+        k = max(self.d)
+        return k, self.d[k]
 
 uaf = UAFilter()
 
 @app.before_request
 def befr():
+    acceptstr = request.headers['Accept'] if 'Accept' in request.headers else 'NoAccept'
+    uas = str(request.user_agent) if request.user_agent else 'NoUA'
+
     if 'uid' in session:
         g.logged_in = get_user(int(session['uid']))
+        print_info(g.logged_in['name'])
         return
     else:
         g.logged_in = False
@@ -539,14 +572,22 @@ def befr():
     if 'action' in request.args and request.args['action']=='ping':
         return
 
+    if request.path.startswith('/avatar/'):
+        return
+
     # filter bot/dos requests
-    allowed = uaf.judge(str(request.user_agent))
+    allowed = uaf.judge(uas) and uaf.judge(acceptstr)
     if not allowed:
-        time.sleep(random.random()*20+20)
-        if random.random()>0:
+        print_err('[{}][{}][{:.2f}][{:.2f}]'.format(uas, acceptstr, uaf.d[uas], uaf.d[acceptstr]))
+
+        if random.random()>1:
             return ('rate limit exceeded', 500)
-        else:
+        elif random.random()>0.02:
             return (base64.b64encode(os.urandom(int(random.random()*256))), 200)
+        else:
+            pass
+    else:
+        print_up('max: [{}][{:.2f}][{}]'.format(*uaf.get_max(), uaf.blacklist))
 
 @app.route('/')
 @app.route('/c/all')
