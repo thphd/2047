@@ -33,6 +33,8 @@ from flask import Flask, session, g
 from flask import render_template, request, send_from_directory, make_response
 from flask_gzip import Gzip
 
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 from api import api_registry, get_categories_info, setj, get_url_to_post
 # from api import *
 
@@ -57,6 +59,8 @@ def get_secret():
     return r
 
 app = Flask(__name__, static_url_path='')
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
+
 app.secret_key = get_secret()
 CORS(app)
 gzip = Gzip(app, minimum_size=500)
@@ -516,40 +520,38 @@ class UAFilter:
 
     def judge(self, uastring):
         ua = uastring
-        if g.logged_in:
-            return True
-        else:
-            if ua in self.d:
-                self.d[ua]+=1
-                if ua in self.blacklist:
-                    self.d[ua]+=3
-            else:
-                self.d[ua]=1
 
-            this_time = time.time()
-
-            if ua in self.dt:
-                last_time = self.dt[ua]
-            else:
-                last_time = this_time
-
-            duration = max(0.001, this_time - last_time)
-            factor = 0.98 ** duration
-
-            self.d[ua] *= factor
-            # print(self.d[ua])
-
-            self.dt[ua] = this_time
-            # print_err(self.d[ua])
-            if self.d[ua]>45:
+        if ua in self.d:
+            self.d[ua]+=1
+            if ua in self.blacklist:
                 self.d[ua]+=3
+        else:
+            self.d[ua]=1
 
-                if self.d[ua]>75 and (ua not in self.blacklist):
-                    self.blacklist+=ua
+        this_time = time.time()
 
-                return False
-            else:
-                return True
+        if ua in self.dt:
+            last_time = self.dt[ua]
+        else:
+            last_time = this_time
+
+        duration = max(0.001, this_time - last_time)
+        factor = 0.98 ** duration
+
+        self.d[ua] *= factor
+        # print(self.d[ua])
+
+        self.dt[ua] = this_time
+        # print_err(self.d[ua])
+        if self.d[ua]>30:
+            self.d[ua]+=3
+
+            if self.d[ua]>75 and (ua not in self.blacklist):
+                self.blacklist+=ua
+
+            return False
+        else:
+            return True
 
     def get_max(self):
         k = max(self.d)
@@ -562,9 +564,14 @@ def befr():
     acceptstr = request.headers['Accept'] if 'Accept' in request.headers else 'NoAccept'
     uas = str(request.user_agent) if request.user_agent else 'NoUA'
 
+    ipstr = request.remote_addr
+
     if 'uid' in session:
         g.logged_in = get_user(int(session['uid']))
         print_info(g.logged_in['name'])
+
+        # print_err(request.headers)
+
         return
     else:
         g.logged_in = False
@@ -576,9 +583,13 @@ def befr():
         return
 
     # filter bot/dos requests
-    allowed = uaf.judge(uas) and uaf.judge(acceptstr)
+    allowed = \
+        uaf.judge(uas) and\
+        uaf.judge(acceptstr) and\
+        (uaf.judge(ipstr) if ipstr[0:8]!='192.168.' else True)
+
     if not allowed:
-        print_err('[{}][{}][{:.2f}][{:.2f}]'.format(uas, acceptstr, uaf.d[uas], uaf.d[acceptstr]))
+        print_err('[{}][{}][{}][{:.2f}][{:.2f}][{:.2f}]'.format(uas, acceptstr, ipstr, uaf.d[uas], uaf.d[acceptstr], uaf.d[ipstr]))
 
         if random.random()>1:
             return ('rate limit exceeded', 500)
