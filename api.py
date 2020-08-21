@@ -30,6 +30,9 @@ def get_url_to_post(pid):
         )
     ''', tid=tid, tc=pobj['t_c'], silent=True)[0]
 
+    return get_url_to_post_given_details(tid, pid, rank)
+
+def get_url_to_post_given_details(tid, pid, rank): # assume you know rank
     # 3. calculate page number
     pnum = ((rank - 1) // post_list_defaults['pagesize']) + 1
 
@@ -265,7 +268,8 @@ def _():
         ''',silent=True,tid=tid,now=timenow)
 
         # assemble url to the new post
-        url = '/p/{}'.format(inserted['_key'])
+        url = get_url_to_post(str(inserted['_key']))
+        # url = '/p/{}'.format(inserted['_key'])
         inserted['url'] = url
 
         return inserted
@@ -370,7 +374,8 @@ def _():
         post['t_h']=timenow
 
         inserted = aql('insert @i into histories return NEW',i=post)[0]
-        inserted['url'] = '/p/{}'.format(_id)
+        url = get_url_to_post(str(_id))
+        inserted['url'] = url
         return inserted
     else:
         raise Exception('unsupported target type')

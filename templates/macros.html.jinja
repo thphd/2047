@@ -73,7 +73,7 @@
           <span>[ 由</span>
           <a href="/u/{{p.editor}}">{{'本人' if p.editor==p.uid else '其他人'}}</a>
           <span>于</span>
-          <a href="/p/{{p._key}}">{{format_time_dateonly(p.t_e)}}</a>
+          <span>{{format_time_dateonly(p.t_e)}}</span>
           <span>编辑 ]</span>
         </div>
       {%endif%}
@@ -111,15 +111,16 @@
           {%elif m=='last_commenter'%}
             {% if p.lastuser %}
               {# number of comments #}
-              <a class="response" href="/p/{{p.last._key}}">{{p.count}} 个回复</span>
+              {%set url_to_last = get_url_to_post_given_details(p.tid,p.last._key,p.count)%}
+              <a class="response" href="{{url_to_last}}">{{p.count}} 个回复</span>
 
               {# last commenter #}
-              <a class="user_name" href="/p/{{p.last._key}}">
+              <a class="user_name" href="{{url_to_last}}">
                 {{p.lastuser.name}}
               </a>
 
               {# last commented date #}
-              <a class="last_commented_date" href="/p/{{p.last._key}}">
+              <a class="last_commented_date" href="{{url_to_last}}">
                 {{format_time_dateifnottoday(p.last.t_c)}}
               </a>
 
@@ -199,7 +200,8 @@
   {%if 'last_commenter' in metas and p.count %}
   {# small circle indicating num replies #}
   <div class="leftmost">
-      <a class="reply_count c{{p.cid}}" href="/p/{{p.last._key}}">{{p.count}}</a>
+    {%set url_to_last = get_url_to_post_given_details(p.tid,p.last._key,p.count)%}
+    <a class="reply_count c{{p.cid}}" href="{{url_to_last}}">{{p.count}}</a>
   </div>
   {%endif%}
 
@@ -272,7 +274,7 @@
         <button type="button" id="editor_btnpreview">预览</button>
         <button type="button" id="editor_btnsubmit">提交</button>
         <a href="https://www.markdown.xyz/basic-syntax/" rel='noreferrer'>Markdown语法参考</a>
-        
+
       </div>
     </div>
     <div class="editor_right" id="editor_right">

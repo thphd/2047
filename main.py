@@ -1,18 +1,18 @@
-import threading, builtins
-printlock = threading.Lock()
-
-vanilla_print = print
-def orderly_print(*a, **k):
-    printlock.acquire()
-    try:
-        vanilla_print(*a, **k)
-    except Exception as ex:
-        printlock.release()
-        raise ex
-    else:
-        printlock.release()
-
-builtins.print = orderly_print
+# import threading, builtins
+# printlock = threading.Lock()
+#
+# vanilla_print = print
+# def orderly_print(*a, **k):
+#     printlock.acquire()
+#     try:
+#         vanilla_print(*a, **k)
+#     except Exception as ex:
+#         printlock.release()
+#         raise ex
+#     else:
+#         printlock.release()
+#
+# builtins.print = orderly_print
 
 
 import time,os,sched,random,threading,traceback,datetime
@@ -35,7 +35,7 @@ from flask_gzip import Gzip
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from api import api_registry, get_categories_info, setj, get_url_to_post
+from api import api_registry, get_categories_info, setj, get_url_to_post, get_url_to_post_given_details
 # from api import *
 
 def init_directory(d):
@@ -707,6 +707,7 @@ def catspe(cid):
         page_subheader=(catobj['brief'] or '').replace('\\',''),
         threadlist=threadlist,
         pagination=pagination,
+        categories=get_categories_info(),
         category=catobj,
         # threadcount=count,
         **(globals())
@@ -978,7 +979,7 @@ def _(uid):
     else:
         resp.set_etag(etag)
 
-    resp.headers['Cache-Control']= 'max-age=1800'
+    resp.headers['Cache-Control']= 'max-age=14400'
     return resp
 
     # default: 307 to logo.png
@@ -996,8 +997,10 @@ def _(name):
         return make_response('no such user', 500)
 
     u = res[0]
-    resp = make_response('user found', 307)
-    resp.headers['Location'] = '/u/{}'.format(u['uid'])
+    # resp = make_response('user found', 307)
+    # resp.headers['Location'] = '/u/{}'.format(u['uid'])
+    return userpage(u['uid'])
+
     return resp
 
 @route('/m')

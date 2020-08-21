@@ -302,6 +302,16 @@ function logout(){
   .catch(alert)
 }
 
+function go_or_refresh_if_samepage(url){
+  var hashless = url.split('#')[0]
+  if(window.location.href.includes(hashless)){
+    window.location.href = url
+    window.location.reload()
+  }else{
+    window.location.href = url
+  }
+}
+
 var editor_target = geid('editor_target')
 
 if (editor_target){
@@ -350,7 +360,8 @@ if (editor_target){
       print(j)
       // alert(j)
       editor_text.value = "" // firefox didn't clear the box
-      window.location.href = j.url
+      // window.location.href = j.url
+      go_or_refresh_if_samepage(j.url)
 
       // window.location.reload() // in case the previous doesn't work
 
