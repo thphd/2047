@@ -10,6 +10,8 @@ aqlc.create_collection('operations')
 aqlc.create_collection('aliases')
 aqlc.create_collection('histories')
 aqlc.create_collection('votes')
+aqlc.create_collection('messages')
+aqlc.create_collection('conversations')
 
 def get_url_to_post(pid):
     # 1. get tid
@@ -67,6 +69,24 @@ def es(k):
     j = g.j
     return (str(j[k]) if (k in j) else None)
 
+def ei(k):
+    j = g.j
+    return (int(j[k]) if (k in j) else None)
+
+def get_user_by_name(name):
+    res = aql('for u in users filter u.name==@n return u', n=name, silent=True)
+    if len(res)>0:
+        return res[0]
+    else:
+        return None
+
+def get_user_by_id(id):
+    res = aql('for u in users filter u.uid==@n return u', n=int(id), silent=True)
+    if len(res)>0:
+        return res[0]
+    else:
+        return None
+
 @register('test')
 def _():
     # raise Exception('ouch')
@@ -78,12 +98,10 @@ def _():
     pwh = es('password_hash')
 
     # find user
-    u = aql('for u in users filter u.name==@n return u', n=uname)
+    u = get_user_by_name(uname)
 
-    if len(u)==0:
+    if not u:
         raise Exception('username not found')
-
-    u = u[0]
 
     # find password object
     p = aql('for p in passwords filter p.uid==@uid return p', uid=u['uid'])
@@ -229,7 +247,7 @@ def _():
     uid = g.current_user['uid']
 
 
-    target_type, _id = parse_target(es('target'))
+    target_type, _id = parse_target(es('target'), force_int=False)
 
     # title = es('title').strip()
 
@@ -237,6 +255,7 @@ def _():
     content_length_check(content)
 
     if target_type=='thread':
+        _id = int(_id)
         # check if tid exists
         tid = _id
         thread = get_thread(tid)
@@ -270,7 +289,34 @@ def _():
 
         return inserted
 
+    elif target_type=='user': # send another user a new message
+        _id = int(_id)
+
+        target_uid = _id
+
+        target_user = get_user_by_id(target_uid)
+        if not target_user:
+            raise Exception('uid not exist')
+
+        # content_length_check(content)
+        url = send_message(uid, target_uid, content)
+        return {'url':url}
+
+    elif target_type=='username': # send another user a new message
+        _id =  _id
+
+        target_user = get_user_by_name(_id)
+        if not target_user:
+            raise Exception('username not exist')
+        target_uid = target_user['uid']
+
+        # content_length_check(content)
+        url = send_message(uid, target_uid, content)
+        return {'url':url}
+
     elif target_type=='category':
+        _id = int(_id)
+
         title = es('title').strip()
         title_length_check(title)
 
@@ -313,6 +359,8 @@ def _():
         return inserted
 
     elif target_type == 'edit_thread':
+        _id = int(_id)
+
         title = es('title').strip()
         title_length_check(title)
 
@@ -347,6 +395,8 @@ def _():
         return inserted
 
     elif target_type == 'edit_post':
+        _id = int(_id)
+
         post = get_post(_id)
         if not can_do_to(g.current_user, 'edit', post['uid']):
             raise Exception('insufficient priviledge')
@@ -651,6 +701,72 @@ def _():
         {hashstr:@h, saltstr:@s} in passwords',uid=uid,h=hash,s=salt)
 
     return {'error':False}
+
+def send_message(fromuid, touid, content):
+    timenow = time_iso_now()
+
+    # 1. determine whether to start a new conversation or not
+    # find conversation object
+    found = aql('''
+    let c1 = (for c in conversations filter c.uid==@a and c.to_uid==@b
+    sort c.t_c desc limit 1 return c)
+    let c2 = (for c in conversations filter c.uid==@b and c.to_uid==@a
+    sort c.t_c desc limit 1 return c)
+
+    return append(c1, c2)
+    ''',
+        a=fromuid, b=touid, silent=True)[0]
+
+    if len(found)!=0 and len(found)!=2:
+        raise Exception('conversation data corrupted, contact admin')
+
+    if len(found)==0:
+        # generate a unique convid
+        while 1:
+            convid = get_random_hex_string(8)
+            # check collision
+            collisions = aql('return length(for c in conversations filter c.convid==@k return c)', k=convid)[0]
+
+            if not collisions:
+                break
+
+        # make 2 new conversations with the same convid
+        conv1 = aql('insert @k into conversations return NEW', k=dict(
+            uid=fromuid,
+            to_uid=touid,
+            convid=convid,
+            t_u=timenow,
+            t_c=timenow,
+        ))[0]
+        conv2 = aql('insert @k into conversations return NEW', k=dict(
+            uid=touid,
+            to_uid=fromuid,
+            convid=convid,
+            t_u=timenow,
+            t_c=timenow,
+        ))[0]
+
+    else:
+        # use existing conversation
+        conv1, conv2 = found[0],found[1]
+
+    assert conv1['convid']==conv2['convid']
+    convid = conv1['convid']
+
+    aql('insert @k in messages', k=dict(
+        uid=fromuid,
+        to_uid=touid,
+        t_c=timenow,
+        content=content.strip(),
+        convid=convid,
+    ))
+
+    if found:
+        # update conversation object
+        aql('for i in @c update i with {t_u:@t} in conversations', c=[conv1,conv2], t=timenow)
+
+    url = '/m/'+convid
+    return url
 
 # feedback regulated ping service
 # average 1 ping every 3 sec

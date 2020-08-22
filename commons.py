@@ -1,6 +1,7 @@
 # useful definitions in one place
 
 import os, hashlib, binascii as ba
+import base64
 
 # everything time related
 
@@ -56,6 +57,9 @@ def hexstr2bytes(h):
 # https://nitratine.net/blog/post/how-to-hash-passwords-in-python/
 def get_salt():
     return os.urandom(32)
+
+def get_random_hex_string(b=8):
+    return base64.b16encode(os.urandom(b)).decode('ascii')
 
 def hash_pw(salt, string):
     return hashlib.pbkdf2_hmac(
@@ -210,13 +214,15 @@ def can_do_to(u1, operation, u2id):
 
 # parse string of form "target_type/target_id"
 
-def parse_target(s):
+def parse_target(s, force_int=True):
     s = s.split('/')
     if len(s)!=2:
         raise Exception('target string failed to split')
+    if not (len(s[0]) and len(s[1])):
+        raise Exception('splitted parts have zero length(s)')
 
     targ = s[0]
-    _id = int(s[1])
+    _id = int(s[1]) if force_int else s[1]
 
     return targ, _id
 
@@ -238,3 +244,6 @@ if __name__ == '__main__':
 
     import re
     print(re.fullmatch(username_regex, 'asdf你好中国'))
+
+    for i in range(10):
+        print(get_random_hex_string(6))

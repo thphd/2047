@@ -304,7 +304,9 @@ function logout(){
 
 function go_or_refresh_if_samepage(url){
   var hashless = url.split('#')[0]
-  if(window.location.href.includes(hashless)){
+  var old_hashless = window.location.href.split('#')[0]
+
+  if(old_hashless.endsWith(hashless)){
     window.location.href = url
     window.location.reload()
   }else{
@@ -389,8 +391,10 @@ function highlight_hash(){
   if(hash[0]=='#'){
     var _id = hash.substr(1)
     var elem = geid(_id)
-    print(elem)
-    elem.className+=' chosen'
+    if(elem){
+      print(elem)
+      elem.className+=' chosen'
+    }
   }
 }
 highlight_hash()
@@ -501,4 +505,16 @@ function display_notice(str){
   }else{
     geid('overlay').style.display = 'none'
   }
+}
+
+function send_new_message(){
+  var un = prompt('请输入对方的用户名')
+  if(!un){
+    return
+  }
+  un = un.trim()
+  if(!un){
+    return
+  }
+  window.location.href = '/editor?target=username/'+un
 }

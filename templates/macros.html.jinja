@@ -28,6 +28,9 @@
   <div class="left">
     {# editor avatar should be current logged in user's #}
     {% set uid = g.logged_in.uid if 'editor' in metas else p.uid %}
+    {% set uid = uid if not (('conversation' in metas) and p.last) else (
+      p.last.to_uid if p.last.to_uid!=g.logged_in.uid else p.last.uid
+    ) %}
 
     <a href="/u/{{uid}}"><img class="avatar" src="/avatar/{{uid}}" alt=""></a>
   </div>
@@ -38,7 +41,7 @@
         {%if caller%}
           {{caller()}}
         {%else%}
-          {% set text = p.content or p.title or p.text or p.profile_string or p.name or '' %}
+          {% set text = p.content or p.title or p.text or p.profile_string or p.name or (p.last and p.last.content) or '' %}
 
           {# content is title to a thread #}
           {%if 'threadlist' in metas %}
@@ -56,8 +59,19 @@
           {%elif 'editor' in metas %}
             {{editor('thread/'~p.tid)}}
 
+          {# content is an targeted editor #}
+          {%elif 'targeted_editor' in metas %}
+            {{editor(p.target)}}
+
+          {# content is link to conversation #}
+          {%elif 'conversation' in metas %}
+              <a href="/m/{{p.convid}}" class="threadlist_title">
+                {{text}}
+              </a>
+
           {%else%}
             {{(convert_markdown(text)|safe) if not p.delete else ('<s>内容被删除</s>'|safe)}}
+
           {%endif%}
 
           {%if p.brief%}
@@ -97,6 +111,14 @@
             <a class="date" href="/p/{{p._key}}">
               {{format_time_dateifnottoday(p.t_c)}}
             </a>
+
+          {%elif m=='conversation_with'%}
+            {%set sent = 1 if p.last.to_uid!=g.logged_in.uid else 0 %}
+            <span>{{"发给" if sent else "来自"}}</span>
+            <a class="user_name" href="/u/{{p.last.to_uid if sent else p.last.uid}}">{{p.last.to_user.name if sent else p.last.user.name}}</a>
+
+          {%elif m=='conversation_date'%}
+            <span>{{format_time_dateifnottoday(p.last.t_c)}}</span>
 
           {%elif m=='link_to'%}
             {%if not t%}
@@ -190,6 +212,20 @@
 
             </div>
 
+          {%elif m=='message'%}
+            <span>由</span>
+            {# sender #}
+            <a class="user_name" href="/u/{{p.uid}}">{{p.user.name}}</a>
+
+            <span>发送给</span>
+            {# receiver #}
+            <a class="user_name" href="/u/{{p.to_uid}}">{{p.to_user.name}}</a>
+
+            {# date #}
+            <span>
+              {{format_time_dateifnottoday(p.t_c)}}
+            </span>
+
           {%endif%}
 
         {%endfor%}
@@ -235,9 +271,24 @@
   {{post(p, ['userpage_meta','userlist'])}}
 {%endmacro%}
 
+{# one line of conv, used in convlist #}
+{%macro post_conversation(p)%}
+  {{post(p, ['conversation','conversation_with','conversation_date'])}}
+{%endmacro%}
+
+{# one line of message, used in messagelist #}
+{%macro post_message(p)%}
+  {{post(p, ['message'])}}
+{%endmacro%}
+
 {# one line of editor, used in postlist #}
 {%macro post_postlist_editor(p)%}
   {{post(p, ['editor'])}}
+{%endmacro%}
+
+{# one line of targeted editor #}
+{%macro post_targeted_editor(p)%}
+  {{post(p, ['targeted_editor'])}}
 {%endmacro%}
 
 {%macro category_bubble(c)%}
@@ -295,6 +346,10 @@
 
       {%if g.logged_in and category%}
         <a class='makepost' href="/editor?target=category/{{category.cid}}">发帖</a>
+      {%endif%}
+
+      {%if can_send_message%}
+        <a class='makepost' href="javascript:send_new_message()">写私信</a>
       {%endif%}
     </div>
   {%endif%}

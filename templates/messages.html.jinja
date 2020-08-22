@@ -1,0 +1,14 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+
+<div class="threadlist">
+  {%if editor_target and g.logged_in%}
+    {{macros.post_targeted_editor(editor_target)}}
+  {%endif%}
+
+  {%for c in messages%}
+    {{macros.post_message(c)}}
+  {%endfor%}
+
+</div>
+{%endblock%}

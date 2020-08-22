@@ -169,6 +169,14 @@ aqlc.create_index('votes',
 aqlc.create_index('votes',
     type='persistent', fields=['uid','t_c'], unique=False, sparse=False)
 
+aqlc.create_index('conversations',
+    type='persistent', fields=['uid','to_uid','t_u'], unique=False, sparse=False)
+aqlc.create_index('conversations',
+    type='persistent', fields=['uid','t_u'], unique=False, sparse=False)
+aqlc.create_index('messages',
+    type='persistent', fields=['convid','t_u'], unique=False, sparse=False)
+
+
 is_integer = lambda i:isinstance(i, int)
 class Paginator:
     def __init__(self,):
@@ -846,7 +854,7 @@ def editor_handler():
     details['has_title'] = True
 
     target = ras('target')
-    target_type, _id = parse_target(target)
+    target_type, _id = parse_target(target, force_int=False)
 
     if target_type=='edit_post':
         details['has_title'] = False
@@ -859,6 +867,9 @@ def editor_handler():
 
         details['content'] = thread_original['content']
         details['title'] = thread_original['title']
+
+    if 'user' in target_type:
+        details['has_title'] = False
 
     page_title = '{} - {}'.format(
         '发表' if 'edit' not in target_type else '编辑',
@@ -1005,7 +1016,77 @@ def _(name):
 
 @route('/m')
 def _():
-    return '这功能还没做好'
+    if not g.logged_in: raise Exception('not logged in')
+
+    res = aql('''
+    for i in conversations
+    filter i.uid==@uid
+
+    sort i.t_u desc
+
+    let last = (for m in messages filter m.convid==i.convid
+    sort m.t_c desc limit 1 return m)[0]
+
+    let user = (for u in users filter u.uid==i.uid return u)[0]
+    let to_user = (for u in users filter u.uid==i.to_uid return u)[0]
+
+    return merge(i, {last: merge(last, {user, to_user})})
+    ''', uid=g.logged_in['uid'],silent=True)
+
+    return render_template('conversations.html.jinja',
+        page_title='私信（施工中，尚未开放）',
+        conversations=res,
+        can_send_message=True,
+        **(globals())
+    )
+
+@app.route('/m/<string:convid>')
+def message_by_convid(convid):
+    if not g.logged_in: raise Exception('not logged in')
+    uid = g.current_user['uid']
+
+    # only allow user to see own conversation
+    c = aql('for i in conversations filter i.convid==@k return i', k=convid, silent=True)
+    if len(c)==0:
+        raise Exception('convid not found')
+
+    conv = c[0]
+    if conv['uid']!=uid and conv['to_uid']!=uid:
+        raise Exception('you dont own the conversation')
+
+    res = aql('''
+    for i in messages
+    filter i.convid==@convid
+    sort i.t_c desc
+
+    let user = (for u in users filter u.uid==i.uid return u)[0]
+    let to_user = (for u in users filter u.uid==i.to_uid return u)[0]
+
+    return merge(i,{user, to_user})
+    ''', convid=convid, silent=True)
+
+    last = res[0]
+    u1n = last['user']['name']
+    u2n = last['to_user']['name']
+
+    if uid==last['user']['uid']:
+        myname = u1n
+        hisname = u2n
+    else:
+        myname = u2n
+        hisname = u1n
+
+    return render_template('messages.html.jinja',
+        page_title='和 {} 之间的私信对话'.format(hisname),
+        conversation=c,
+        hisname=hisname,
+        editor_target = dict(
+            target = 'username/{}'.format(hisname),
+            uid=uid,
+        ),
+        messages=res,
+        **(globals())
+    )
 
 @app.route('/api', methods=['GET', 'POST'])
 def apir():
