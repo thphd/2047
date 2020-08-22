@@ -3,6 +3,8 @@ import time
 
 from commons import *
 
+from flask import g
+
 aqlc.create_collection('admins')
 aqlc.create_collection('operations')
 aqlc.create_collection('aliases')
@@ -61,20 +63,14 @@ def register(name):
         api_registry[name] = f
     return k
 
-# global variable representing json input
-j = None
-current_user = None
-def setj(k):
-    global j,current_user
-    j = k
-    current_user = j['logged_in'] if ((j is not None) and ('logged_in' in j)) else None
-
-def es(k): return (str(j[k]) if (k in j) else None)
+def es(k):
+    j = g.j
+    return (str(j[k]) if (k in j) else None)
 
 @register('test')
 def _():
     # raise Exception('ouch')
-    return {'double':int(j['a'])*2}
+    return {'double':int(g.j['a'])*2}
 
 @register('login')
 def _():
@@ -227,10 +223,10 @@ def get_post(pid):
 
 @register('post')
 def _():
-    if not current_user:
+    if not g.current_user:
         raise Exception('you are not logged in')
 
-    uid = current_user['uid']
+    uid = g.current_user['uid']
 
 
     target_type, _id = parse_target(es('target'))
@@ -321,7 +317,7 @@ def _():
         title_length_check(title)
 
         thread = get_thread(_id)
-        if not can_do_to(current_user,'edit',thread['uid']):
+        if not can_do_to(g.current_user,'edit',thread['uid']):
             raise Exception('insufficient priviledge')
 
         if 'title' in thread and title==thread['title']:
@@ -334,7 +330,7 @@ def _():
         newthread = dict(
             title = title,
             content = content,
-            editor = current_user['uid'],
+            editor = g.current_user['uid'],
             t_e = timenow,
         )
 
@@ -352,7 +348,7 @@ def _():
 
     elif target_type == 'edit_post':
         post = get_post(_id)
-        if not can_do_to(current_user, 'edit', post['uid']):
+        if not can_do_to(g.current_user, 'edit', post['uid']):
             raise Exception('insufficient priviledge')
 
         if 'content' in post and content==post['content']:
@@ -362,7 +358,7 @@ def _():
 
         newpost = dict(
             content = content,
-            editor = current_user['uid'],
+            editor = g.current_user['uid'],
             t_e = timenow,
         )
 
@@ -400,7 +396,7 @@ update t with {votes:upv} in posts return NEW
 
 @register('update_votecount')
 def _():
-    if not current_user: raise Exception('you are not logged in')
+    if not g.current_user: raise Exception('you are not logged in')
     target_type,_id = parse_target(es('target'))
 
     if target_type=='thread':
@@ -413,7 +409,7 @@ def _():
 
 @register('cast_vote')
 def _():
-    if not current_user: raise Exception('you are not logged in')
+    if not g.current_user: raise Exception('you are not logged in')
     target_type,_id = parse_target(es('target'))
     vote_number = int(es('vote'))
 
@@ -423,11 +419,11 @@ def _():
     if target_type=='thread':
         thread = get_thread(_id)
 
-        if not can_do_to(current_user, 'vote', thread['uid']):
+        if not can_do_to(g.current_user, 'vote', thread['uid']):
             raise Exception('insufficient priviledge')
 
         # see if you already voted
-        votes = aqlc.from_filter('votes','i.uid==@k and i.type=="thread" and i.id==@_id',k=current_user['uid'],_id=_id)
+        votes = aqlc.from_filter('votes','i.uid==@k and i.type=="thread" and i.id==@_id',k=g.current_user['uid'],_id=_id)
 
         timenow = time_iso_now()
 
@@ -438,7 +434,7 @@ def _():
 
             # make vote
             vobj = dict(
-                uid=current_user['uid'],
+                uid=g.current_user['uid'],
                 to_uid=thread['uid'],
                 type='thread',
                 id=_id,
@@ -471,11 +467,11 @@ def _():
     elif target_type=='post':
         post = get_post(_id)
 
-        if not can_do_to(current_user, 'vote', post['uid']):
+        if not can_do_to(g.current_user, 'vote', post['uid']):
             raise Exception('insufficient priviledge')
 
         # see if you already voted
-        votes = aqlc.from_filter('votes','i.uid==@k and i.type=="post" and i.id==@_id',k=current_user['uid'],_id=_id)
+        votes = aqlc.from_filter('votes','i.uid==@k and i.type=="post" and i.id==@_id',k=g.current_user['uid'],_id=_id)
 
         timenow = time_iso_now()
 
@@ -486,7 +482,7 @@ def _():
 
             # make vote
             vobj = dict(
-                uid=current_user['uid'],
+                uid=g.current_user['uid'],
                 to_uid=post['uid'],
                 type='post',
                 id=_id,
@@ -520,9 +516,9 @@ def _():
 
 @register('mark_delete')
 def _():
-    if not current_user:
+    if not g.current_user:
         raise Exception('you are not logged in')
-    uobj = current_user
+    uobj = g.current_user
     uid = uobj['uid']
 
     target = es('target')
@@ -585,7 +581,7 @@ def _():
 
 @register('render')
 def _():
-    if not current_user: raise Exception('you are not logged in')
+    if not g.current_user: raise Exception('you are not logged in')
 
     content = es('content').strip()
     content_length_check(content, allow_short=True)
@@ -597,16 +593,16 @@ def r8():return os.urandom(8)
 
 @register('generate_invitation_code')
 def _():
-    if not current_user: raise Exception('you are not logged in')
-    uid = current_user['uid']
+    if not g.current_user: raise Exception('you are not logged in')
+    uid = g.current_user['uid']
 
     invs = aql('''for i in invitations
         filter i.uid==@k and i.active == true
         return i''',
         k=uid, silent=True)
 
-    if len(invs)>=5:
-        raise Exception('you can only generate so much invitation code')
+    if len(invs)>=num_max_used_invitation_codes:
+        raise Exception('you can only generate so much unused invitation code({})'.format(num_max_used_invitation_codes))
 
     code = '2047'+base64.b16encode(r8()).decode('ascii')
 
@@ -623,8 +619,10 @@ def _():
 
 @register('change_password')
 def _():
-    if not current_user: raise Exception('you are not logged in')
-    uid = current_user['uid']
+    j = g.j
+
+    if not g.current_user: raise Exception('you are not logged in')
+    uid = g.current_user['uid']
 
     pwo = j['old_password_hash']
     pwn = j['new_password_hash']

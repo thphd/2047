@@ -179,6 +179,8 @@ friendly_links = [
     {'text':'服务条款', 'url':'/t/7110'},
 ]
 
+num_max_used_invitation_codes = 20
+
 # priviledge: who can do what to whom
 
 def can_do_to(u1, operation, u2id):

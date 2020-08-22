@@ -14,7 +14,6 @@
 #
 # builtins.print = orderly_print
 
-
 import time,os,sched,random,threading,traceback,datetime
 import re,base64
 import zlib
@@ -35,7 +34,7 @@ from flask_gzip import Gzip
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from api import api_registry, get_categories_info, setj, get_url_to_post, get_url_to_post_given_details
+from api import api_registry, get_categories_info, get_url_to_post, get_url_to_post_given_details
 # from api import *
 
 def init_directory(d):
@@ -568,6 +567,7 @@ def befr():
 
     if 'uid' in session:
         g.logged_in = get_user(int(session['uid']))
+        g.current_user = g.logged_in
         print_info(g.logged_in['name'])
 
         # print_err(request.headers)
@@ -1041,21 +1041,23 @@ def apir():
     j['logged_in'] = g.logged_in
     if action in api_registry:
         if action != 'ping':
-            print_up(j)
+            print_up('API >>', j)
+            g.j = j
+
         try:
-            setj(j)
             answer = api_registry[action]()
-            setj(None)
+
         except Exception as ex:
             traceback.print_exc()
             errstr = ex.__class__.__name__+'/{}'.format(str(ex))
             print_err('Exception in api "{}":'.format(action), errstr)
             return e(errstr)
+
         else:
             if answer is None:
                 raise Exception('return value is None, what the fuck?')
             if action != 'ping':
-                print_down(answer)
+                print_down('API <<', answer)
             if 'setuid' in answer:
                 session['uid'] = answer['setuid']
             if 'logout' in answer:
