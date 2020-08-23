@@ -6,6 +6,23 @@
 </div>
 
 <div class="threadlist">
+  {%if g.logged_in and updateable_personal_info%}
+    <div class="invitations">
+      <div class="invitation_list_title">
+        修改个人资料
+      </div>
+
+      <div class="register" id="update_personal_info">
+        {%for item, explain in updateable_personal_info%}
+          <label>{{explain}}</label>
+          <input type="text" id="{{item}}" value={{g.logged_in[item]}}>
+          <br>
+        {%endfor%}
+
+        <button type="button" id="button_update_personal_info">修改个人资料</button>
+      </div>
+    </div>
+  {%endif%}
 
   {%if (invitations!=None)%}
   <div class="invitations">

@@ -35,7 +35,7 @@ from flask_gzip import Gzip
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from api import api_registry, get_categories_info, get_url_to_post, get_url_to_post_given_details
-# from api import *
+from api import *
 
 def init_directory(d):
     try:

@@ -457,6 +457,33 @@ def _():
         raise Exception('target_type not supported')
     return {'ok':'done'}
 
+updateable_personal_info = [
+    ('brief', '个人简介（140字符）')
+]
+
+@register('update_personal_info')
+def _():
+    if not g.current_user: raise Exception('you are not logged in')
+
+    upd=dict()
+    for item,explain in updateable_personal_info:
+        if item not in g.j:
+            continue
+
+        value = es(item)
+
+        if item=='brief':
+            if len(value)>140:
+                raise Exception('brief should not be longer than 140 chars')
+
+        upd[item] = value
+
+
+    aql('for u in users filter u.uid==@uid update u with @upd in users return NEW',
+        uid=g.current_user['uid'], upd=upd, silent=True)
+
+    return {'error':False}
+
 @register('cast_vote')
 def _():
     if not g.current_user: raise Exception('you are not logged in')

@@ -522,3 +522,34 @@ function send_new_message(){
   }
   window.location.href = '/editor?target=username/'+un
 }
+
+var bupi = geid('button_update_personal_info')
+if(bupi){
+  bupi.onclick = function(){
+    var calldict = {
+      action:'update_personal_info',
+    }
+
+    var dupi = geid('update_personal_info')
+    var inputs = gebtn(dupi)('input')
+
+    foreach(inputs)(e=>{
+      calldict[e.id] = e.value
+    })
+
+    bupi.disabled=true
+    api(calldict)
+    .then(r=>{
+      bupi.disabled=false
+      return r
+    })
+    .catch(e=>{
+      bupi.disabled=false
+      throw e
+    })
+    .then(r=>{
+      window.location.reload()
+    })
+    .catch(alert)
+  }  
+}
