@@ -750,7 +750,7 @@ body {
 }
 
 .rightalign a {
-    color: #005bac;
+    /* color: #005bac; */
 }
 
 
@@ -821,6 +821,7 @@ body {
 
 a {
     text-decoration: none;
+    color: #005bac;
 }
 
 .editor_button_row a {
@@ -866,4 +867,12 @@ span.votenumber {}
 
 #editor_text::placeholder {
     color: gray;
+}
+
+.gotmail {
+    color: red;
+}
+
+.gotmail {
+    color: red;
 }

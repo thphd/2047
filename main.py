@@ -150,6 +150,9 @@ aqlc.create_index('users',
 aqlc.create_index('users',
     type='persistent', fields=['name'], unique=False, sparse=False)
 
+aqlc.create_index('users',
+    type='persistent', fields=['invitation'], unique=False, sparse=False)
+
 aqlc.create_index('invitations',
     type='persistent', fields=['uid','active','t_c'], unique=False, sparse=False)
 aqlc.create_index('invitations',
@@ -173,9 +176,11 @@ aqlc.create_index('conversations',
     type='persistent', fields=['uid','to_uid','t_u'], unique=False, sparse=False)
 aqlc.create_index('conversations',
     type='persistent', fields=['uid','t_u'], unique=False, sparse=False)
-aqlc.create_index('messages',
-    type='persistent', fields=['convid','t_u'], unique=False, sparse=False)
 
+aqlc.create_index('messages',
+    type='persistent', fields=['convid','t_c'], unique=False, sparse=False)
+aqlc.create_index('messages',
+    type='persistent', fields=['to_uid','t_c'], unique=False, sparse=False)
 
 is_integer = lambda i:isinstance(i, int)
 class Paginator:
@@ -550,7 +555,7 @@ class UAFilter:
 
         self.dt[ua] = this_time
         # print_err(self.d[ua])
-        if self.d[ua]>30:
+        if self.d[ua]>45:
             self.d[ua]+=3
 
             if self.d[ua]>75 and (ua not in self.blacklist):
@@ -579,6 +584,18 @@ def befr():
         print_info(g.logged_in['name'])
 
         # print_err(request.headers)
+
+        # when is the last time you check your inbox?
+        if 't_inbox' not in g.current_user:
+            g.current_user['t_inbox'] = '1989-06-04T00:00:00'
+
+        # how many unread messages?
+        num_unread = aql('return length(for m in messages filter m.to_uid==@uid and m.t_c>@lastcheck return m)',
+            uid=g.current_user['uid'],
+            lastcheck=g.current_user['t_inbox'],
+            silent=True,
+        )[0]
+        g.current_user['num_unread']=num_unread
 
         return
     else:
@@ -1027,14 +1044,20 @@ def _():
     let last = (for m in messages filter m.convid==i.convid
     sort m.t_c desc limit 1 return m)[0]
 
-    let user = (for u in users filter u.uid==i.uid return u)[0]
-    let to_user = (for u in users filter u.uid==i.to_uid return u)[0]
+    let user = (for u in users filter u.uid==last.uid return u)[0]
+    let to_user = (for u in users filter u.uid==last.to_uid return u)[0]
 
-    return merge(i, {last: merge(last, {user, to_user})})
+    return merge(i, {last: merge(last, {user:user, to_user:to_user})})
     ''', uid=g.logged_in['uid'],silent=True)
 
+    # update t_inbox
+    timenow = time_iso_now()
+    aql('update @user with {t_inbox:@t} in users',
+        user=g.current_user,t=timenow,silent=True)
+    g.current_user['num_unread']=0
+
     return render_template('conversations.html.jinja',
-        page_title='私信（施工中，尚未开放）',
+        page_title='私信（测试中）',
         conversations=res,
         can_send_message=True,
         **(globals())

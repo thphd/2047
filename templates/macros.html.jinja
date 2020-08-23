@@ -113,7 +113,7 @@
             </a>
 
           {%elif m=='conversation_with'%}
-            {%set sent = 1 if p.last.to_uid!=g.logged_in.uid else 0 %}
+            {%set sent = 1 if p.last.uid==g.logged_in.uid else 0 %}
             <span>{{"发给" if sent else "来自"}}</span>
             <a class="user_name" href="/u/{{p.last.to_uid if sent else p.last.uid}}">{{p.last.to_user.name if sent else p.last.user.name}}</a>
 

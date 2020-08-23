@@ -730,21 +730,24 @@ def send_message(fromuid, touid, content):
             if not collisions:
                 break
 
-        # make 2 new conversations with the same convid
-        conv1 = aql('insert @k into conversations return NEW', k=dict(
-            uid=fromuid,
-            to_uid=touid,
-            convid=convid,
-            t_u=timenow,
-            t_c=timenow,
-        ))[0]
-        conv2 = aql('insert @k into conversations return NEW', k=dict(
-            uid=touid,
-            to_uid=fromuid,
-            convid=convid,
-            t_u=timenow,
-            t_c=timenow,
-        ))[0]
+        conv1,conv2 = aql('''
+        for i in @k insert i into conversations return NEW
+        ''',k=[
+            dict(
+                uid=fromuid,
+                to_uid=touid,
+                convid=convid,
+                t_u=timenow,
+                t_c=timenow,
+            ),
+            dict(
+                uid=touid,
+                to_uid=fromuid,
+                convid=convid,
+                t_u=timenow,
+                t_c=timenow,
+            ),
+        ])
 
     else:
         # use existing conversation

@@ -25,7 +25,9 @@
 
         {%if g.logged_in%}
 
-        <a href="/m">私信</a>
+        {%set nu = g.logged_in.num_unread %}
+        <a href="/m" class="{{'gotmail' if nu else ''}}">私信{{' ('~nu~')' if nu else ''}}</a>
+
         <a href="javascript:void(0)" onclick="logout();">登出</a>
 
         <a href="/u/{{g.logged_in.uid}}">

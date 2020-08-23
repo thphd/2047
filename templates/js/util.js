@@ -297,7 +297,11 @@ function logout(){
     action:'logout'
   })
   .then(res=>{
-    window.location.reload()
+    if(window.location.href.includes('/m')){
+      window.location.href='/'
+    }else{
+      window.location.reload()
+    }
   })
   .catch(alert)
 }
