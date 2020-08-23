@@ -196,6 +196,7 @@ span.last_commented_date {
     align-items: center;
     align-content: center;
     flex-direction: row;
+    justify-content: space-between;
 }
 
 
@@ -642,12 +643,15 @@ code .nf {
 }
 
 .header > .makepost {
-    font-size: 16px;
+    font-size: 80%;
     border-style: solid;
     border-width: 1px;
-    border-radius: 3px;
+    border-radius: .3em;
     padding: 2px 7px;
-    color: #b9b9b9;
+    color: #ffffff;
+    background-color: #6ebf7f;
+    border-color: #349640;
+    display: flex;
 }
 
 .meta .category_name {

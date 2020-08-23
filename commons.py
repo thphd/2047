@@ -233,8 +233,24 @@ password_warning = convert_markdown('''
 
 密码太简单（少于13位纯数字、少于8位数字+字母、[最常见的一百万个密码](https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10-million-password-list-top-1000000.txt)）将导致你的密码被人用计算机在短时间内猜解。
 
-2047建议您使用浏览器提供的随机密码。
+我们建议您使用浏览器提供的随机密码。
 
+''')
+
+messaging_warning = convert_markdown('''
+# 私信安全警告
+
+2047在数据库中明文保存所有私信。
+
+私信内容不会纳入论坛数据备份。除非FBI敲门，我们不会将私信内容提供给任何第三方。
+
+站长可以阅读所有私信内容，使用私信功能即视为默许。
+
+如果您不希望站长阅读私信内容，可以将私信内容加密。
+
+我们不会对私信内容作任何限制，不存在比如说新品葱搞的那种关键词审查/过滤。
+
+但请注意，如果您发送的私信令其他用户感到困扰，在收到举报后我们有可能根据《服务条款》封禁您的账号。
 ''')
 
 if __name__ == '__main__':
