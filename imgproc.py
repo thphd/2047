@@ -30,7 +30,7 @@ def avatar_pipeline(b):
     # output binary
 
     im = load_img_from_bin(b)
-    im = resize_to(im, 84).quantize(
+    im = resize_to(im, 96).quantize(
         colors=64,
         method=Image.FASTOCTREE, # only applicapable
         kmeans=1, # larger faster

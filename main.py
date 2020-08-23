@@ -991,7 +991,15 @@ def _(uid):
     # print(res)
     if len(res)>0:
         res = res[0]
-        if 'data' in res:
+
+        if 'data_new' in res:
+            # new 2047 png pipeline
+            d = res['data_new']
+            rawdata = base64.b64decode(d)
+
+            resp = make_response(rawdata, 200)
+            resp.headers['Content-Type'] = 'image/png'
+        elif 'data' in res:
             # old 2049bbs jpeg pipeline
 
             d = res['data']
@@ -1002,14 +1010,6 @@ def _(uid):
 
             resp = make_response(rawdata, 200)
             resp.headers['Content-Type'] = 'image/jpeg'
-
-        elif 'data_new' in res:
-            # new 2047 png pipeline
-            d = res['data_new']
-            rawdata = base64.b64decode(d)
-
-            resp = make_response(rawdata, 200)
-            resp.headers['Content-Type'] = 'image/png'
 
         else:
             raise Exception('no data in avatar object found')
@@ -1182,7 +1182,8 @@ def apir():
             if 'setuid' in answer:
                 session['uid'] = answer['setuid']
             if 'logout' in answer:
-                del session['uid']
+                if 'uid' in session:
+                    del session['uid']
 
             return answer
     else:
