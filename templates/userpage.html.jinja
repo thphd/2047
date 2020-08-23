@@ -4,9 +4,9 @@
 <div class="threadlist">
   {{macros.post_userpage(u)}}
 </div>
-
+<hr>
 <div class="threadlist">
-  {%if g.logged_in and updateable_personal_info%}
+  {%if user_is_self and updateable_personal_info%}
     <div class="invitations">
       <div class="invitation_list_title">
         修改个人资料
@@ -22,6 +22,30 @@
         <button type="button" id="button_update_personal_info">修改个人资料</button>
       </div>
     </div>
+  {%endif%}
+
+  {%if user_is_self%}
+  <div class="invitations">
+    <div class="invitation_list_title">
+      上传头像
+    </div>
+
+    <div class="post_content">
+      <blockquote>
+        （图片限1MB，支持透明度，自动裁剪为方形，上传后由于浏览器缓存原因，不会立即起作用，请 Ctrl-F5 绕开浏览器缓存，不同浏览器绕开缓存方式不同，可参考<a href="https://en.wikipedia.org/wiki/Wikipedia:Bypass_your_cache#Bypassing_cache">这里</a>）
+      </blockquote>
+    </div>
+
+    <img src="/avatar/{{u.uid}}?no-cache=1" alt="">
+
+    <div class="register" id="update_personal_info">
+      <form>
+        <input type="file" id="file_selector" name="avatar">
+        </form>
+
+      <button type="button" id="button_upload">上传</button>
+    </div>
+  </div>
   {%endif%}
 
   {%if (invitations!=None)%}
@@ -47,7 +71,7 @@
   </div>
   {%endif%}
 
-  {%if g.logged_in and g.logged_in.uid==u.uid%}
+  {%if user_is_self%}
   <form class="register">
     <label>用户名</label>
     <input type="text" id="username" value="{{g.logged_in.name}}" disabled="true">

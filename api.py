@@ -522,7 +522,7 @@ def _():
             # put in db
             n = aql('insert @i into votes return NEW',i=vobj,silent=True)[0]
             n = update_thread_votecount(_id)
-            return n
+            return {'ok':vote_number}
 
         #if you voted before
         else:
@@ -539,7 +539,7 @@ def _():
             # put in db
             n = aql('update @k with @o in votes return NEW',k=vote,o=vobj,silent=True)[0]
             n = update_thread_votecount(_id)
-            return n
+            return {'ok':vote_number}
 
     elif target_type=='post':
         post = get_post(_id)

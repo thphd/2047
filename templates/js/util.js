@@ -118,6 +118,43 @@ function xhr(method, dest, data){
   })
 }
 
+var file_selector = geid('file_selector')
+var btn_upload = geid('button_upload')
+
+if (file_selector&&btn_upload){
+  btn_upload.onclick=function(){
+    btn_upload.disabled=true
+    upload_file('/upload')
+  }
+}
+
+function upload_file(target){
+
+  var files = file_selector.files
+  if(files.length==0){
+    alert('请先选择一个文件')
+    return
+  }
+
+  var file = files[0];
+  print(file)
+
+  var xhrObj = new XMLHttpRequest();
+  // xhrObj.upload.addEventListener("loadstart", loadStartFunction, false);
+  // xhrObj.upload.addEventListener("progress", progressFunction, false);
+  xhrObj.upload.addEventListener("load", function(){
+    display_notice('')
+    window.location.reload()
+  }, false);
+  display_notice('正在上传到服务器...')
+  xhrObj.open("POST", target, true);
+  xhrObj.setRequestHeader("Content-type", file.type);
+  // xhrObj.setRequestHeader("X_FILE_NAME", file.name);
+  xhrObj.send(file);
+}
+
+
+
 // access api
 function api(j){
   display_notice('连接服务器...')
@@ -551,5 +588,5 @@ if(bupi){
       window.location.reload()
     })
     .catch(alert)
-  }  
+  }
 }

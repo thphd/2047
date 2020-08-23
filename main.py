@@ -22,6 +22,7 @@ from colors import *
 import requests as r
 
 import Identicon
+Identicon._crop_coner_round = lambda a,b:a # don't cut corners, please
 import mimetypes as mt
 
 from commons import *
@@ -58,6 +59,7 @@ def get_secret():
     return r
 
 app = Flask(__name__, static_url_path='')
+app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
 
 app.secret_key = get_secret()
@@ -906,6 +908,9 @@ def userfill(u):
 
 @app.route('/u/<int:uid>')
 def userpage(uid):
+    return _userpage(uid)
+
+def _userpage(uid):
     uobj = aql('''
     for u in users filter u.uid==@uid
     return u
@@ -918,6 +923,7 @@ def userpage(uid):
     u = uobj
 
     userfill(u)
+    user_is_self = (uid == g.logged_in['uid']) if g.logged_in else False
 
     stats = aql('''return {
             nthreads:length(for t in threads filter t.uid==@uid return t),
@@ -942,7 +948,7 @@ UID {}
 
     invitations = None
     if g.logged_in:
-        if g.logged_in['uid']==uid:
+        if user_is_self:
             k = aql('for i in invitations filter i.uid==@k\
             let users = (for u in users filter u.invitation==i._key return u)\
             sort i.t_c desc limit 25 return merge(i,{users})',k=uid,silent=True)
@@ -952,9 +958,9 @@ UID {}
         page_title=uobj['name'],
         u=uobj,
         invitations=invitations,
+        user_is_self=user_is_self,
         **(globals())
     )
-
 @app.route('/register')
 def regpage():
     invitation = ras('code') or ''
@@ -983,17 +989,30 @@ def _(uid):
     # first check db
     res = aql('for a in avatars filter a.uid==@uid return a', uid=uid, silent=True)
     # print(res)
-    if len(res)>0 and 'data' in res[0]:
+    if len(res)>0:
         res = res[0]
+        if 'data' in res:
+            # old 2049bbs jpeg pipeline
 
-        d = res['data']
-        match = re.match(r'^data:(.*?);base64,(.*)$',d)
-        mime,b64data = match[1],match[2]
+            d = res['data']
+            match = re.match(r'^data:(.*?);base64,(.*)$',d)
+            mime,b64data = match[1],match[2]
 
-        rawdata = base64.b64decode(b64data)
+            rawdata = base64.b64decode(b64data)
 
-        resp = make_response(rawdata, 200)
-        resp.headers['Content-Type'] = 'image/jpeg'
+            resp = make_response(rawdata, 200)
+            resp.headers['Content-Type'] = 'image/jpeg'
+
+        elif 'data_new' in res:
+            # new 2047 png pipeline
+            d = res['data_new']
+            rawdata = base64.b64decode(d)
+
+            resp = make_response(rawdata, 200)
+            resp.headers['Content-Type'] = 'image/png'
+
+        else:
+            raise Exception('no data in avatar object found')
 
     else: # db no match
         # render an identicon
@@ -1007,7 +1026,10 @@ def _(uid):
     else:
         resp.set_etag(etag)
 
-    resp.headers['Cache-Control']= 'max-age=14400'
+    if 'no-cache' in request.args:
+        resp.headers['Cache-Control']= 'no-cache'
+    else:
+        resp.headers['Cache-Control']= 'max-age=14400'
     return resp
 
     # default: 307 to logo.png
@@ -1017,22 +1039,18 @@ def _(uid):
     resp.headers['Cache-Control']= 'max-age=1800'
     return resp
 
-@route('/member/<string:name>')
-def _(name):
+@app.route('/member/<string:name>')
+def userpage_byname(name):
     # check if user exists
     res = aql('for u in users filter u.name==@n return u', n=name)
     if len(res)==0:
         return make_response('no such user', 500)
 
     u = res[0]
-    # resp = make_response('user found', 307)
-    # resp.headers['Location'] = '/u/{}'.format(u['uid'])
-    return userpage(u['uid'])
+    return _userpage(u['uid'])
 
-    return resp
-
-@route('/m')
-def _():
+@app.route('/m')
+def conversation_page():
     if not g.logged_in: raise Exception('not logged in')
 
     res = aql('''
@@ -1064,7 +1082,7 @@ def _():
     )
 
 @app.route('/m/<string:convid>')
-def message_by_convid(convid):
+def messages_by_convid(convid):
     if not g.logged_in: raise Exception('not logged in')
     uid = g.current_user['uid']
 
@@ -1111,11 +1129,10 @@ def message_by_convid(convid):
         **(globals())
     )
 
+def e(s): return make_response({'error':s}, 500)
+
 @app.route('/api', methods=['GET', 'POST'])
 def apir():
-    # global logged_in
-
-    def e(s): return make_response({'error':s}, 500)
 
     if request.method not in ['GET','POST']:
         return e('support GET and POST only')
@@ -1170,6 +1187,28 @@ def apir():
             return answer
     else:
         return e('action function not registered')
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if request.method != 'POST':
+        return e('please use POST')
+    if not g.logged_in: raise Exception('log in please')
+
+    data = request.data # binary
+    # print(len(data))
+
+    from imgproc import avatar_pipeline
+
+    png = avatar_pipeline(data)
+    png = base64.b64encode(png).decode('ascii')
+
+    avatar_object = dict(
+        uid=g.logged_in['uid'],
+        data_new=png,
+    )
+    aql('upsert {uid:@uid} insert @k update @k into avatars',
+        uid=avatar_object['uid'], k=avatar_object)
+    return {'error':False}
 
 if __name__ == '__main__':
     import os
