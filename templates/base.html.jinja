@@ -58,35 +58,54 @@
         {%block navigator%}{%endblock%}
       </div>
     </div>
+
+
     <div id="footer" class="">
-      <div class="copyright">
-        ©1989 Tsinghua University
+      <div class="lr">
+        <div class="">
+          <div class="copyright">
+            ©1989 Tsinghua University
+          </div>
+          <br>
+          <div class="copyright">
+            ©2047 Beijing Wudaokou Computing Technology LLC
+          </div>
+          <br>
+          <div class="copyright">
+            版权所有 北京市五道口计算机技术有限公司 地址：北京市海淀区中关村东路1号院3号
+          </div>
+          <br>
+          {%if 0%}
+          <div class="copyright">
+            <img src="/images/ga.png">
+            <a href="/jgawb/全国互联网安全管理服务平台.html">京公网安备 11040102700068号</a>
+            <a href="/jicpb/ICP_IP地址_域名信息备案管理系统.html">京ICP备 04000001号</a>
+          </div>
+          <br>
+          {%endif%}
+          <div class="copyright">
+            <a rel='noreferrer' href="https://github.com/thphd/2047">GitHub</a>
+          </div>
+          <br>
+          <div class="copyright" onclick="window.location.href='/';">
+            回到首页
+          </div>
+        </div>
+
+        <div class="">
+          <div class="friendly_link_title copyright">
+            友情链接
+          </div>
+          <br>
+          {%for item in friendly_links%}
+            <a class='copyright' href="{{item.url}}" title={{item.notes}}>{{item.text}}</a>
+          {%endfor%}
+        </div>
       </div>
-      <br>
-      <div class="copyright">
-        ©2047 Beijing Wudaokou Computing Technology LLC
-      </div>
-      <br>
-      <div class="copyright">
-        版权所有 北京市五道口计算机技术有限公司 地址：北京市海淀区中关村东路1号院3号
-      </div>
-      <br>
-      {%if 0%}
-      <div class="copyright">
-        <img src="/images/ga.png">
-        <a href="/jgawb/全国互联网安全管理服务平台.html">京公网安备 11040102700068号</a>
-        <a href="/jicpb/ICP_IP地址_域名信息备案管理系统.html">京ICP备 04000001号</a>
-      </div>
-      <br>
-      {%endif%}
-      <div class="copyright">
-        <a rel='noreferrer' href="https://github.com/thphd/2047">GitHub</a>
-      </div>
-      <br>
-      <div class="copyright" onclick="window.location.href='/';">
-        回到首页
-      </div>
+
     </div>
+
+
     <script src="/js/md5.js" charset="utf-8"></script>
     <script src="/js/util.js" charset="utf-8"></script>
   </div>

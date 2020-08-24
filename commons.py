@@ -180,20 +180,31 @@ user_list_defaults = dict(
     sortby='uid',
 )
 
-common_links = [
-    {'text':'花名册', 'url':'/u/all'},
-    {'text':'删帖', 'url':'/c/deleted'},
-    {'text':'老用户', 'url':'/t/7108'},
-    {'text':'邀请码', 'url':'/t/7109'},
-    {'text':'服务条款', 'url':'/t/7110'},
-]
-friendly_links = [
-    {'text':'花名册', 'url':'/u/all'},
-    {'text':'删帖', 'url':'/c/deleted'},
-    {'text':'老用户', 'url':'/t/7108'},
-    {'text':'邀请码', 'url':'/t/7109'},
-    {'text':'服务条款', 'url':'/t/7110'},
-]
+def linkify(s):
+    lines = s.split('\n')
+    lines = [l.strip() for l in lines if len(l.strip())!=0]
+    lines = [l.split(' ') for l in lines if len(l.split(' '))==3]
+    lines = [{'text':l[0],'url':l[1],'notes':l[2]} for l in lines]
+    return lines
+
+common_links = linkify('''
+花名册 /u/all 本站用户名册
+老用户 /t/7108 原2049用户取回账号方式
+邀请码 /t/7109 获取邀请码
+删帖 /c/deleted 本站被删帖子
+数据备份 /t/7135 论坛数据库备份
+服务条款 /t/7110 违者封号
+''')
+
+friendly_links = linkify('''
+火光 https://2049post.wordpress.com/ 薪火相传光明不息
+BE4 https://nodebe4.github.io/ BE4的网络服务
+XsDen https://xsden.info/ 講粵語嘅討論區
+膜乎 https://mohu.rocks/ 中南海皇家娱乐城
+連登 https://lihkg.com/ 光復香港冷氣革命
+Tor上的2047 http://terminusnemheqvy.onion/ 特殊情况下使用
+新品葱 https://pincong.rocks/ 台湾人开的简体字论坛
+''')
 
 site_name='2047论坛'
 

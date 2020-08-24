@@ -293,7 +293,7 @@
 
 {%macro category_bubble(c)%}
   {# category name #}
-  <a class="category_name c{{c.cid}}" href="/c/{{c.cid}}">
+  <a class="category_name c{{c.cid}}" href="/c/{{c.cid}}" title="{{c.brief}}">
     {{c.cname if c.cname else c.name}}
     {%if 0 and not(c.cname)%}
       <br>
@@ -304,7 +304,7 @@
 
 {%macro link_bubble(linkobj)%}
   {# category name #}
-  <a class="category_name" href="{{linkobj.url}}">
+  <a class="category_name" href="{{linkobj.url}}" title="{{linkobj.notes}}">
     {{linkobj.text}}
     {%if 0 and not(c.cname)%}
       <br>
