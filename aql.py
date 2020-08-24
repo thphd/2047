@@ -25,26 +25,36 @@ class AQLController:
     def __init__(self, dburl, dbname, collections):
         self.dburl = dburl
         self.dbname = dbname
+        self.collections = collections
+        self.prepared = False
 
-        # create database if nonexistent
-        self.request('post','/_api/database', name=dbname, raise_error=False)
+    def prepare(self):
+        if not self.prepared:
+            # create database if nonexistent
+            self.request('post','/_api/database', name=self.dbname, raise_error=False)
 
-        # create collections if nonexistent
-        for c in collections:
-            self.create_collection(c)
+            self.prepared = True
+            # create collections if nonexistent
+            for c in self.collections:
+                self.create_collection(c)
+
 
     def create_collection(self, name):
+        self.prepare()
         return self.request('POST', '/_db/'+self.dbname+'/_api/collection',
         name=name, waitForSync=True, raise_error=False)
 
     def clear_collection(self, name, filter=''):
+        self.prepare()
         return self.aql('for i in {} {} remove i in {}'.format(
             name, filter, name))
 
     def create_index(self, collection, **kw):
+        self.prepare()
         return self.request('post', '/_db/'+self.dbname+'/_api/index?collection='+collection, raise_error=False, **kw)
 
     def aql(self, query, silent=False, **kw):
+        self.prepare()
         if not silent: print_up('AQL >>',query,kw)
         resp = self.request(
             'POST', '/_db/'+self.dbname+'/_api/cursor',
@@ -57,6 +67,7 @@ class AQLController:
         return res
 
     def from_filter(self, _from, _filter, **kw):
+        self.prepare()
         return self.aql('for i in {} filter {} return i'.format(_from, _filter), **kw)
 
 if __name__ == '__main__':
