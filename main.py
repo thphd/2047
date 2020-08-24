@@ -1046,10 +1046,13 @@ def conversation_page():
     let last = (for m in messages filter m.convid==i.convid
     sort m.t_c desc limit 1 return m)[0]
 
+    let count = length(for m in messages filter m.convid==i.convid
+    return m)
+
     let user = (for u in users filter u.uid==last.uid return u)[0]
     let to_user = (for u in users filter u.uid==last.to_uid return u)[0]
 
-    return merge(i, {last: merge(last, {user:user, to_user:to_user})})
+    return merge(i, {count, last: merge(last, {user:user, to_user:to_user})})
     ''', uid=g.logged_in['uid'],silent=True)
 
     # update t_inbox

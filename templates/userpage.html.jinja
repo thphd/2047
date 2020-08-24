@@ -3,7 +3,11 @@
 
 <div class="threadlist">
   {%call macros.post(u,[])%}
-  <p>用户名 {{u.name}}</p>
+  <p>用户名 {{u.name}}
+    {%if g.logged_in%}
+      <a href="/editor?target=username/{{u.name}}">发私信给ta</a>
+    {%endif%}
+  </p>
   <p>UID {{u.uid}}</p>
   <p>注册时间 {{format_time_datetime(u.t_c)}}</p>
   <p>发帖 <a href="/u/{{u.uid}}/t">{{u.stats.nthreads}}</a></p>

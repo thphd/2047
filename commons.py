@@ -203,7 +203,7 @@ XsDen https://xsden.info/ 講粵語嘅討論區
 膜乎 https://mohu.rocks/ 中南海皇家娱乐城
 連登 https://lihkg.com/ 光復香港冷氣革命
 Tor上的2047 http://terminusnemheqvy.onion/ 特殊情况下使用
-新品葱 https://pincong.rocks/ 台湾人开的简体字论坛
+新品葱 https://pincong.rocks/ 带关键词审查的墙外论坛
 ''')
 
 site_name='2047论坛'
