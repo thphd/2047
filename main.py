@@ -510,8 +510,6 @@ def ras(k):
     v = key(request.args,k)
     return str(v) if v else ''
 
-site_name='2047'
-
 def get_user(uid):
     uo = aql('for i in users filter i.uid==@k \
         let admin = length(for a in admins filter a.name==i.name return a)\
@@ -875,6 +873,11 @@ def editor_handler():
     target = ras('target')
     target_type, _id = parse_target(target, force_int=False)
 
+    if target_type not in [
+        'user','username','edit_post','edit_thread','category','thread'
+        ]:
+        raise Exception('unsupported target_type')
+
     if target_type=='edit_post':
         details['has_title'] = False
         post_original = aqlc.from_filter('posts', 'i._key==@_id', _id=str(_id))[0]
@@ -882,10 +885,14 @@ def editor_handler():
         details['content'] = post_original['content']
 
     if target_type == 'edit_thread':
+        _id = int(_id)
         thread_original = aqlc.from_filter('threads', 'i.tid==@id',id=_id)[0]
 
         details['content'] = thread_original['content']
         details['title'] = thread_original['title']
+
+    if target_type=='user':
+        _id = int(_id)
 
     if 'user' in target_type:
         details['has_title'] = False

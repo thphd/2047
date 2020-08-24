@@ -169,7 +169,7 @@ def _():
     ''',ik=ik)
 
     if len(invitation) == 0:
-        raise Exception('invitation code not exist or expired')
+        raise Exception('invitation code not exist or already used by someone else')
 
     # obtain a new uid
     uid = obtain_new_id('uid')
