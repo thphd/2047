@@ -11,6 +11,7 @@ dtdt = datetime.datetime
 dtt = datetime.time
 dtd = datetime.date
 dtn = dtdt.now
+dttz = datetime.timezone
 
 # default time parsing
 def dtdt_from_stamp(stamp):
@@ -36,15 +37,17 @@ format_time_timeonly = lambda s: format_time(dfs(s), '%H:%M')
 
 def format_time_dateifnottoday(s):
     dt = dfs(s)
-    now = dtn()
+    now = dtn(working_timezone)
 
     if now.date() > dt.date():
         return format_time_dateonly(s)
     else:
         return format_time_timeonly(s)
 
+working_timezone = dttz(datetime.timedelta(hours=+8)) # Hong Kong
+
 def time_iso_now():
-    return format_time_iso(dtn())
+    return format_time_iso(dtn(working_timezone))
 
 # pw hashing
 
@@ -265,3 +268,7 @@ if __name__ == '__main__':
 
     for i in range(10):
         print(get_random_hex_string(6))
+
+    # test timezone
+    print(format_time_iso(dtn()))
+    print(format_time_iso(dtn(working_timezone)))
