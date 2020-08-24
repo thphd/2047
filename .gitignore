@@ -11,3 +11,5 @@ dump
 j*b/
 ga.png
 *.tar*
+release_token*
+backup

@@ -17,7 +17,6 @@
 import time,os,sched,random,threading,traceback,datetime
 import re,base64
 import zlib
-from colors import *
 
 import requests as r
 
@@ -37,14 +36,6 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 from api import api_registry, get_categories_info, get_url_to_post, get_url_to_post_given_details
 from api import *
-
-def init_directory(d):
-    try:
-        os.mkdir(d)
-    except FileExistsError as e:
-        print_err('directory {} already exists.'.format(d), e)
-    else:
-        print_info('directory {} created.'.format(d))
 
 # init_directory('./static/')
 # init_directory('./static/upload/')

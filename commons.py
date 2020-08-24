@@ -2,6 +2,15 @@
 
 import os, hashlib, binascii as ba
 import base64
+from colors import *
+
+def init_directory(d):
+    try:
+        os.mkdir(d)
+    except FileExistsError as e:
+        print_err('directory {} already exists.'.format(d), e)
+    else:
+        print_info('directory {} created.'.format(d))
 
 # everything time related
 
