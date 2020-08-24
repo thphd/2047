@@ -2,8 +2,23 @@
 {%block content%}
 
 <div class="threadlist">
-  {{macros.post_userpage(u)}}
+  {%call macros.post(u,[])%}
+  <p>用户名 {{u.name}}</p>
+  <p>UID {{u.uid}}</p>
+  <p>注册时间 {{format_time_datetime(u.t_c)}}</p>
+  <p>发帖 <a href="/u/{{u.uid}}/t">{{u.stats.nthreads}}</a></p>
+  <p>回复 <a href="/u/{{u.uid}}/p">{{u.stats.nposts}}</a></p>
+
+  {%if u.brief %}
+  <blockquote>
+    {{u.brief}}
+  </blockquote>
+  {%else%}
+  <p>（个人简介暂无）</p>
+  {%endif%}
+  {%endcall%}
 </div>
+
 <hr>
 <div class="threadlist">
   {%if user_is_self and updateable_personal_info%}

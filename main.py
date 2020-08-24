@@ -939,20 +939,6 @@ def _userpage(uid):
         ''',uid=uid, silent=True)[0]
 
     uobj['stats']=stats
-    uobj['profile_string']='''
-用户名 {}
-
-UID {}
-
-注册时间 {}
-
-发帖 [{}](/u/{}/t)
-
-回复 [{}](/u/{}/p)
-    '''.strip().format(u['name'], u['uid'], format_time_datetime(u['t_c']),
-        stats['nthreads'], u['uid'], stats['nposts'], u['uid']
-    )
-
     invitations = None
     if g.logged_in:
         if user_is_self:
@@ -1220,7 +1206,7 @@ def upload_file():
 
 if __name__ == '__main__':
     import os
-    if 'DEBUG' in os.environ and os.environ['DEBUG']:
+    if 'DEBUG' in os.environ:
         app.run(host='0.0.0.0', port='5000', debug=True)
     else:
         app.run(host='0.0.0.0', port='5000')
