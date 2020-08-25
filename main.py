@@ -1030,6 +1030,8 @@ def _userpage(uid):
 
     userfill(u)
 
+    selfuid = g.logged_in['uid'] if g.logged_in else -1
+
     # display showcase thread/post
     sc_ts = []
     if 'showcase' in u:
@@ -1038,7 +1040,7 @@ def _userpage(uid):
             for idx, case in enumerate(showcases):
                 if case[0]=='t':
                     tid = int(case[1])
-                    thobj = get_thread_full(tid, g.logged_in['uid'])
+                    thobj = get_thread_full(tid, selfuid)
                     if thobj:
                         thobj['type']='thread'
                         sc_ts.append(thobj)
@@ -1055,7 +1057,7 @@ def _userpage(uid):
 
                 # print(thobj)
 
-    user_is_self = (uid == g.logged_in['uid']) if g.logged_in else False
+    user_is_self = (uid == selfuid)
 
     stats = aql('''return {
             nthreads:length(for t in threads filter t.uid==@uid return t),

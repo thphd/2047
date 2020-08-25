@@ -709,6 +709,7 @@ function ban_user_reverse(uid){
 
 /* Light YouTube Embeds by @labnol */
 /* Web: http://labnol.org/?p=27941 */
+// modified by thphd
 
 function process_all_youtube_reference(){
   function labnolThumb(id) {
@@ -728,7 +729,7 @@ function process_all_youtube_reference(){
     div.onclick = ()=>{
       // var iframe = document.createElement("iframe");
 
-      var iframet = `<iframe src="https://www.youtube.com/embed/${did}" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
+      var iframet = `<iframe src="https://www.youtube.com/embed/${did}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
 
       var template = document.createElement('template')
       template.innerHTML = iframet
