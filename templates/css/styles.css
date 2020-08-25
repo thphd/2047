@@ -227,6 +227,7 @@ span.last_commented_date {
     align-items: stretch;
     /* align-content: baseline; */
     justify-content: flex-start;
+    /* background-color: green; */
 }
 
 
@@ -585,7 +586,7 @@ div#navigator {
 .c1 {background-color: #97c12f;}
 
 .c6 {
-    background-color: #59b6cc;
+    background-color: #30abc7;
 }
 
 .c9 {
@@ -599,7 +600,7 @@ div#navigator {
 }
 
 .c17 {
-    background-color: #cccc5e;
+    background-color: #b5b529;
 }
 
 .c11 {

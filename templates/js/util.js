@@ -609,3 +609,51 @@ function at_reply(k){
   text.value += `@${uname} <#${k}> `
   text.focus()
 }
+
+(function(){
+  var rgbify = a=>`rgb(${a.join(',')})`
+
+  function colormap(i){ // i within -1..1
+      var red = [255,200,162,.65] // reddish
+      var green = [235, 255, 229, 0.65] // greenish
+      var c = i>=0?green:red
+      i = (i>=0?i:-i)
+      c[3] *= cap(i)
+      return rgbify(c)
+  }
+
+  function colormap2(i){ // different shades of yellow
+      var yellow = [255,255,100, 0.5]
+      yellow[3]*=i
+      return rgbify(yellow)
+  }
+
+
+  function vote2col(v){
+      if(v>0){
+          v = Math.log10(v+1)
+      }else if (v<0) {
+          v = -Math.log10(-v+1)
+      }else{
+          v = 0
+      }
+      v *= 0.6
+      v = Math.max(v,-1)
+      v = Math.min(v, 1)
+      return colormap(v)
+  }
+
+
+  var tlis = gebcn(document)('threadlistitem')
+  if(tlis.length==0){return}
+  foreach(tlis)(e=>{
+    var voten = gebcn(e)('votenumber')
+    if(voten.length==0){return}
+
+    var vote = parseInt(voten[0].innerText.trim()||0)
+    print(vote)
+
+    var col = vote2col(vote)
+    e.style.backgroundColor = col
+  })
+})()

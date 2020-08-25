@@ -258,6 +258,7 @@ Tor上的2047 http://terminusnemheqvy.onion/ 特殊情况下使用
 ''')
 
 site_name='2047论坛'
+site_name_header='2047'
 
 num_max_used_invitation_codes = 20
 
