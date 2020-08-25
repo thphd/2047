@@ -264,13 +264,13 @@ body>#content {
 }
 
 .post_content p {
-    margin: 0 0 .4em 0;
+    margin: 0 0 .3em 0;
     word-break: break-all;
     line-height: 170%;
 }
 
 .post_content p:last-child {
-    margin: 0;
+    margin-bottom: 0;
 }
 
 .post_content li {
@@ -279,12 +279,12 @@ body>#content {
 }
 
 .post_content ol {
-    margin: 13px 0;
+    margin: 0 0 .2em 0;
 }
 
 .post_content blockquote {
     background: #f3f3ac80;
-    margin: 0 0 8px 0;
+    margin: 2px 0 8px 0;
     padding: 10px;
     border-style: solid;
     border-width: 0 0 0 3px;
@@ -513,7 +513,7 @@ a.threadlist_title {
 }
 
 .left > a {
-    display: inline-block;
+    display: flex;
 }
 
 
@@ -530,8 +530,13 @@ div#navigator {
     display: flex;
     flex-flow: column;
     /* flex-direction: column; */
-    max-width: 200px;
-    flex-grow: 0;
+    /* max-width: 200px; */
+    /* flex-grow: 1; */
+    border-style: none none none solid;
+    border-color: #e8e8e8;
+    margin-left: .5em;
+    padding-left: .9em;
+    /* width: 1900px; */
 }
 
 .categories .category_name {
@@ -553,7 +558,7 @@ div#navigator {
 .box {
     /* padding: 10px; */
     /* margin: 10px; */
-    margin-left: 10px;
+    /* margin-left: 10px; */
     display: flex;
     flex-flow: column;
     align-items: center;
@@ -920,4 +925,61 @@ a.adminstuff {}
 
 .adminstuff.at_reply {
     color: #5a4b00;
+}
+
+.meta.upper {
+    margin-bottom: 0.5em;
+}
+
+.threadlistitem.thread_header {
+    flex-direction: row-reverse;
+}
+
+.thread_header_info>div:not(:first-child) {
+    /* text-align: left; */
+    margin: 0.5em 0 0;
+}
+
+.navigator_userpanel {
+    flex-flow: column;
+    display: flex;
+    /* align-items: flex-end; */
+    margin-top: .7em;
+    min-width: 10em;
+    /* margin-left: 1em; */
+}
+
+.thread_header_info .brief {
+    color: #c5c5c5;
+    font-size: 80%;
+}
+
+.thread_header_info .user_name {
+    color: #545454;
+    margin-left: .6em;
+}
+
+.threadlistitem.thread_header {
+}
+
+.thread_header .left {
+    display: none;
+}
+
+
+* {
+    border-width: 1px;
+}
+
+.avatar_line {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.post_content p:first-child {
+    margin-top: 0em;
+}
+
+.post_content blockquote:first-child {
 }

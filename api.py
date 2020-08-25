@@ -573,7 +573,7 @@ def _():
     return {'ok':'done'}
 
 updateable_personal_info = [
-    ('brief', '个人简介（140字符）')
+    ('brief', '个人简介（80字符）')
 ]
 
 @register('update_personal_info')
@@ -588,8 +588,8 @@ def _():
         value = es(item)
 
         if item=='brief':
-            if len(value)>140:
-                raise Exception('brief should not be longer than 140 chars')
+            if len(value)>80:
+                raise Exception('brief should not be longer than 80 chars')
 
         upd[item] = value
 

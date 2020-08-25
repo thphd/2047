@@ -23,5 +23,25 @@
 {%if t and g.logged_in%}
   {{macros.post_postlist_editor(t)}}
 {%endif%}
+{%endblock%}
 
+{%block navigator%}
+
+{%if t%}
+<div class="navigator_userpanel">
+  {# publisher #}
+  <div class="thread_header_info">
+    <div class="avatar_line">
+      <a href="/u/{{t.uid}}"><img class="avatar" src="/avatar/{{t.uid}}" alt=""></a>
+      <a class="user_name" href="/u/{{t.uid}}">{{t.user.name}}</a>
+
+    </div>
+
+    <div class="">
+      <span class='brief'>{{t.user.brief}}</span>
+    </div>
+  </div>
+
+</div>
+{%endif%}
 {%endblock%}

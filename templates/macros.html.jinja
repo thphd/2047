@@ -7,7 +7,7 @@
 {% set _ide = 'id="editor"' if 'editor' in metas %}
 {% set _idp = 'id="' ~ p._key ~ '"' if 'postlist' in metas %}
 
-<div class="threadlistitem{{ ' deleted' if p.delete and t else ''}}" {{_ide or _idt or _idp}}>
+<div class="threadlistitem{{ ' deleted' if p.delete and t else ''}} {{'thread_header' if 'thread_header' in metas else ''}}" {{_ide or _idt or _idp}}>
 
     {%if 'thread_votes' in metas%}
     <div class="leftmost">
@@ -34,10 +34,39 @@
     {% set uid = uid if 'notification' not in metas else (p.from_uid or 5132) %}
 
     <a href="/u/{{uid}}"><img class="avatar" src="/avatar/{{uid}}" alt=""></a>
+
+    {%if 'thread_header' in metas and 0%}
+    {# publisher #}
+    <div class="thread_header_info">
+      <div class="">
+        <a class="user_name" href="/u/{{p.uid}}">{{p.user.name}}</a>
+      </div>
+
+      <div class="">
+        <span class='brief'>{{p.user.brief[0:140]}}</span>
+      </div>
+    </div>
+    {%endif%}
+
   </div>
 
   <div class="right">
     <div class="details">
+
+      {%if 'upper' in metas%}
+        <div class="meta upper">
+          {%if 'publisher_upper' in metas%}
+          {# publisher #}
+          <a class="user_name" href="/u/{{p.uid}}">{{p.user.name}}</a>
+          {%endif%}
+
+          {%if 'brief_upper' in metas%}
+          <span class='brief'>{{p.user.brief[:80]}}</span>
+          {%endif%}
+
+        </div>
+      {%endif%}
+
       <div class="{{'' if 'editor' in metas else 'post_content'}}">
         {%if caller%}
           {{caller()}}
@@ -268,12 +297,12 @@
 
 {# one line of post, used in postlist #}
 {%macro post_postlist(p)%}
-  {{post(p, ['publisher','publish_date_linkto','link_to','postlist','under_vote','at_reply','delete_post','edit_post','display_edit_status','post','view_post_code'])}}
+  {{post(p, ['upper','publisher_upper','brief_upper','under_vote','publish_date_linkto','link_to','postlist','at_reply','delete_post','edit_post','display_edit_status','post','view_post_code'])}}
 {%endmacro%}
 
 {# one line of post, used in postlist's thread header #}
 {%macro post_postlist_header(p)%}
-  {{post(p, ['publisher','publish_date_thread','under_vote','delete_thread','edit_thread','display_edit_status','thread','view_thread_code'])}}
+  {{post(p, ['under_vote','publish_date_thread','delete_thread','edit_thread','display_edit_status','thread','thread_header','view_thread_code'])}}
 {%endmacro%}
 
 {# one line of thread, used in threadlist #}
