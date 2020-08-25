@@ -233,6 +233,22 @@ class Paginator:
 
         return userlist, pagination_obj
 
+    def get_post_one(self, pid):
+        selfuid = g.logged_in['uid'] if g.logged_in else -1
+
+        qs = '''for i in posts filter i._key==@pid
+
+        let u = (for u in users filter u.uid==i.uid return u)[0]
+        let self_voted = length(for v in votes filter v.uid==@selfuid and v.id==to_number(i._key) and v.type=='post' and v.vote==1 return v)
+
+        return merge(i, {user:u},{self_voted})
+        '''
+
+        ps = aql(qs, pid=str(pid),selfuid=selfuid, silent=True)
+        if len(ps)<1: return False
+        ps = ps[0]
+        return ps
+
     def get_post_list(self,
         by='thread',
         tid=0,
@@ -819,12 +835,7 @@ def userthreads(uid):
         **(globals())
     )
 
-# thread, list of posts
-@app.route('/t/<int:tid>')
-def thrd(tid):
-
-    selfuid = g.logged_in['uid'] if g.logged_in else -1
-
+def get_thread_full(tid, selfuid=-1):
     thobj = aql('''
     for t in threads filter t.tid==@tid
     let u = (for u in users filter u.uid==t.uid return u)[0]
@@ -834,10 +845,33 @@ def thrd(tid):
     return merge(t, {user:u},{self_voted:self_voted})
     ''', tid=tid, selfuid=selfuid, silent=True)
 
-    if len(thobj)!=1:
-        return make_response('thread not exist', 404)
+    if len(thobj)<1:
+        return False
 
     thobj = thobj[0]
+    return thobj
+
+def remove_duplicate_brief(postlist):
+    # remove duplicate brief string within a page
+    bd = dict()
+    for p in postlist:
+        if 'user' in p:
+            if 'brief' in p['user']:
+                b = p['user']['brief']
+                if b in bd:
+                    p['user']['brief']=''
+                else:
+                    bd[b] = 1
+
+# thread, list of posts
+@app.route('/t/<int:tid>')
+def thrd(tid):
+
+    selfuid = g.logged_in['uid'] if g.logged_in else -1
+
+    thobj = get_thread_full(tid, selfuid)
+    if not thobj:
+        return make_response('thread not exist', 404)
 
     catobj = aql('''
     for c in categories filter c.cid==@cid return c
@@ -860,14 +894,7 @@ def thrd(tid):
         path = rpath)
 
     # remove duplicate brief string within a page
-    bd = dict()
-    for p in postlist:
-        if 'brief' in p['user']:
-            b = p['user']['brief']
-            if b in bd:
-                p['user']['brief']=''
-            else:
-                bd[b] = 1
+    remove_duplicate_brief(postlist)
 
     return render_template('postlist.html.jinja',
         page_title=thobj['title'],
@@ -908,6 +935,8 @@ def uposts(uid):
         order=order,
         pagenumber=pagenumber, pagesize=pagesize,
         path = rpath)
+
+    remove_duplicate_brief(postlist)
 
     return render_template('postlist.html.jinja',
         page_title='回复 - '+uobj['name'],
@@ -985,6 +1014,32 @@ def _userpage(uid):
     u = uobj
 
     userfill(u)
+
+    # display showcase thread/post
+    sc_ts = []
+    if 'showcase' in u:
+        showcases = parse_showcases(u['showcase'])
+        if len(showcases):
+            for idx, case in enumerate(showcases):
+                if case[0]=='t':
+                    tid = int(case[1])
+                    thobj = get_thread_full(tid, g.logged_in['uid'])
+                    if thobj:
+                        thobj['type']='thread'
+                        sc_ts.append(thobj)
+
+                elif case[0]=='p':
+                    pid = case[1]
+                    pobj = pgnt.get_post_one(pid)
+                    if pobj:
+                        thobj['type']='post'
+                        sc_ts.append(pobj)
+
+                if len(sc_ts)>=4: # at most 4 for now
+                    break
+
+                # print(thobj)
+
     user_is_self = (uid == g.logged_in['uid']) if g.logged_in else False
 
     stats = aql('''return {
@@ -1007,6 +1062,9 @@ def _userpage(uid):
         u=uobj,
         invitations=invitations,
         user_is_self=user_is_self,
+
+        sc_ts = sc_ts, # showcase_threads
+
         **(globals())
     )
 @app.route('/register')
@@ -1300,7 +1358,12 @@ def e404(e):
 
 if __name__ == '__main__':
     import os
-    if 'DEBUG' in os.environ:
-        app.run(host='0.0.0.0', port='5000', debug=True)
+    if 'PORT' in os.environ:
+        port = os.environ['PORT']
     else:
-        app.run(host='0.0.0.0', port='5000')
+        port = '5000'
+
+    if 'DEBUG' in os.environ:
+        app.run(host='0.0.0.0', port=port, debug=True)
+    else:
+        app.run(host='0.0.0.0', port=port)

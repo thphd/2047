@@ -738,7 +738,7 @@ form.register {
 }
 
 h1 {
-    margin: .5em 0 .5em 0;
+    margin: 0.3em 0 .5em 0;
 }
 
 body {
@@ -993,4 +993,8 @@ a.adminstuff {}
 
 h1:not(:first-child) {
     margin-top: .9em;
+}
+
+button {
+    border-radius: 2px;
 }

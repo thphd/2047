@@ -30,6 +30,17 @@
   <p>（个人简介暂无）</p>
   {%endif%}
   {%endcall%}
+
+  {%for t in sc_ts%}
+    {%if t.type=='thread'%}
+    {{macros.post_postlist_header_kept(t)}}
+
+    {%else%}
+    {{macros.post_postlist(t)}}
+
+    {%endif%}
+  {%endfor%}
+
 </div>
 
 <hr>

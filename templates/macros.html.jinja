@@ -305,6 +305,11 @@
   {{post(p, ['under_vote','publish_date_thread','delete_thread','edit_thread','display_edit_status','thread','thread_header','view_thread_code'])}}
 {%endmacro%}
 
+{# one line of post, used in postlist's thread header, keep the style unchanged #}
+{%macro post_postlist_header_kept(p)%}
+  {{post(p, ['under_vote','publisher','publish_date_thread','delete_thread','edit_thread','display_edit_status','thread','view_thread_code'])}}
+{%endmacro%}
+
 {# one line of thread, used in threadlist #}
 {%macro post_threadlist(p)%}
   {{post(p, ['category','publisher','publish_date_thread','last_commenter',

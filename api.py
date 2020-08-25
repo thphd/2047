@@ -575,7 +575,8 @@ def _():
     return {'ok':'done'}
 
 updateable_personal_info = [
-    ('brief', '个人简介（80字符）')
+    ('brief', '个人简介（80字符）'),
+    ('showcase', '个人主页展示帖子或评论（例如“t7113”或者“p247105”，中间逗号或空格隔开），暂限4项'),
 ]
 
 @register('update_personal_info')
@@ -589,12 +590,11 @@ def _():
 
         value = es(item)
 
-        if item=='brief':
+        if item=='brief' or item=='showcase':
             if len(value)>80:
-                raise Exception('brief should not be longer than 80 chars')
+                raise Exception('brief/showcase should not be longer than 80 chars')
 
         upd[item] = value
-
 
     aql('for u in users filter u.uid==@uid update u with @upd in users return NEW',
         uid=g.current_user['uid'], upd=upd, silent=True)

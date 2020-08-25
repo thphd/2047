@@ -307,6 +307,17 @@ def parse_target(s, force_int=True):
 
     return targ, _id
 
+# parse string that contains t123 or p456
+def parse_showcases(s):
+    rsc = r'(t|p)([0-9]{1,16})'
+    occurences = re.findall(rsc, s)
+    return occurences
+
+if __name__ == '__main__':
+    print(parse_showcases('''
+如“t7113”或者“p247105”）,t112,p1
+    '''),parse_showcases(''))
+
 password_warning = convert_markdown('''
 # 密码安全警告
 
