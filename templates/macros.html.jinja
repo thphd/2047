@@ -130,6 +130,9 @@
           {%elif m=='view_thread_code'%}
             <a class='adminstuff viewcode' href="/t/{{p.tid}}/code">源码</a>
 
+          {%elif m=='at_reply' and t and g.logged_in%}
+            <a class='adminstuff at_reply' href="javascript:at_reply('{{p._key}}')">回复</a>
+
           {%elif m=='link_to'%}
             {%if not t%}
             {#link to original article#}
@@ -265,7 +268,7 @@
 
 {# one line of post, used in postlist #}
 {%macro post_postlist(p)%}
-  {{post(p, ['publisher','publish_date_linkto','link_to','postlist','under_vote','delete_post','edit_post','display_edit_status','post','view_post_code'])}}
+  {{post(p, ['publisher','publish_date_linkto','link_to','postlist','under_vote','at_reply','delete_post','edit_post','display_edit_status','post','view_post_code'])}}
 {%endmacro%}
 
 {# one line of post, used in postlist's thread header #}

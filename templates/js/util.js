@@ -590,3 +590,22 @@ if(bupi){
     .catch(alert)
   }
 }
+
+function at_reply(k){
+  var text = geid('editor_text')
+  if (!text){
+    return
+  }
+
+  var tli = geid(k)
+  var uns = gebcn(tli)('user_name')
+  if(uns.length<1){
+    return
+  }
+  uns = uns[0]
+  var uname = uns.innerText
+  var url = `/p/${k}`
+
+  text.value += `@${uname} <#${k}> `
+  text.focus()
+}

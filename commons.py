@@ -125,16 +125,25 @@ username_regex_string = str(username_regex).replace('\\\\','\\')
 
 at_extractor_regex = r'@([0-9a-zA-Z\u4e00-\u9fff\-\_\.]{2,16}?)(?=[^0-9a-zA-Z\u4e00-\u9fff\-\_\.]|$)'
 
+post_autolink_regex = r'<#([0-9]{2,16})>'
+
 def extract_ats(s): # extract @usernames out of text
     groups = re.findall(at_extractor_regex, s, flags=re.MULTILINE)
     return groups
 
-def replace_f(match):
-    uname= match.group(1)
-    return '[@{uname}](/member/{uname})'.format(uname=uname)
-
 def replace_ats(s): # replace occurence
-    return re.sub(at_extractor_regex, replace_f, s, flags=re.MULTILINE)
+    def f(match):
+        uname = match.group(1)
+        return '[@{uname}](/member/{uname})'.format(uname=uname)
+
+    return re.sub(at_extractor_regex, f, s, flags=re.MULTILINE)
+
+def replace_pal(s):
+    def f(match):
+        pid = match.group(1)
+        return '[#{}](/p/{})'.format(pid,pid)
+
+    return re.sub(post_autolink_regex, f, s, flags=re.MULTILINE)
 
 # markdown renderer
 
@@ -146,6 +155,7 @@ if 0:
 elif 1:
     import mistletoe
     def convert_markdown(s):
+        s = replace_pal(s)
         s = replace_ats(s)
         return mistletoe.markdown(s)
 

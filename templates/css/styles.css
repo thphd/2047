@@ -917,3 +917,7 @@ a.adminstuff {}
 .secondline {
     margin-bottom: 1em;
 }
+
+.adminstuff.at_reply {
+    color: #5a4b00;
+}
