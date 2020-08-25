@@ -177,6 +177,11 @@ aqlc.create_index('messages',
 
 aqlc.create_index('notifications',
     type='persistent', fields=['to_uid','t_c'], unique=False, sparse=False)
+aqlc.create_index('notifications',
+    type='persistent', fields=['to_uid','from_uid','why','url'], unique=False, sparse=False)
+
+aqlc.create_index('avatars',
+    type='persistent', fields=['uid'], unique=False, sparse=False)
 
 is_integer = lambda i:isinstance(i, int)
 class Paginator:

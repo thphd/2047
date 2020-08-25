@@ -14,17 +14,17 @@ aqlc.create_collection('messages')
 aqlc.create_collection('conversations')
 aqlc.create_collection('notifications')
 
-def make_notification(to_uid, from_uid, why, url, **kw):
-    d = dict(
-        to_uid=to_uid,
-        from_uid=from_uid,
-        why=why,
-        url=url,
-        t_c=time_iso_now(),
-        **kw,
-    )
-
-    aql('insert @k into notifications', k=d, silent=True)
+# def make_notification(to_uid, from_uid, why, url, **kw):
+#     d = dict(
+#         to_uid=to_uid,
+#         from_uid=from_uid,
+#         why=why,
+#         url=url,
+#         t_c=time_iso_now(),
+#         **kw,
+#     )
+#
+#     aql('insert @k into notifications', k=d, silent=True)
 
 def make_notification_names(names, from_uid, why, url, **kw):
     # names is a list of usernames
