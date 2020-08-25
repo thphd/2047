@@ -145,6 +145,57 @@ def replace_pal(s):
 
     return re.sub(post_autolink_regex, f, s, flags=re.MULTILINE)
 
+# match only youtube links that occupy a single line
+youtube_extractor_regex = r'(?=\n|\r|^)(?:http|https|)(?::\/\/|)(?:www.|)(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/ytscreeningroom\?v=|\/feeds\/api\/videos\/|\/user\S*[^\w\-\s]|\S*[^\w\-\s]))([\w\-]{11})[A-Za-z0-9;:@#?&%=+\/\$_.-]*(?=\n|$)'
+
+def replace_ytb(s):
+    def f(match):
+        vid = match.group(1)
+        return '<div class="youtube-player-unprocessed" data-id="{}"></div>'.format(vid)
+    return re.sub(youtube_extractor_regex, f, s, flags=re.MULTILINE)
+
+youtube_extraction_test_string="""
+youtu.be/DFjD8iOUx0I
+https://youtu.be/DFjD8iOUx0I
+
+自动
+youtu.be/DFjD8iOUx0I
+
+http://youtu.be/dQw4w9WgXcQ
+
+// https://www.youtube.com/embed/dQw4w9WgXcQ
+// http://www.youtube.com/watch?v=dQw4w9WgXcQ
+// http://www.youtube.com/?v=dQw4w9WgXcQ
+// http://www.youtube.com/v/dQw4w9WgXcQ
+// http://www.youtube.com/e/dQw4w9WgXcQ
+// http://www.youtube.com/user/username#p/u/11/dQw4w9WgXcQ
+// http://www.youtube.com/sandalsResorts#p/c/54B8C800269D7C1B/0/dQw4w9WgXcQ
+// http://www.youtube.com/watch?feature=player_embedded&v=dQw4w9WgXcQ
+//
+
+http://www.youtube.com/?feature=player_embedded&v=dQw4w9WgXcQ
+
+" https://youtu.be/yVpbFMhOAwE ",
+"https://www.youtube.com/embed/yVpbFMhOAwE",
+"youtu.be/yVpbFMhOAwE",
+"youtube.com/watch?v=yVpbFMhOAwE",
+"http://youtu.be/yVpbFMhOAwE",
+"http://www.youtube.com/embed/yVpbFMhOAwE",
+"http://www.youtube.com/watch?v=yVpbFMhOAwE",
+"http://www.youtube.com/watch?v=yVpbFMhOAwE&feature=g-vrec",
+"http://www.youtube.com/watch?v=yVpbFMhOAwE&feature=player_embedded",
+好的" http://www.youtube.com/v/yVpbFMhOAwE?fs=1&hl=en_US  ",
+" http://www.youtube.com/ytscreeningroom?v=yVpbFMhOAwE ",
+"http://www.youtube.com/watch?NR=1&feature=endscreen&v=yVpbFMhOAwE",
+"http://www.youtube.com/user/Scobleizer#p/u/1/1p3vcRhsYGo",
+" http://www.youtube.com/watch?v=6zUVS4kJtrA&feature=c4-overview-vl&list=PLbzoR-pLrL6qucl8-lOnzvhFc2UM1tcZA ",
+"
+
+https://www.youtube.com/watch?v=FZu097wb8wU&list=RDFZu097wb8wU
+ "
+youtu.be/DFjD8iOUx0I
+"""
+
 # markdown renderer
 
 if 0:
@@ -157,6 +208,7 @@ elif 1:
     def convert_markdown(s):
         s = replace_pal(s)
         s = replace_ats(s)
+        s = replace_ytb(s)
         return mistletoe.markdown(s)
 
 else:
@@ -230,6 +282,9 @@ user_list_defaults = dict(
     order='desc',
     sortby='uid',
 )
+
+# visitors can't see those on homepage
+hidden_from_visitor = [int(i) for i in '4 19'.split(' ')]
 
 def linkify(s):
     lines = s.split('\n')

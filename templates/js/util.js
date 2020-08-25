@@ -377,6 +377,11 @@ if (editor_target){
     .then(j=>{
       preview.innerHTML = j.html
       editor_right.style.display = 'initial'
+
+      if(process_all_youtube_reference){
+        process_all_youtube_reference()
+      }
+
     })
     .catch(alert)
     .then(()=>{
@@ -610,6 +615,7 @@ function at_reply(k){
   text.focus()
 }
 
+// post colorify
 (function(){
   var rgbify = a=>`rgb(${a.join(',')})`
 
@@ -651,7 +657,7 @@ function at_reply(k){
     if(voten.length==0){return}
 
     var vote = parseInt(voten[0].innerText.trim()||0)
-    print(vote)
+    // print(vote)
 
     var col = vote2col(vote)
     e.style.backgroundColor = col
@@ -700,3 +706,44 @@ function ban_user_reverse(uid){
   })
   .catch(alert)
 }
+
+/* Light YouTube Embeds by @labnol */
+/* Web: http://labnol.org/?p=27941 */
+
+function process_all_youtube_reference(){
+  function labnolThumb(id) {
+      var thumb = '<img src="https://i.ytimg.com/vi/ID/hqdefault.jpg">',
+          play = '<div class="play"></div>';
+      return thumb.replace("ID", id) + play;
+  }
+
+  var divs = gebcn(document)('youtube-player-unprocessed')
+
+  foreach(divs)(e=>{
+    var did = e.dataset.id
+    var div = document.createElement('div')
+    div.setAttribute("data-id", did);
+    div.innerHTML = labnolThumb(did);
+
+    div.onclick = ()=>{
+      // var iframe = document.createElement("iframe");
+
+      var iframet = `<iframe src="https://www.youtube.com/embed/${did}" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
+
+      var template = document.createElement('template')
+      template.innerHTML = iframet
+      var iframe = template.content.firstChild
+
+      // var embed = "https://www.youtube.com/embed/ID?autoplay=1";
+      // iframe.setAttribute("src", embed.replace("ID", div.dataset.id));
+      // iframe.setAttribute("frameborder", "0");
+      // iframe.setAttribute("allowfullscreen", "1");
+      div.parentNode.replaceChild(iframe, div);
+    }
+
+    e.appendChild(div)
+    e.className='youtube-player'
+  })
+}
+
+document.addEventListener("DOMContentLoaded", process_all_youtube_reference);

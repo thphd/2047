@@ -661,14 +661,23 @@ def befr():
     if not allowed:
         print_err('[{}][{}][{}][{:.2f}][{:.2f}][{:.2f}]'.format(uas, acceptstr, ipstr, uaf.d[uas], uaf.d[acceptstr], uaf.d[ipstr] if ipstr in uaf.d else -1))
 
-        if random.random()>1:
-            return ('rate limit exceeded', 500)
+        if random.random()>0:
+            return ('rate limit exceeded', 429)
         elif random.random()>0.02:
-            return ('please wait a moment before accesing this page'+base64.b64encode(os.urandom(int(random.random()*256))), 200)
+            return (b'please wait a moment before accesing this page'+base64.b64encode(os.urandom(int(random.random()*256))), 200)
         else:
             pass
     else:
         print_up('max: [{}][{:.2f}][{}]'.format(*uaf.get_max(), uaf.blacklist))
+
+def remove_hidden_from_visitor(threadlist):
+    ntl = []
+    for i in threadlist:
+        if 'cid' in i:
+            if i['cid'] not in hidden_from_visitor:
+                ntl.append(i)
+    threadlist=ntl
+    return threadlist
 
 @app.route('/')
 @app.route('/c/all')
@@ -686,11 +695,17 @@ def catall():
         pagenumber=pagenumber, pagesize=pagesize,
         path = rpath)
 
+    categories=get_categories_info()
+
+    if not g.logged_in:
+        threadlist = remove_hidden_from_visitor(threadlist)
+        categories = remove_hidden_from_visitor(categories)
+
     return render_template('threadlist.html.jinja',
         page_title='所有分类',
         threadlist=threadlist,
         pagination=pagination,
-        categories=get_categories_info(),
+        categories=categories,
         # threadcount=count,
         **(globals())
     )
@@ -1248,7 +1263,7 @@ def notification_page():
     let from_user=(for u in users filter u.uid==i.from_uid return u)[0]\
     return merge(i,{from_user})',
         uid=uid,
-        silent=False)
+        silent=True)
 
     # update t_notif
     timenow = time_iso_now()
