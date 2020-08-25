@@ -894,3 +894,26 @@ a.adminstuff {}
 .adminstuff.viewcode {
     color: #185fca;
 }
+
+
+.c404 {
+    margin: 100px auto;
+    text-align: center;
+}
+
+.c404>img {
+    height: 200px;
+}
+
+.c404 >div {
+    text-align: center;
+}
+
+.firstline {
+    font-size: 130%;
+    margin-bottom: 1em;
+}
+
+.secondline {
+    margin-bottom: 1em;
+}

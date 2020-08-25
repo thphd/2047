@@ -42,14 +42,32 @@ def avatar_pipeline(b):
     return result_file.getvalue()
 
 if __name__ == '__main__':
-    b = open('templates/images/logo.png','rb').read()
-    # b = b[:100]
-    im = load_img_from_bin(b)
+    import sys
+    if len(sys.argv)>1:
+        fn = sys.argv[1]
 
-    print(im)
-    # resize_to(im, 84).quantize(
-    #     colors=32,
-    #     method=Image.FASTOCTREE, # only applicapable
-    #     kmeans=1, # larger faster
-    #     dither=Image.FLOYDSTEINBERG,
-    # ).save('test.png')
+        im = load_img_from_bin(open(fn,'rb').read())
+
+        im = im.quantize(
+            colors=64,
+            method=Image.FASTOCTREE, # only applicapable
+            kmeans=1, # larger faster
+            dither=Image.FLOYDSTEINBERG,
+        )
+
+        im.save(fn,'PNG',optimize=True)
+        print('saved to', fn)
+    else:
+        print('no args')
+
+    # b = open('templates/images/logo.png','rb').read()
+    # # b = b[:100]
+    # im = load_img_from_bin(b)
+    #
+    # print(im)
+    # # resize_to(im, 84).quantize(
+    # #     colors=32,
+    # #     method=Image.FASTOCTREE, # only applicapable
+    # #     kmeans=1, # larger faster
+    # #     dither=Image.FLOYDSTEINBERG,
+    # # ).save('test.png')

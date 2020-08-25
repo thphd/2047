@@ -1250,6 +1250,18 @@ def upload_file():
         uid=avatar_object['uid'], k=avatar_object)
     return {'error':False}
 
+@app.errorhandler(404)
+def e404(e):
+    return render_template('404.html.jinja',
+        **(globals())
+    ), 404
+@app.errorhandler(500)
+def e404(e):
+    return render_template('404.html.jinja',
+        e500=True,
+        **(globals())
+    ), 500
+
 if __name__ == '__main__':
     import os
     if 'DEBUG' in os.environ:
