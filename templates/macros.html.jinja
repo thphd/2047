@@ -43,7 +43,7 @@
       </div>
 
       <div class="">
-        <span class='brief'>{{p.user.brief[0:140]}}</span>
+        <span class='brief'>{{p.user.brief}}</span>
       </div>
     </div>
     {%endif%}
@@ -61,7 +61,7 @@
           {%endif%}
 
           {%if 'brief_upper' in metas%}
-          <span class='brief'>{{p.user.brief[:80]}}</span>
+          <span class='brief'>{{p.user.brief and p.user.brief[:80]}}</span>
           {%endif%}
 
         </div>
