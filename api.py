@@ -303,6 +303,8 @@ def _():
 
     uid = g.current_user['uid']
 
+    if 'delete' in g.current_user and g.current_user['delete']:
+        raise Exception('your account has been banned')
 
     target_type, _id = parse_target(es('target'), force_int=False)
 
@@ -767,6 +769,7 @@ def _():
         'uid':uid,
         'op':'mark_delete',
         'target':target,
+        't_c':time_iso_now(),
     })
 
     return upd[0]
@@ -912,6 +915,53 @@ def send_message(fromuid, touid, content):
 
     url = '/m/'+convid
     return url
+
+@register('ban_user')
+def _():
+    j = g.j
+    if not g.current_user: raise Exception('you are not logged in')
+    if not g.current_user['admin']:
+        raise Exception("you are not admin")
+
+    reason = es('reason')
+    uid = ei('uid')
+    t_c = time_iso_now()
+
+    reverse = es('reverse')
+
+    if not reverse:
+        # mark user as banned
+        aql('for u in users filter u.uid==@uid update u with {delete:true, t_d:@t_d} in users',
+        uid=uid,t_d=t_c)
+
+        # log
+        aql('insert @k in operations',k={
+            'uid':g.current_user['uid'],
+            'op':'ban_user',
+            'target':uid,
+            'reason':reason,
+            't_c':t_c,
+        })
+
+        return {'error':False}
+
+    else:
+        # mark user as unbanned
+        aql('for u in users filter u.uid==@uid update u with {delete:false, t_d:@t_d} in users',
+        uid=uid,t_d=t_c)
+
+        # log
+        aql('insert @k in operations',k={
+            'uid':g.current_user['uid'],
+            'op':'ban_user',
+            'target':uid,
+            'reason':reason,
+            't_c':t_c,
+            'reverse':True,
+        })
+
+        return {'error':False}
+
 
 # feedback regulated ping service
 # average 1 ping every 3 sec

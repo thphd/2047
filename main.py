@@ -529,16 +529,7 @@ class UAFilter:
         self.dt = {}
         self.blacklist = ''
 
-    def judge(self, uastring):
-        ua = uastring
-
-        if ua in self.d:
-            self.d[ua]+=1
-            if ua in self.blacklist:
-                self.d[ua]+=3
-        else:
-            self.d[ua]=1
-
+    def timedelta(self, ua):
         this_time = time.time()
 
         if ua in self.dt:
@@ -547,15 +538,36 @@ class UAFilter:
             last_time = this_time
 
         duration = max(0.001, this_time - last_time)
+        self.dt[ua] = this_time
+
+        return duration
+
+    def cooldown(self, ua):
+        duration = self.timedelta(ua)
+        factor = 0.6 ** duration
+
+        if ua in self.d:
+            self.d[ua] *= factor
+
+    def judge(self, uastring, weight=1.):
+        ua = uastring
+
+        if ua in self.d:
+            self.d[ua]+=1*weight
+            if ua in self.blacklist:
+                self.d[ua]+=3*weight
+        else:
+            self.d[ua]=1
+
+        duration = self.timedelta(ua)
         factor = 0.98 ** duration
 
         self.d[ua] *= factor
         # print(self.d[ua])
 
-        self.dt[ua] = this_time
         # print_err(self.d[ua])
-        if self.d[ua]>45:
-            self.d[ua]+=3
+        if self.d[ua]>20:
+            self.d[ua]+=3*weight
 
             if self.d[ua]>75 and (ua not in self.blacklist):
                 self.blacklist+=ua
@@ -605,21 +617,30 @@ def befr():
         g.current_user['num_unread']=num_unread
         g.current_user['num_notif']=num_notif
 
+        uaf.cooldown(uas)
+        uaf.cooldown(acceptstr)
         return
     else:
         g.logged_in = False
+        g.current_user = g.logged_in
 
     if 'action' in request.args and request.args['action']=='ping':
+        uaf.cooldown(uas)
+        uaf.cooldown(acceptstr)
         return
 
     if request.path.startswith('/avatar/'):
         return
 
+    weight = 1.
+    if 'application/x-php' in acceptstr:
+        weight = 2.
+
     # filter bot/dos requests
     allowed = \
-        uaf.judge(uas) and\
-        uaf.judge(acceptstr) and\
-        (uaf.judge(ipstr) if ipstr[0:8]!='192.168.' else True)
+        uaf.judge(uas, weight) and\
+        uaf.judge(acceptstr, weight) and\
+        (uaf.judge(ipstr, weight) if ipstr[0:8]!='192.168.' else True)
 
     if not allowed:
         print_err('[{}][{}][{}][{:.2f}][{:.2f}][{:.2f}]'.format(uas, acceptstr, ipstr, uaf.d[uas], uaf.d[acceptstr], uaf.d[ipstr] if ipstr in uaf.d else -1))
@@ -627,7 +648,7 @@ def befr():
         if random.random()>1:
             return ('rate limit exceeded', 500)
         elif random.random()>0.02:
-            return (base64.b64encode(os.urandom(int(random.random()*256))), 200)
+            return ('please wait a moment before accesing this page'+base64.b64encode(os.urandom(int(random.random()*256))), 200)
         else:
             pass
     else:
@@ -837,6 +858,16 @@ def thrd(tid):
         order=order,
         pagenumber=pagenumber, pagesize=pagesize,
         path = rpath)
+
+    # remove duplicate brief string within a page
+    bd = dict()
+    for p in postlist:
+        if 'brief' in p['user']:
+            b = p['user']['brief']
+            if b in bd:
+                p['user']['brief']=''
+            else:
+                bd[b] = 1
 
     return render_template('postlist.html.jinja',
         page_title=thobj['title'],

@@ -657,3 +657,46 @@ function at_reply(k){
     e.style.backgroundColor = col
   })
 })()
+
+function ban_user(uid){
+  if (!confirm('确定要封禁用户 '+uid.toString()+' 吗？')){
+    return
+  }
+  var reason = prompt('请输入封禁理由：')
+  if(!reason || reason.trim().length<4){
+    alert('未填写理由或理由字数不足')
+    return
+  }
+
+  api({
+    action:'ban_user',
+    uid:uid,
+    reason:reason.trim(),
+  })
+  .then(r=>{
+    window.location.reload()
+  })
+  .catch(alert)
+}
+
+function ban_user_reverse(uid){
+  if (!confirm('确定要解封用户 '+uid.toString()+' 吗？')){
+    return
+  }
+  var reason = prompt('请输入解封理由：')
+  if(!reason || reason.trim().length<4){
+    alert('未填写理由或理由字数不足')
+    return
+  }
+
+  api({
+    action:'ban_user',
+    uid:uid,
+    reason:reason.trim(),
+    reverse:'yes',
+  })
+  .then(r=>{
+    window.location.reload()
+  })
+  .catch(alert)
+}

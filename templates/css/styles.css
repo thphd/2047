@@ -279,8 +279,9 @@ body>#content {
     line-height: 170%;
 }
 
-.post_content ol {
+.post_content ol, .post_content ul {
     margin: 0 0 .2em 0;
+    padding-left: 2em;
 }
 
 .post_content blockquote {
@@ -983,4 +984,13 @@ a.adminstuff {}
 }
 
 .post_content blockquote:first-child {
+}
+
+.info.warning {
+    background-color: #d4f3ff;
+    border-color: #bae4f5;
+}
+
+h1:not(:first-child) {
+    margin-top: .9em;
 }

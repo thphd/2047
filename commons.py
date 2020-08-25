@@ -287,6 +287,10 @@ def can_do_to(u1, operation, u2id):
         if is_admin:
             return True
 
+    elif operation == 'ban_user':
+        if is_admin:
+            return True
+
     return False
 
 # parse string of form "target_type/target_id"
@@ -314,6 +318,13 @@ password_warning = convert_markdown('''
 
 ''')
 
+public_key_info = convert_markdown('''
+# Public Key Cryptography
+
+2047将在未来某个时间允许用户将上传的公钥用于验证身份并登录。届时，将个人公钥上传至2047的用户，可用他的私钥加密/签名凭据登录2047，免除密码泄露之虞。
+
+''')
+
 messaging_warning = convert_markdown('''
 # 私信安全警告
 
@@ -328,6 +339,13 @@ messaging_warning = convert_markdown('''
 我们不会对私信内容作任何限制，不存在比如说新品葱搞的那种关键词审查/过滤。
 
 但请注意，如果您发送的私信令其他用户感到困扰，在收到举报后我们有可能根据《服务条款》封禁您的账号。
+''')
+
+register_warning = convert_markdown('''
+# 注册提醒
+
+使用2047的所有用户都必须遵守[《服务条款》](/t/7110)。违反《服务条款》的用户，其账号将会被封禁。
+
 ''')
 
 if __name__ == '__main__':

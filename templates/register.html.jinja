@@ -32,7 +32,12 @@
       服务器端收到用户提交hash后，会再用pbkdf2-hmac-sha256+salt作hash
     </blockquote>
   </div>
-  
+  <div class="post_content warning">
+    {{register_warning|safe}}
+  </div>
+  <div class="post_content info warning">
+    {{public_key_info|safe}}
+  </div>
   <div class="post_content warning">
     {{password_warning|safe}}
   </div>

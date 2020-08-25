@@ -3,10 +3,19 @@
 
 <div class="threadlist">
   {%call macros.post(u,[])%}
-  <p>用户名 {{u.name}}
-    {%if g.logged_in%}
-      <a href="/editor?target=username/{{u.name}}">发私信给ta</a>
-    {%endif%}
+  <p>用户名 {{u.name}} {{'（已封禁于 '~format_time_dateifnottoday(u.t_d)~'）'if u.delete else ''}}
+        {%if g.logged_in%}
+        <a href="/editor?target=username/{{u.name}}">发私信给ta</a>
+      {%endif%}
+
+
+      {%if not u.delete and can_do_to(g.logged_in, 'ban_user', u.uid)%}
+        <a href="javascript:ban_user({{u.uid}})" class="adminstuff delete">封禁</a>
+      {%endif%}
+      {%if u.delete and can_do_to(g.logged_in, 'ban_user', u.uid)%}
+        <a href="javascript:ban_user_reverse({{u.uid}})" class="adminstuff delete">解除封禁</a>
+      {%endif%}
+
   </p>
   <p>UID {{u.uid}}</p>
   <p>注册时间 {{format_time_datetime(u.t_c)}}</p>
@@ -109,6 +118,9 @@
 
   <div class="post_content warning">
     {{password_warning|safe}}
+  </div>
+  <div class="post_content info warning">
+    {{public_key_info|safe}}
   </div>
 
   {%endif%}
