@@ -12,6 +12,63 @@ aqlc.create_collection('histories')
 aqlc.create_collection('votes')
 aqlc.create_collection('messages')
 aqlc.create_collection('conversations')
+aqlc.create_collection('notifications')
+
+def make_notification(to_uid, from_uid, why, url, **kw):
+    d = dict(
+        to_uid=to_uid,
+        from_uid=from_uid,
+        why=why,
+        url=url,
+        t_c=time_iso_now(),
+        **kw,
+    )
+
+    aql('insert @k into notifications', k=d, silent=True)
+
+def make_notification_names(names, from_uid, why, url, **kw):
+    # names is a list of usernames
+    d = dict(
+        # to_uid=to_uid,
+        from_uid=from_uid,
+        why=why,
+        url=url,
+        t_c=time_iso_now(),
+        **kw,
+    )
+    aql('''
+    let uidlist = (
+        for n in @names
+        let user = (for i in users filter i.name==n return i)[0]
+        return user.uid
+    )
+    let uids = remove_value(uidlist, null)
+
+    for i in uids
+    let d = merge({to_uid:i}, @k)
+    upsert {to_uid:d.to_uid, from_uid:d.from_uid, why:d.why, url:d.url}
+    insert d update d into notifications
+    ''', names=names, k=d, silent=True)
+
+def make_notification_uids(uids, from_uid, why, url, **kw):
+    # same as above but with uids
+    d = dict(
+        # to_uid=to_uid,
+        from_uid=from_uid,
+        why=why,
+        url=url,
+        t_c=time_iso_now(),
+        **kw,
+    )
+    aql('''
+    let uidlist = @uids
+    let uids = remove_value(uidlist, null)
+
+    for i in uids
+    let d = merge({to_uid:i}, @k)
+    upsert {to_uid:d.to_uid, from_uid:d.from_uid, why:d.why, url:d.url}
+    insert d update d into notifications
+    ''', uids=uids, k=d, silent=True)
 
 def get_url_to_post(pid):
     # 1. get tid
@@ -271,7 +328,7 @@ def _():
         newpost = dict(
             uid=uid,
             t_c=timenow,
-            content=content.strip(),
+            content=content,
             tid=tid,
         )
         inserted = aql('insert @p in posts return NEW', p=newpost)[0]
@@ -286,6 +343,26 @@ def _():
         url = get_url_to_post(str(inserted['_key']))
         # url = '/p/{}'.format(inserted['_key'])
         inserted['url'] = url
+
+        # notifications
+        # extract_ats
+        ats = extract_ats(content)
+        ats = [name for name in ats if name!=g.current_user['name']]
+        if len(ats):
+            make_notification_names(
+                names=ats,
+                why='at_post',
+                url=url,
+                from_uid=uid,
+            )
+        # replies
+        if thread['uid']!=uid:
+            make_notification_uids(
+                uids=[thread['uid']],
+                why='reply_thread',
+                url=url,
+                from_uid=uid,
+            )
 
         return inserted
 
@@ -356,6 +433,18 @@ def _():
         url = '/t/{}'.format(inserted['tid'])
         inserted['url'] = url
 
+        # notifications
+        # extract_ats
+        ats = extract_ats(content)
+        ats = [name for name in ats if name!=g.current_user['name']]
+        if len(ats):
+            make_notification_names(
+                names=ats,
+                why='at_thread',
+                url=url,
+                from_uid=uid,
+            )
+
         return inserted
 
     elif target_type == 'edit_thread':
@@ -392,6 +481,19 @@ def _():
 
         inserted = aql('insert @i into histories return NEW',i=thread)[0]
         inserted['url'] = '/t/{}'.format(_id)
+
+        # notifications
+        # extract_ats
+        ats = extract_ats(content)
+        ats = [name for name in ats if name!=g.current_user['name']]
+        if len(ats):
+            make_notification_names(
+                names=ats,
+                why='at_thread',
+                url=url,
+                from_uid=uid,
+            )
+
         return inserted
 
     elif target_type == 'edit_post':
@@ -422,6 +524,19 @@ def _():
         inserted = aql('insert @i into histories return NEW',i=post)[0]
         url = get_url_to_post(str(_id))
         inserted['url'] = url
+
+        # notifications
+        # extract_ats
+        ats = extract_ats(content)
+        ats = [name for name in ats if name!=g.current_user['name']]
+        if len(ats):
+            make_notification_names(
+                names=ats,
+                why='at_post',
+                url=url,
+                from_uid=uid,
+            )
+
         return inserted
     else:
         raise Exception('unsupported target type')

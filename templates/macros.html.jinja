@@ -31,6 +31,7 @@
     {% set uid = uid if not (('conversation' in metas) and p.last) else (
       p.last.to_uid if p.last.to_uid!=g.logged_in.uid else p.last.uid
     ) %}
+    {% set uid = uid if 'notification' not in metas else (p.from_uid or 5132) %}
 
     <a href="/u/{{uid}}"><img class="avatar" src="/avatar/{{uid}}" alt=""></a>
   </div>
@@ -119,6 +120,15 @@
 
           {%elif m=='conversation_date'%}
             <span>{{format_time_dateifnottoday(p.last.t_c)}}</span>
+
+          {%elif m=='notification'%}
+            <span>{{format_time_datetime(p.t_c)}}</span>
+
+          {%elif m=='view_post_code'%}
+            <a class='adminstuff viewcode' href="/p/{{p._key}}/code">源码</a>
+
+          {%elif m=='view_thread_code'%}
+            <a class='adminstuff viewcode' href="/t/{{p.tid}}/code">源码</a>
 
           {%elif m=='link_to'%}
             {%if not t%}
@@ -255,12 +265,12 @@
 
 {# one line of post, used in postlist #}
 {%macro post_postlist(p)%}
-  {{post(p, ['publisher','publish_date_linkto','link_to','postlist','under_vote','delete_post','edit_post','display_edit_status','post'])}}
+  {{post(p, ['publisher','publish_date_linkto','link_to','postlist','under_vote','delete_post','edit_post','display_edit_status','post','view_post_code'])}}
 {%endmacro%}
 
 {# one line of post, used in postlist's thread header #}
 {%macro post_postlist_header(p)%}
-  {{post(p, ['publisher','publish_date_thread','under_vote','delete_thread','edit_thread','display_edit_status','thread'])}}
+  {{post(p, ['publisher','publish_date_thread','under_vote','delete_thread','edit_thread','display_edit_status','thread','view_thread_code'])}}
 {%endmacro%}
 
 {# one line of thread, used in threadlist #}
@@ -287,6 +297,26 @@
 {# one line of message, used in messagelist #}
 {%macro post_message(p)%}
   {{post(p, ['message'])}}
+{%endmacro%}
+
+{# one line of notification, used in notification_list #}
+{%macro post_notification(p)%}
+  {%call post(p,['notification'])%}
+
+    {%if p.why == 'reply_thread'%}
+      <a href="/u/{{p.from_uid}}">{{(p.from_user and p.from_user.name) or p.from_uid}}</a>
+      <span>在你的</span>
+      <a href="{{p.url}}">帖子 - {{p.url}}</a>
+      <span>下发表了回复</span>
+
+    {%elif 'at' in (p.why or '')%}
+      <a href="/u/{{p.from_uid}}">{{(p.from_user and p.from_user.name) or p.from_uid}}</a>
+      <span>在</span>
+      <a href="{{p.url}}">{{'评论' if 'post'in p.why else '帖子'}} - {{p.url}}</a>
+      <span>中 @ 了你</span>
+
+    {%endif%}
+  {%endcall%}
 {%endmacro%}
 
 {# one line of editor, used in postlist #}

@@ -1,7 +1,7 @@
 # useful definitions in one place
 
 import os, hashlib, binascii as ba
-import base64
+import base64, re
 from colors import *
 
 def init_directory(d):
@@ -21,6 +21,7 @@ dtt = datetime.time
 dtd = datetime.date
 dtn = dtdt.now
 dttz = datetime.timezone
+dttd = datetime.timedelta
 
 # default time parsing
 def dtdt_from_stamp(stamp):
@@ -45,15 +46,41 @@ format_time_dateonly = lambda s: format_time(dfs(s), '%Y-%m-%d')
 format_time_timeonly = lambda s: format_time(dfs(s), '%H:%M')
 
 def format_time_dateifnottoday(s):
-    dt = dfs(s)
+    # dt = dfs(s)
+    # now = dtn(working_timezone)
+    #
+    # if now.date() > dt.date():
+    #     return format_time_dateonly(s)
+    # else:
+    #     return format_time_timeonly(s)
+
+    return format_time_absolute_fallback(s)
+
+def format_time_relative_fallback(s):
+    dt = dfs(s).astimezone(working_timezone)
     now = dtn(working_timezone)
 
-    if now.date() > dt.date():
-        return format_time_dateonly(s)
-    else:
-        return format_time_timeonly(s)
+    past = now-dt # larger=>longer in the past
 
-working_timezone = dttz(datetime.timedelta(hours=+8)) # Hong Kong
+    if past < dttd(seconds=3600):
+        return str(past.seconds // 60) + '分钟前'
+    if past < dttd(seconds=3600*24):
+        return str(past.seconds // 3600) + '小时前'
+    else:
+        return format_time_dateonly(s)
+
+def format_time_absolute_fallback(s):
+    dt = dfs(s).astimezone(working_timezone)
+    now = dtn(working_timezone)
+
+    past = now-dt # larger=>longer in the past
+
+    if past < dttd(seconds=3600*15):
+        return format_time_timeonly(s)
+    else:
+        return format_time_dateonly(s)
+
+working_timezone = dttz(dttd(hours=+8)) # Hong Kong
 
 def time_iso_now():
     return format_time_iso(dtn(working_timezone))
@@ -96,6 +123,19 @@ def check_hash_salt_pw(hashstr, saltstr, string):
 username_regex=r'^[0-9a-zA-Z\u4e00-\u9fff\-\_\.]{2,16}$'
 username_regex_string = str(username_regex).replace('\\\\','\\')
 
+at_extractor_regex = r'@([0-9a-zA-Z\u4e00-\u9fff\-\_\.]{2,16}?)(?=[^0-9a-zA-Z\u4e00-\u9fff\-\_\.]|$)'
+
+def extract_ats(s): # extract @usernames out of text
+    groups = re.findall(at_extractor_regex, s, flags=re.MULTILINE)
+    return groups
+
+def replace_f(match):
+    uname= match.group(1)
+    return '[@{uname}](/member/{uname})'.format(uname=uname)
+
+def replace_ats(s): # replace occurence
+    return re.sub(at_extractor_regex, replace_f, s, flags=re.MULTILINE)
+
 # markdown renderer
 
 if 0:
@@ -106,6 +146,7 @@ if 0:
 elif 1:
     import mistletoe
     def convert_markdown(s):
+        s = replace_ats(s)
         return mistletoe.markdown(s)
 
 else:
@@ -200,9 +241,9 @@ friendly_links = linkify('''
 火光 https://2049post.wordpress.com/ 薪火相传光明不息
 BE4 https://nodebe4.github.io/ BE4的网络服务
 XsDen https://xsden.info/ 講粵語嘅討論區
-膜乎 https://mohu.rocks/ 中南海皇家娱乐城
 連登 https://lihkg.com/ 光復香港冷氣革命
 Tor上的2047 http://terminusnemheqvy.onion/ 特殊情况下使用
+膜乎 https://mohu.rocks/ 中南海皇家娱乐城
 新品葱 https://pincong.rocks/ 带关键词审查的墙外论坛
 ''')
 
@@ -292,3 +333,7 @@ if __name__ == '__main__':
     # test timezone
     print(format_time_iso(dtn()))
     print(format_time_iso(dtn(working_timezone)))
+
+    print(format_time_relative_fallback(
+        format_time_iso(dtn())
+    ))

@@ -25,6 +25,9 @@
 
         {%if g.logged_in%}
 
+        {%set nu = g.logged_in.num_notif %}
+        <a href="/n" class="{{'gotmail' if nu else ''}}">提醒{{' ('~nu~')' if nu else ''}}</a>
+
         {%set nu = g.logged_in.num_unread %}
         <a href="/m" class="{{'gotmail' if nu else ''}}">私信{{' ('~nu~')' if nu else ''}}</a>
 
@@ -87,8 +90,8 @@
             <a rel='noreferrer' href="https://github.com/thphd/2047">GitHub</a>
           </div>
           <br>
-          <div class="copyright" onclick="window.location.href='/';">
-            回到首页
+          <div class="copyright">
+            <a href="/">回到首页</a>
           </div>
         </div>
 

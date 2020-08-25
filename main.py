@@ -175,6 +175,9 @@ aqlc.create_index('messages',
 aqlc.create_index('messages',
     type='persistent', fields=['to_uid','t_c'], unique=False, sparse=False)
 
+aqlc.create_index('notifications',
+    type='persistent', fields=['to_uid','t_c'], unique=False, sparse=False)
+
 is_integer = lambda i:isinstance(i, int)
 class Paginator:
     def __init__(self,):
@@ -580,13 +583,22 @@ def befr():
         if 't_inbox' not in g.current_user:
             g.current_user['t_inbox'] = '1989-06-04T00:00:00'
 
-        # how many unread messages?
-        num_unread = aql('return length(for m in messages filter m.to_uid==@uid and m.t_c>@lastcheck return m)',
+        # when is the last time you check your notifications?
+        if 't_notif' not in g.current_user:
+            g.current_user['t_notif'] = '1989-06-04T00:00:00'
+
+        # how many unread messages/notifications?
+        num_unread, num_notif = aql('''return [
+            length(for m in messages filter m.to_uid==@uid and m.t_c>@lastcheck return m),
+            length(for n in notifications filter n.to_uid==@uid and n.t_c>@lastcheck_n return n)
+            ]''',
             uid=g.current_user['uid'],
             lastcheck=g.current_user['t_inbox'],
+            lastcheck_n=g.current_user['t_notif'],
             silent=True,
         )[0]
         g.current_user['num_unread']=num_unread
+        g.current_user['num_notif']=num_notif
 
         return
     else:
@@ -692,6 +704,22 @@ def getpost(pid):
     resp = make_response('', 307)
     resp.headers['Location'] = url
     resp.headers['Cache-Control']= 'max-age=86400'
+    return resp
+
+@app.route('/p/<int:pid>/code')
+def getpostcode(pid):
+    p = aql('for p in posts filter p._key==@k return p',k=str(pid), silent=True)[0]
+    resp = make_response(p['content'], 200)
+    resp.headers['Cache-Control']='max-age=1800'
+    resp.headers['Content-Type']='text/plain; charset=UTF-8'
+    return resp
+
+@app.route('/t/<int:tid>/code')
+def getthreadcode(tid):
+    p = aql('for p in threads filter p.tid==@k return p',k=tid, silent=True)[0]
+    resp = make_response(p['content'], 200)
+    resp.headers['Cache-Control']='max-age=1800'
+    resp.headers['Content-Type']='text/plain; charset=UTF-8'
     return resp
 
 @app.route('/c/<int:cid>')
@@ -1114,6 +1142,30 @@ def messages_by_convid(convid):
         ),
         messages=res,
         **(globals())
+    )
+
+@app.route('/n')
+def notification_page():
+    if not g.logged_in: raise Exception('not logged in')
+    uid = g.current_user['uid']
+
+    notifications = aql('for i in notifications \
+    filter i.to_uid==@uid sort i.t_c desc limit 50 \
+    let from_user=(for u in users filter u.uid==i.from_uid return u)[0]\
+    return merge(i,{from_user})',
+        uid=uid,
+        silent=False)
+
+    # update t_notif
+    timenow = time_iso_now()
+    aql('update @user with {t_notif:@t} in users',
+        user=g.current_user,t=timenow,silent=True)
+    g.current_user['num_notif']=0
+
+    return render_template('notifications.html.jinja',
+        page_title='系统提醒',
+        notifications=notifications,
+        **(globals()),
     )
 
 def e(s): return make_response({'error':s}, 500)

@@ -884,3 +884,13 @@ span.votenumber {}
 #footer .lr>*:first-child {
     margin-right: 2em;
 }
+
+a.adminstuff {}
+
+.meta .viewcode {
+    color: blue;
+}
+
+.adminstuff.viewcode {
+    color: #185fca;
+}

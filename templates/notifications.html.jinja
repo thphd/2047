@@ -1,0 +1,12 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+
+<div class="threadlist">
+
+  {%for n in notifications%}
+    {{macros.post_notification(n)}}
+  {%endfor%}
+
+</div>
+
+{%endblock%}
