@@ -15,36 +15,38 @@
 {%endblock%}
 
 {%block navigator%}
+<div id="navigator" class="">
 
-{%if categories%}
+  {%if categories%}
 
-<div class="box">
-  <div class="boxtitle">
-    分类列表
+  <div class="box">
+    <div class="boxtitle">
+      分类列表
+    </div>
+
+    <div class="categories">
+      {%for c in categories%}
+      {{macros.category_bubble(c)}}
+      {%endfor%}
+    </div>
   </div>
 
-  <div class="categories">
-  {%for c in categories%}
-  {{macros.category_bubble(c)}}
-  {%endfor%}
+  {%endif%}
+
+  {%if common_links %}
+  <div class="box">
+    <div class="boxtitle">
+      常用链接
+    </div>
+    <div class="categories">
+      {%for l in common_links%}
+      {{macros.link_bubble(l)}}
+      {%endfor%}
+    </div>
+
   </div>
+
+  {%endif%}
 </div>
-
-{%endif%}
-
-{%if common_links %}
-<div class="box">
-  <div class="boxtitle">
-    常用链接
-  </div>
-  <div class="categories">
-    {%for l in common_links%}
-    {{macros.link_bubble(l)}}
-    {%endfor%}
-  </div>
-
-</div>
-
-{%endif%}
 
 {%endblock%}
