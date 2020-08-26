@@ -1010,7 +1010,8 @@ button {
 }
 
 .userpage_name {
-    margin-bottom: 1em;
+    /* margin-bottom: 1em; */
+    line-height: 250%;
 }
 
 .userpage_name:last-child {
@@ -1042,8 +1043,13 @@ button {
 
 .userpage_lr {
     display: flex;
+    align-content: space-between;
 }
 
 .userpage_let:not(:first-child) {
     margin-left: 2em;
+}
+
+.userpage_let:first-child {
+    max-width: 60%;
 }
