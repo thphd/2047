@@ -182,6 +182,12 @@ aqlc.create_index('notifications',
 
 aqlc.create_index('avatars',
     type='persistent', fields=['uid'], unique=False, sparse=False)
+aqlc.create_index('admins',
+    type='persistent', fields=['name'], unique=False, sparse=False)
+aqlc.create_index('aliases',
+    type='persistent', fields=['is','name'], unique=False, sparse=False)
+aqlc.create_index('aliases',
+    type='persistent', fields=['name','is'], unique=False, sparse=False)
 
 is_integer = lambda i:isinstance(i, int)
 class Paginator:
@@ -1049,7 +1055,7 @@ def _userpage(uid):
                     pid = case[1]
                     pobj = pgnt.get_post_one(pid)
                     if pobj:
-                        thobj['type']='post'
+                        pobj['type']='post'
                         sc_ts.append(pobj)
 
                 if len(sc_ts)>=4: # at most 4 for now

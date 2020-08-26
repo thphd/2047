@@ -47,7 +47,7 @@ def make_notification_names(names, from_uid, why, url, **kw):
     for i in uids
     let d = merge({to_uid:i}, @k)
     upsert {to_uid:d.to_uid, from_uid:d.from_uid, why:d.why, url:d.url}
-    insert d update d into notifications
+    insert d update {} into notifications
     ''', names=names, k=d, silent=True)
 
 def make_notification_uids(uids, from_uid, why, url, **kw):
@@ -67,7 +67,7 @@ def make_notification_uids(uids, from_uid, why, url, **kw):
     for i in uids
     let d = merge({to_uid:i}, @k)
     upsert {to_uid:d.to_uid, from_uid:d.from_uid, why:d.why, url:d.url}
-    insert d update d into notifications
+    insert d update {} into notifications
     ''', uids=uids, k=d, silent=True)
 
 def get_url_to_post(pid):
@@ -962,6 +962,32 @@ def _():
 
         return {'error':False}
 
+@register('add_alias')
+def _():
+    j = g.j
+    # @掀翻小池塘
+    if not g.current_user: raise Exception('you are not logged in')
+    if not g.current_user['admin']:
+        raise Exception("you are not admin")
+
+    name = es('name')
+    _is = es('is')
+
+    un = get_user_by_name(name)
+    uis = get_user_by_name(_is)
+
+    if un and uis:
+        l = aql('for i in aliases filter i.is == @n return i',n=_is)
+        if len(l):
+            raise Exception('this user already linked to '+str(l[0]['name']))
+
+        aql('insert @k into aliases', k={
+            'name':name,
+            'is':_is
+        })
+        return {'error':False}
+    else:
+        raise Exception('user not exist')
 
 # feedback regulated ping service
 # average 1 ping every 3 sec

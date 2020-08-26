@@ -126,6 +126,7 @@ username_regex_string = str(username_regex).replace('\\\\','\\')
 at_extractor_regex = r'@([0-9a-zA-Z\u4e00-\u9fff\-\_\.]{2,16}?)(?=[^0-9a-zA-Z\u4e00-\u9fff\-\_\.]|$)'
 
 post_autolink_regex = r'<#([0-9]{2,16})>'
+thread_autolink_regex = r'<t([0-9]{2,16})>'
 
 def extract_ats(s): # extract @usernames out of text
     groups = re.findall(at_extractor_regex, s, flags=re.MULTILINE)
@@ -144,6 +145,13 @@ def replace_pal(s):
         return '[#{}](/p/{})'.format(pid,pid)
 
     return re.sub(post_autolink_regex, f, s, flags=re.MULTILINE)
+
+def replace_tal(s):
+    def f(match):
+        pid = match.group(1)
+        return '[/t/{}](/t/{})'.format(pid,pid)
+
+    return re.sub(thread_autolink_regex, f, s, flags=re.MULTILINE)
 
 # match only youtube links that occupy a single line
 youtube_extractor_regex = r'(?=\n|\r|^)(?:http|https|)(?::\/\/|)(?:www.|)(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/ytscreeningroom\?v=|\/feeds\/api\/videos\/|\/user\S*[^\w\-\s]|\S*[^\w\-\s]))([\w\-]{11})[A-Za-z0-9;:@#?&%=+\/\$_.-]*(?=\n|$)'
@@ -207,6 +215,7 @@ elif 1:
     import mistletoe
     def convert_markdown(s):
         s = replace_pal(s)
+        s = replace_tal(s)
         s = replace_ats(s)
         s = replace_ytb(s)
         return mistletoe.markdown(s)
@@ -343,6 +352,10 @@ def can_do_to(u1, operation, u2id):
             return True
 
     elif operation == 'ban_user':
+        if is_admin:
+            return True
+
+    elif operation == 'add_alias':
         if is_admin:
             return True
 

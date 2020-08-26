@@ -365,6 +365,81 @@ if (editor_target){
   var editor_title = geid('editor_title')
   var editor_right = geid('editor_right')
 
+  var adjustments = foreach(
+    'image,link,link_label,italic,bold,code,quote'
+    .split(','))(n=>{
+    var editor_x = geid('editor_'+n)
+    if (editor_x){
+      editor_x.onclick = function(){
+        var et = editor_text
+        var ss = et.selectionStart
+        var se = et.selectionEnd
+
+        // selected text
+        var st = et.value.substr(ss, se-ss)
+        print(st)
+        var stl = st.length
+        var bst = et.value.substr(0, ss)
+        var ast = et.value.substr(se)
+
+        et.focus()
+
+        switch (n) {
+          case 'bold':
+              et.setRangeText(`**${st}**`,ss,se,'preserve')
+              et.setSelectionRange(ss+2, se+2)
+            break;
+
+            case 'italic':
+              et.setRangeText(`*${st}*`,ss,se,'preserve')
+              et.setSelectionRange(ss+1, se+1)
+            break;
+
+            case 'code':
+              et.setRangeText(`\`${st}\``,ss,se,'preserve')
+              et.setSelectionRange(ss+1, se+1)
+            break;
+
+            case 'link':
+              var stt = st.trim()
+              var lstt = stt.length
+              et.setRangeText(`<${stt}>`,ss,se,'preserve')
+              et.setSelectionRange(ss+1, ss+1+lstt)
+            break;
+
+            case 'link_label':
+              et.setRangeText(`[](${st.trim()})`,ss,se,'preserve')
+              et.setSelectionRange(ss+1, ss+1)
+            break;
+
+            case 'image':
+              et.setRangeText(`![](${st.trim()})`,ss,se,'preserve')
+              if(!st.trim().length){
+                et.setSelectionRange(ss+4, ss+4)
+              }else{
+                et.setSelectionRange(ss+2, ss+2)
+              }
+            break;
+
+            case 'quote':
+              var stt = st.trim()
+              var lstt = stt.length
+              if(bst[ss-1]=='\n'){
+                et.setRangeText(`> ${stt}\n`,ss,se,'preserve')
+                et.setSelectionRange(ss+2, ss+2+lstt)
+              }else{
+                et.setRangeText(`\n> ${stt}\n`,ss,se,'preserve')
+                et.setSelectionRange(ss+3, ss+3+lstt)
+              }
+            break;
+
+          default:
+        }
+
+      }
+    }
+  })
+
   editor_right.style.display = 'none'
 
   bpreview.onclick = function(){
@@ -705,6 +780,25 @@ function ban_user_reverse(uid){
     window.location.reload()
   })
   .catch(alert)
+}
+
+function add_alias(curr_name){
+  var linkedname = prompt('请输入关联账户名')
+  if (linkedname){
+    linkedname = linkedname.trim()
+    api({
+      action:'add_alias',
+      name:linkedname,
+      is:curr_name,
+    })
+    .then(res=>{
+      alert('已关联至', curr_name)
+      window.location.reload()
+    })
+    .catch(alert)
+  }else{
+    alert('未输入用户名')
+  }
 }
 
 /* Light YouTube Embeds by @labnol */

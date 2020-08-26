@@ -8,6 +8,9 @@
         <a href="/editor?target=username/{{u.name}}">发私信给ta</a>
       {%endif%}
 
+      {%if can_do_to(g.logged_in, 'add_alias', u.uid)%}
+        <a href="javascript:add_alias('{{u.name}}')" class='adminstuff delete'>链接老账户</a>
+      {%endif%}
 
       {%if not u.delete and can_do_to(g.logged_in, 'ban_user', u.uid)%}
         <a href="javascript:ban_user({{u.uid}})" class="adminstuff delete">封禁</a>
