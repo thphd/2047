@@ -292,7 +292,7 @@ user_post_list_defaults = dict(
 
 user_list_defaults = dict(
     pagenumber=1,
-    pagesize=50,
+    pagesize=30,
     order='desc',
     sortby='uid',
 )

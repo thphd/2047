@@ -130,6 +130,8 @@ aqlc.create_index('posts',
     type='persistent', fields=['tid','t_c','_key'], unique=False, sparse=False)
 aqlc.create_index('posts',
     type='persistent', fields=['uid','t_c','_key'], unique=False, sparse=False)
+aqlc.create_index('posts',
+    type='persistent', fields=['tid','delete','t_c','_key'], unique=False, sparse=False)
 
 aqlc.create_index('categories',
     type='persistent', fields=['cid'], unique=True, sparse=False)
@@ -142,6 +144,15 @@ aqlc.create_index('users',
     type='persistent', fields=['uid'], unique=True, sparse=False)
 aqlc.create_index('users',
     type='persistent', fields=['name'], unique=False, sparse=False)
+
+aqlc.create_index('users',
+    type='persistent', fields=['nposts'], unique=False, sparse=False)
+aqlc.create_index('users',
+    type='persistent', fields=['nthreads'], unique=False, sparse=False)
+aqlc.create_index('users',
+    type='persistent', fields=['nlikes'], unique=False, sparse=False)
+aqlc.create_index('users',
+    type='persistent', fields=['nliked'], unique=False, sparse=False)
 
 aqlc.create_index('users',
     type='persistent', fields=['invitation'], unique=False, sparse=False)
@@ -201,7 +212,7 @@ class Paginator:
         pagenumber=1,
         path=''):
 
-        assert sortby in ['t_c','uid'] # future can have more.
+        assert sortby in ['t_c','uid','nthreads','nposts','nlikes','nliked'] # future can have more.
         # sortby = 't_c'
         assert order in ['desc', 'asc']
 
@@ -217,12 +228,12 @@ class Paginator:
         sort u.{sortby} {order}
         limit {start},{count}
 
-        let stat = {{
-            nthreads:length(for t in threads filter t.uid==u.uid return t),
-            nposts:length(for p in posts filter p.uid==u.uid return p),
-        }}
+        //let stat = {{
+        //    nthreads:length(for t in threads filter t.uid==u.uid return t),
+        //    nposts:length(for p in posts filter p.uid==u.uid return p),
+        //}}
 
-        return merge(u, stat)
+        return u //merge(u, stat)
         '''.format(sortby=sortby, order=order,
         start=start, count=count,)
 
@@ -481,7 +492,19 @@ class Paginator:
 
         sortbys2 = [
         ('UID',querystring(pagenumber, pagesize, order, 'uid'), 'uid'==sortby),
-        ('注册时间', querystring(pagenumber, pagesize, order, 't_c'),'t_c'==sortby)
+        # ('注册时间', querystring(pagenumber, pagesize, order, 't_c'),
+        #     't_c'==sortby),
+
+        ('主题数', querystring(pagenumber, pagesize, order, 'nthreads'),
+            'nthreads'==sortby),
+        ('评论数', querystring(pagenumber, pagesize, order, 'nposts'),
+            'nposts'==sortby),
+
+        ('点赞', querystring(pagenumber, pagesize, order, 'nliked'),
+            'nliked'==sortby),
+        ('被赞', querystring(pagenumber, pagesize, order, 'nlikes'),
+            'nlikes'==sortby),
+
         ]
 
         button_groups = []
@@ -746,10 +769,11 @@ def delall():
 
 @app.route('/u/all')
 def alluser():
-    pagenumber = rai('page') or 1
-    pagesize = rai('pagesize') or 50
-    order = ras('order') or 'desc'
-    sortby = ras('sortby') or 'uid'
+    uld = user_list_defaults
+    pagenumber = rai('page') or uld['pagenumber']
+    pagesize = rai('pagesize') or uld['pagesize']
+    order = ras('order') or uld['order']
+    sortby = ras('sortby') or uld['sortby']
     rpath = request.path
 
     userlist, pagination = pgnt.get_user_list(

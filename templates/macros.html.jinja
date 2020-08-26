@@ -81,7 +81,7 @@
 
           {# content is name of an user #}
           {%elif 'userlist' in metas %}
-            <a href='/u/{{p.uid}}' class='threadlist_title'>
+            <a href='/u/{{p.uid}}' class='userlist_name'>
               {{text}}
             </a>
 
@@ -105,7 +105,7 @@
           {%endif%}
 
           {%if p.brief%}
-          <blockquote>{{p.brief}}</blockquote>
+          <span class="userlist_brief">{{p.brief[:80]}}</span>
           {%endif%}
         {%endif%}
 
@@ -208,6 +208,15 @@
             {%if p.nposts%}
             <a href='/u/{{p.uid}}/p' class="response">{{p.nposts}} 个回复</a>
             {%endif%}
+
+            {%if p.nliked%}
+            <a href='/u/{{p.uid}}' class="nliked">点赞 {{p.nliked}} 次</a>
+            {%endif%}
+
+            {%if p.nlikes%}
+            <a href='/u/{{p.uid}}' class="nlikes">被赞 {{p.nlikes}} 次</a>
+            {%endif%}
+
 
           {# admin stuff #}
           {%elif m=='delete_thread'%}

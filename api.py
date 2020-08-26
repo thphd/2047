@@ -385,6 +385,9 @@ def _():
                 from_uid=uid,
             )
 
+        update_thread_votecount(thread['tid'])
+        update_user_votecount(g.current_user['uid'])
+
         return inserted
 
     elif target_type=='user': # send another user a new message
@@ -465,6 +468,8 @@ def _():
                 url=url,
                 from_uid=uid,
             )
+
+        update_user_votecount(g.current_user['uid'])
 
         return inserted
 
@@ -565,8 +570,12 @@ def _():
 def update_thread_votecount(tid):
     res = aql('''
 let t = (for i in threads filter i.tid==@_id return i)[0]
-let upv= length(for v in votes filter v.id==t.tid and v.vote==1 return v)
-update t with {votes:upv} in threads return NEW
+
+let upv= length(for v in votes filter v.type=='thread' and v.id==t.tid and v.vote==1 return v)
+let nreplies = length(for p in posts filter p.tid==t.tid return p)
+let t_u = ((for p in posts filter p.tid==t.tid and p.delete==null sort p.t_c desc limit 1 return p)[0].t_c or t.t_c)
+
+update t with {votes:upv, nreplies, t_u} in threads return NEW
     ''', _id=int(tid), silent=True)
 
     return res[0]
@@ -574,11 +583,23 @@ update t with {votes:upv} in threads return NEW
 def update_post_votecount(pid):
     res = aql('''
 let t = (for i in posts filter i._key==@_id return i)[0]
-let upv= length(for v in votes filter to_string(v.id)==t._key and v.vote==1 return v)
+let upv = length(for v in votes filter v.type=='post' and v.id==@_id2 and v.vote==1 return 1)
 update t with {votes:upv} in posts return NEW
-    ''', _id=str(pid), silent=True)
+    ''', _id=str(pid), _id2=int(pid), silent=True)
 
     return res[0]
+
+def update_user_votecount(uid):
+    res = aql('''
+    for u in users filter u.uid==@uid
+    update u with
+    {
+        nthreads:length(for t in threads filter t.uid==u.uid return t),
+        nposts:length(for p in posts filter p.uid==u.uid return p),
+        nlikes:length(for v in votes filter v.to_uid==u.uid and v.vote==1 return v),
+        nliked:length(for v in votes filter v.uid==u.uid and v.vote==1 return v),
+    } in users
+    ''', uid=int(uid), silent=True)
 
 @register('update_votecount')
 def _():
@@ -658,8 +679,6 @@ def _():
             )
             # put in db
             n = aql('insert @i into votes return NEW',i=vobj,silent=True)[0]
-            n = update_thread_votecount(_id)
-            return {'ok':vote_number}
 
         #if you voted before
         else:
@@ -675,8 +694,12 @@ def _():
 
             # put in db
             n = aql('update @k with @o in votes return NEW',k=vote,o=vobj,silent=True)[0]
-            n = update_thread_votecount(_id)
-            return {'ok':vote_number}
+
+        update_thread_votecount(_id)
+
+        update_user_votecount(thread['uid'])
+        update_user_votecount(g.current_user['uid'])
+        return {'ok':vote_number}
 
     elif target_type=='post':
         post = get_post(_id)
@@ -705,8 +728,6 @@ def _():
             )
             # put in db
             n = aql('insert @i into votes return NEW',i=vobj,silent=True)[0]
-            n = update_post_votecount(_id)
-            return n
 
         #if you voted before
         else:
@@ -722,8 +743,12 @@ def _():
 
             # put in db
             n = aql('update @k with @o in votes return NEW',k=vote,o=vobj,silent=True)[0]
-            n = update_post_votecount(_id)
-            return n
+
+        update_post_votecount(_id)
+
+        update_user_votecount(post['uid'])
+        update_user_votecount(g.current_user['uid'])
+        return {'ok':vote_number}
 
     else:
         raise Exception('target type unsupported')
@@ -763,6 +788,8 @@ def _():
         upd = aql('for i in posts filter i._key==@_id\
             update i with {delete:true} in posts return NEW',_id=_id)
 
+        update_thread_votecount(pobj['tid'])
+
         if len(upd)<1:
             raise Exception('pid not found')
 
@@ -778,6 +805,8 @@ def _():
     elif target_type=='upost':
         upd = aql('for i in posts filter i._key==@_id\
             update i with {delete:null} in posts return NEW',_id=_id)
+
+        update_thread_votecount(pobj['tid'])
 
         if len(upd)<1:
             raise Exception('pid not found')

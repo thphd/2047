@@ -116,7 +116,7 @@ span.last_commented_date {
   /* overflow-y: auto; */
   overflow: hidden;
   /* text-overflow: ellipsis; */
-  max-width: 18em;
+  max-width: 16em;
 }
 
 .details .title a {
@@ -1052,4 +1052,28 @@ button {
 
 .userpage_let:first-child {
     max-width: 60%;
+}
+
+span.brief {
+    flex-shrink: 50;
+}
+
+a {}
+
+a.nlikes {
+    color: #ff8100;
+}
+
+a.nliked {
+    color: #e4b7b7;
+}
+
+span.userlist_brief {
+    color: #909090;
+    font-size: 90%;
+}
+
+a.userlist_name {
+    color: #3c3c3c;
+    margin-right: .5em;
 }
