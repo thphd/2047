@@ -3,7 +3,9 @@
 
 <div class="threadlist">
   {%call macros.post(u,[])%}
-  <p>用户名 {{u.name}} {{'（已封禁于 '~format_time_dateifnottoday(u.t_d)~'）'if u.delete else ''}}
+  <div class='userpage_name'>
+    <span>用户名</span>
+      {{u.name}} {{'（已封禁于 '~format_time_dateifnottoday(u.t_d)~'）'if u.delete else ''}}
         {%if g.logged_in%}
         <a href="/editor?target=username/{{u.name}}">发私信给ta</a>
       {%endif%}
@@ -19,19 +21,29 @@
         <a href="javascript:ban_user_reverse({{u.uid}})" class="adminstuff delete">解除封禁</a>
       {%endif%}
 
-  </p>
-  <p>UID {{u.uid}}</p>
-  <p>注册时间 {{format_time_datetime(u.t_c)}}</p>
-  <p>发帖 <a href="/u/{{u.uid}}/t">{{u.stats.nthreads}}</a></p>
-  <p>回复 <a href="/u/{{u.uid}}/p">{{u.stats.nposts}}</a></p>
+  </div>
 
-  {%if u.brief %}
-  <blockquote>
-    {{u.brief}}
-  </blockquote>
-  {%else%}
-  <p>（个人简介暂无）</p>
-  {%endif%}
+  <div class="userpage_name">
+    <span>UID</span> {{u.uid}}
+  </div>
+  <div class="userpage_name">
+    <span>注册时间</span> {{format_time_datetime(u.t_c)}}
+  </div>
+  <div class="userpage_name">
+    <span>发帖</span><a href="/u/{{u.uid}}/t">{{u.stats.nthreads}}</a>
+  </div>
+  <div class="userpage_name">
+    <span>回复</span><a href="/u/{{u.uid}}/p">{{u.stats.nposts}}</a>
+  </div>
+
+  <div class="userpage_name">
+    <span>个人简介</span>
+    {%if u.brief %}
+        {{u.brief}}
+    {%else%}
+      （个人简介暂无）
+    {%endif%}
+  </div>
   {%endcall%}
 
   {%for t in sc_ts%}

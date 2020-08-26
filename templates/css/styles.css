@@ -998,3 +998,18 @@ h1:not(:first-child) {
 button {
     border-radius: 2px;
 }
+
+.userpage_name>span {
+    width: 6em;
+    display: inline-block;
+    /* margin-bottom: 1em; */
+    color: #a7a7a7;
+}
+
+.userpage_name {
+    margin-bottom: 1em;
+}
+
+.userpage_name:last-child {
+    margin-bottom: 0;
+}
