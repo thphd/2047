@@ -25,6 +25,7 @@
 
   <div class="userpage_name">
     <span>UID</span> {{u.uid}}
+    {%if u.admin%}<span title='管理员'>&nbsp;#&nbsp</span>{%endif%}
   </div>
   <div class="userpage_name">
     <span>注册时间</span> {{format_time_datetime(u.t_c)}}

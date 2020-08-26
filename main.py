@@ -1023,15 +1023,11 @@ def userpage(uid):
     return _userpage(uid)
 
 def _userpage(uid):
-    uobj = aql('''
-    for u in users filter u.uid==@uid
-    return u
-    ''', uid=uid, silent=True)
+    uobj = get_user(int(uid))
 
-    if len(uobj)!=1:
+    if not uobj:
         return make_response('user not exist', 404)
 
-    uobj = uobj[0]
     u = uobj
 
     userfill(u)
