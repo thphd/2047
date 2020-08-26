@@ -267,6 +267,25 @@ def obtain_new_id(name):
     '''.format(d=name))[0]
     return uid
 
+def increment_view_counter(target_type, _id):
+    if target_type=='thread' or target_type=='user':
+        _id = int(_id)
+        keyname=target_type[0]+'id'
+    elif target_type=='post':
+        _id = str(_id)
+        keyname='_key'
+    else:
+        raise Exception('unsupported tt for vc increment')
+    aql('''
+        for i in {collname} filter i.{keyname}=={_id}
+        update i with {{ vc:i.vc+1 }} in {collname}
+    '''.format(
+        collname = target_type+'s',
+        keyname = keyname,
+        _id = _id,
+    ),
+    silent=True)
+
 @register('logout')
 def _():
     return {'logout':True}

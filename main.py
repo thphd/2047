@@ -240,7 +240,7 @@ class Paginator:
         return userlist, pagination_obj
 
     def get_post_one(self, pid):
-        selfuid = g.logged_in['uid'] if g.logged_in else -1
+        selfuid = g.selfuid
 
         qs = '''for i in posts filter i._key==@pid
 
@@ -287,7 +287,7 @@ class Paginator:
             filter = 'filter i.uid == {}'.format(uid)
             mode='user_post'
 
-        selfuid = g.logged_in['uid'] if g.logged_in else -1
+        selfuid = g.selfuid
 
         querystring_complex = '''
         for i in posts
@@ -588,7 +588,7 @@ class UAFilter:
         # print(self.d[ua])
 
         # print_err(self.d[ua])
-        if self.d[ua]>20:
+        if self.d[ua]>45:
             self.d[ua]+=3*weight
 
             if self.d[ua]>75 and (ua not in self.blacklist):
@@ -611,10 +611,15 @@ def befr():
 
     ipstr = request.remote_addr
 
+    g.selfuid = -1
+
     if 'uid' in session:
         g.logged_in = get_user(int(session['uid']))
         g.current_user = g.logged_in
+
         print_info(g.logged_in['name'])
+
+        g.selfuid = g.logged_in['uid']
 
         # print_err(request.headers)
 
@@ -763,10 +768,15 @@ def alluser():
 
 @app.route('/p/<int:pid>')
 def getpost(pid):
+    p = get_post(pid)
     url = get_url_to_post(str(pid))
     resp = make_response('', 307)
     resp.headers['Location'] = url
     resp.headers['Cache-Control']= 'max-age=86400'
+
+    user_is_self = p['uid'] == g.selfuid
+    if not user_is_self: increment_view_counter('post', pid)
+
     return resp
 
 @app.route('/p/<int:pid>/code')
@@ -888,7 +898,7 @@ def remove_duplicate_brief(postlist):
 @app.route('/t/<int:tid>')
 def thrd(tid):
 
-    selfuid = g.logged_in['uid'] if g.logged_in else -1
+    selfuid = g.selfuid
 
     thobj = get_thread_full(tid, selfuid)
     if not thobj:
@@ -916,6 +926,9 @@ def thrd(tid):
 
     # remove duplicate brief string within a page
     remove_duplicate_brief(postlist)
+
+    if selfuid != thobj['uid']:
+        increment_view_counter('thread', tid)
 
     return render_template('postlist.html.jinja',
         page_title=thobj['title'],
@@ -1032,7 +1045,8 @@ def _userpage(uid):
 
     userfill(u)
 
-    selfuid = g.logged_in['uid'] if g.logged_in else -1
+    selfuid = g.selfuid
+    user_is_self = (uid == selfuid)
 
     # display showcase thread/post
     sc_ts = []
@@ -1059,11 +1073,12 @@ def _userpage(uid):
 
                 # print(thobj)
 
-    user_is_self = (uid == selfuid)
 
     stats = aql('''return {
             nthreads:length(for t in threads filter t.uid==@uid return t),
             nposts:length(for p in posts filter p.uid==@uid return p),
+            nlikes:length(for v in votes filter v.to_uid==@uid and v.vote==1 return v),
+            nliked:length(for v in votes filter v.uid==@uid and v.vote==1 return v),
         }
         ''',uid=uid, silent=True)[0]
 
@@ -1075,6 +1090,9 @@ def _userpage(uid):
             let users = (for u in users filter u.invitation==i._key return u)\
             sort i.t_c desc limit 25 return merge(i,{users})',k=uid,silent=True)
             invitations = k
+
+    if not user_is_self:
+        increment_view_counter('user', u['uid'])
 
     return render_template('userpage.html.jinja',
         page_title=uobj['name'],

@@ -142,6 +142,11 @@
               {{format_time_dateifnottoday(p.t_c)}}
             </a>
 
+          {%elif m=='vc'%}
+            {%if p.vc%}
+            {# view count #}
+            <span>{{p.vc}} 次浏览</span>
+            {%endif%}
           {%elif m=='conversation_with'%}
             {%set sent = 1 if p.last.uid==g.logged_in.uid else 0 %}
             <span>{{"发给" if sent else "来自"}}</span>
@@ -302,7 +307,7 @@
 
 {# one line of post, used in postlist's thread header #}
 {%macro post_postlist_header(p)%}
-  {{post(p, ['under_vote','publish_date_thread','delete_thread','edit_thread','display_edit_status','thread','thread_header','view_thread_code'])}}
+  {{post(p, ['under_vote','publish_date_thread','vc','delete_thread','edit_thread','display_edit_status','thread','thread_header','view_thread_code'])}}
 {%endmacro%}
 
 {# one line of post, used in postlist's thread header, keep the style unchanged #}
@@ -312,7 +317,7 @@
 
 {# one line of thread, used in threadlist #}
 {%macro post_threadlist(p)%}
-  {{post(p, ['category','publisher','publish_date_thread','last_commenter',
+  {{post(p, ['category','publisher','publish_date_thread','last_commenter','vc',
   'threadlist','delete_thread','thread_votes'])}}
 {%endmacro%}
 

@@ -3,58 +3,76 @@
 
 <div class="threadlist">
   {%call macros.post(u,[])%}
-  <div class='userpage_name'>
-    <span>用户名</span>
-      {{u.name}} {{'（已封禁于 '~format_time_dateifnottoday(u.t_d)~'）'if u.delete else ''}}
+
+  <div class="userpage_lr">
+    <div class="userpage_let">
+      <div class='userpage_name'>
+        <span>用户名</span>{{u.name}}
+        {{'（已封禁于 '~format_time_dateifnottoday(u.t_d)~'）'if u.delete else ''}}
         {%if g.logged_in%}
         <a href="/editor?target=username/{{u.name}}">发私信给ta</a>
-      {%endif%}
+        {%endif%}
 
-      {%if can_do_to(g.logged_in, 'add_alias', u.uid)%}
+        {%if can_do_to(g.logged_in, 'add_alias', u.uid)%}
         <a href="javascript:add_alias('{{u.name}}')" class='adminstuff delete'>链接老账户</a>
-      {%endif%}
+        {%endif%}
 
-      {%if not u.delete and can_do_to(g.logged_in, 'ban_user', u.uid)%}
+        {%if not u.delete and can_do_to(g.logged_in, 'ban_user', u.uid)%}
         <a href="javascript:ban_user({{u.uid}})" class="adminstuff delete">封禁</a>
-      {%endif%}
-      {%if u.delete and can_do_to(g.logged_in, 'ban_user', u.uid)%}
+        {%endif%}
+        {%if u.delete and can_do_to(g.logged_in, 'ban_user', u.uid)%}
         <a href="javascript:ban_user_reverse({{u.uid}})" class="adminstuff delete">解除封禁</a>
+        {%endif%}
+
+      </div>
+
+      <div class="userpage_name">
+        <span>UID</span>{{u.uid}}
+        {%if u.admin%}<span title='管理员'>&nbsp;#&nbsp</span>{%endif%}
+      </div>
+      <div class="userpage_name">
+        <span>注册时间</span>{{format_time_datetime(u.t_c)}}
+      </div>
+      <div class="userpage_name">
+        <span>个人简介</span>{%if u.brief %}{{u.brief}}
+        {%else%}（个人简介暂无）
+        {%endif%}
+      </div>
+
+      {%if u.url %}
+
+      <div class="userpage_name">
+        <span>URL</span>
+        <a href="{{u.url}}" rel='noreferrer' title="本站不审查链接内容，点击链接造成的一切后果需用户自行承担">{{u.url}}</a>
+      </div>
+      {%else%}
       {%endif%}
 
+    </div>
+
+    <div class="userpage_let">
+
+      <div class="userpage_name">
+        <span>发帖</span><a href="/u/{{u.uid}}/t">{{u.stats.nthreads}}</a>
+      </div>
+      <div class="userpage_name">
+        <span>回复</span><a href="/u/{{u.uid}}/p">{{u.stats.nposts}}</a>
+      </div>
+
+      <div class="userpage_name">
+        <span>收到赞</span>{{u.stats.nliked or 0}}
+      </div>
+      <div class="userpage_name">
+        <span>送出赞</span>{{u.stats.nlikes or 0}}
+      </div>
+
+      <div class="userpage_name">
+        <span>资料被浏览</span>{{u.vc or 0}} 次
+      </div>
+
+    </div>
   </div>
 
-  <div class="userpage_name">
-    <span>UID</span> {{u.uid}}
-    {%if u.admin%}<span title='管理员'>&nbsp;#&nbsp</span>{%endif%}
-  </div>
-  <div class="userpage_name">
-    <span>注册时间</span> {{format_time_datetime(u.t_c)}}
-  </div>
-  <div class="userpage_name">
-    <span>发帖</span><a href="/u/{{u.uid}}/t">{{u.stats.nthreads}}</a>
-  </div>
-  <div class="userpage_name">
-    <span>回复</span><a href="/u/{{u.uid}}/p">{{u.stats.nposts}}</a>
-  </div>
-
-  <div class="userpage_name">
-    <span>个人简介</span>
-    {%if u.brief %}
-        {{u.brief}}
-    {%else%}
-      （个人简介暂无）
-    {%endif%}
-  </div>
-
-  {%if u.url %}
-
-  <div class="userpage_name">
-    <span>URL</span>
-        <a href="{{u.url}}" rel='noreferrer' title="本站不审查链接内容，点击链接造成的一切后果需用户自行承担">{{u.url}}</a>
-  </div>
-  {%else%}
-
-  {%endif%}
 
   {%endcall%}
 

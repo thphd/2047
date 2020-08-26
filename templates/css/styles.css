@@ -26,7 +26,7 @@ img#site_logo {
 
 
 body {
-  background-color: #808080;
+  background-color: #888;
 }
 
 #header {
@@ -1034,4 +1034,16 @@ button {
     margin-left: 6px;
 }
 
-.post_content del, .post_content s {text-decoration: none;background-image: linear-gradient(transparent 0.4em,#000000 0.4em,#000000 .6em,transparent .6em);padding: 0 0.1em;margin-left: 0.05em;margin-right: 0.05em;background-color: #ff414140;}
+.post_content del, .post_content s {text-decoration: none;background-image: linear-gradient(transparent 0.4em,#000000 0.4em,#000000 .6em,transparent .6em);padding: 0 0.1em;margin-left: 0.05em;margin-right: 0.05em;/* background-color: #ff414140; */}
+
+.userpage_name>a {
+    margin-left: 0;
+}
+
+.userpage_lr {
+    display: flex;
+}
+
+.userpage_let:not(:first-child) {
+    margin-left: 2em;
+}
