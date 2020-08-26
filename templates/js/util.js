@@ -731,11 +731,14 @@ function at_reply(k){
     var voten = gebcn(e)('votenumber')
     if(voten.length==0){return}
 
-    var vote = parseInt(voten[0].innerText.trim()||0)
-    // print(vote)
-
-    var col = vote2col(vote)
-    e.style.backgroundColor = col
+    foreach(voten)(e1=>{
+      if(e1.className.trim()=='votenumber'){
+        var vote = parseInt(e1.innerText.trim()||0)
+        // print(vote)
+        var col = vote2col(vote)
+        e.style.backgroundColor = col
+      }
+    })
   })
 })()
 
