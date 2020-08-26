@@ -156,11 +156,16 @@ def replace_tal(s):
 # match only youtube links that occupy a single line
 youtube_extractor_regex = r'(?=\n|\r|^)(?:http|https|)(?::\/\/|)(?:www.|)(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/ytscreeningroom\?v=|\/feeds\/api\/videos\/|\/user\S*[^\w\-\s]|\S*[^\w\-\s]))([\w\-]{11})[A-Za-z0-9;:@#?&%=+\/\$_.-]*(?=\n|$)'
 
+# match those from 2049bbs
+old_youtube_extractor_regex = r'<div class="videowrapper"><iframe src="https://www\.youtube\.com/embed/([\w\-]{11})" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>'
+
 def replace_ytb(s):
     def f(match):
         vid = match.group(1)
         return '<div class="youtube-player-unprocessed" data-id="{}"></div>'.format(vid)
-    return re.sub(youtube_extractor_regex, f, s, flags=re.MULTILINE)
+    s = re.sub(old_youtube_extractor_regex, f, s, flags=re.MULTILINE)
+    s = re.sub(youtube_extractor_regex, f, s, flags=re.MULTILINE)
+    return s
 
 youtube_extraction_test_string="""
 youtu.be/DFjD8iOUx0I

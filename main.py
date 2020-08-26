@@ -1182,7 +1182,7 @@ def userpage_byname(name):
 def conversation_page():
     if not g.logged_in: raise Exception('not logged in')
 
-    res = aql('''
+    conversations = aql('''
     for i in conversations
     filter i.uid==@uid
 
@@ -1200,6 +1200,12 @@ def conversation_page():
     return merge(i, {count, last: merge(last, {user:user, to_user:to_user})})
     ''', uid=g.logged_in['uid'],silent=True)
 
+
+    # mark unread
+    for i in conversations:
+        if i['t_u']>g.current_user['t_inbox']:
+            i['unread'] = True
+
     # update t_inbox
     timenow = time_iso_now()
     aql('update @user with {t_inbox:@t} in users',
@@ -1208,7 +1214,7 @@ def conversation_page():
 
     return render_template('conversations.html.jinja',
         page_title='私信（测试中）',
-        conversations=res,
+        conversations=conversations,
         can_send_message=True,
         **(globals())
     )
@@ -1272,6 +1278,11 @@ def notification_page():
     return merge(i,{from_user})',
         uid=uid,
         silent=True)
+
+    # mark unread
+    for i in notifications:
+        if i['t_c']>g.current_user['t_notif']:
+            i['unread'] = True
 
     # update t_notif
     timenow = time_iso_now()

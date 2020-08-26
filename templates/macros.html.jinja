@@ -7,7 +7,7 @@
 {% set _ide = 'id="editor"' if 'editor' in metas %}
 {% set _idp = 'id="' ~ p._key ~ '"' if 'postlist' in metas %}
 
-<div class="threadlistitem{{ ' deleted' if p.delete and t else ''}} {{'thread_header' if 'thread_header' in metas else ''}}" {{_ide or _idt or _idp}}>
+<div class="threadlistitem{{ ' deleted' if p.delete and t else ''}} {{'thread_header' if 'thread_header' in metas else ''}} {{'unread' if p.unread else ''}}" {{_ide or _idt or _idp}}>
 
     {%if 'thread_votes' in metas%}
     <div class="leftmost">

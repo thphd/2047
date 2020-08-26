@@ -44,6 +44,17 @@
       （个人简介暂无）
     {%endif%}
   </div>
+
+  {%if u.url %}
+
+  <div class="userpage_name">
+    <span>URL</span>
+        <a href="{{u.url}}" rel='noreferrer' title="本站不审查链接内容，点击链接造成的一切后果需用户自行承担">{{u.url}}</a>
+  </div>
+  {%else%}
+
+  {%endif%}
+
   {%endcall%}
 
   {%for t in sc_ts%}
@@ -69,7 +80,7 @@
       <div class="register" id="update_personal_info">
         {%for item, explain in updateable_personal_info%}
           <label>{{explain}}</label>
-          <input type="text" id="{{item}}" value={{g.logged_in[item]}}>
+          <input type="text" id="{{item}}" value={{g.logged_in[item] or ''}}>
           <br>
         {%endfor%}
 

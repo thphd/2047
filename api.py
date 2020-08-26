@@ -576,6 +576,7 @@ def _():
 
 updateable_personal_info = [
     ('brief', '个人简介（80字符）'),
+    ('url', '个人URL（80字符）'),
     ('showcase', '个人主页展示帖子或评论（例如“t7113”或者“p247105”，中间逗号或空格隔开），暂限4项'),
 ]
 
@@ -590,9 +591,9 @@ def _():
 
         value = es(item)
 
-        if item=='brief' or item=='showcase':
-            if len(value)>80:
-                raise Exception('brief/showcase should not be longer than 80 chars')
+        # if item=='brief' or item=='showcase':
+        if len(value)>80:
+            raise Exception('brief/showcase/url should not be longer than 80 chars')
 
         upd[item] = value
 

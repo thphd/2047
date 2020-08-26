@@ -114,8 +114,9 @@ span.last_commented_date {
   white-space: nowrap;
   /* overflow-x: hidden; */
   /* overflow-y: auto; */
-  /* overflow: hidden; */
-  text-overflow: ellipsis;
+  overflow: hidden;
+  /* text-overflow: ellipsis; */
+  max-width: 18em;
 }
 
 .details .title a {
@@ -132,7 +133,7 @@ span.last_commented_date {
   margin: 0px 0;
   border-style: solid;
   border-width: 1px 0 0 0;
-  padding: 9px 0;
+  padding: 10px 0;
   border-color: #e8e8e8;
   /* border-radius: 0; */
   /* background: rgb(245 245 245); */
@@ -248,7 +249,7 @@ span.last_commented_date {
 
 
 .response {
-    color: #089600;
+    color: #6cc167;
     /* width: 70px; */
     justify-content: flex-end;
 }
@@ -265,7 +266,7 @@ body>#content {
 }
 
 .post_content p {
-    margin: 0 0 .5em 0;
+    margin: 0 0 .8em 0;
     word-break: break-all;
     line-height: 170%;
 }
@@ -298,6 +299,8 @@ body>#content {
 .post_content img {
     max-height: 800px;
     max-width: 100%;
+    border-style: none none none dashed;
+    border-color: #00000038;
 }
 
 span.floor_num {color: #652929;}
@@ -473,14 +476,14 @@ img.headerbtn {
 a.title {}
 
 a.threadlist_title {
-    color: #03396f;
+    color: #155faa;
     margin-left: 0;
     margin-right: 0;
     display: block;
     /* margin-bottom: 3px; */
     font-size: 100%;
-    /* font-weight: bold; */
-    /* letter-spacing: 0.05em; */
+    font-weight: bold;
+    letter-spacing: 0.03em;
 }
 
 .post_content pre {
@@ -1012,4 +1015,16 @@ button {
 
 .userpage_name:last-child {
     margin-bottom: 0;
+}
+
+.unread {
+    background-color: red;
+}
+
+.unread {
+    background-color: #f0fbff;
+}
+
+.meta > a:not(:first-child), .meta>span {
+    /* color: #b3b3b3; */
 }
