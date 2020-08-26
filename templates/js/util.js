@@ -807,7 +807,7 @@ function add_alias(curr_name){
       is:curr_name,
     })
     .then(res=>{
-      alert('已关联至', curr_name)
+      alert('已关联至'+ curr_name)
       window.location.reload()
     })
     .catch(alert)

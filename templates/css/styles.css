@@ -281,8 +281,8 @@ body>#content {
 }
 
 .post_content ol, .post_content ul {
-    margin: 0 0 .2em 0;
-    padding-left: 2em;
+    margin: 0 0 1em 0;
+    padding-left: 2.8em;
 }
 
 .post_content blockquote {
@@ -1076,4 +1076,7 @@ span.userlist_brief {
 a.userlist_name {
     color: #3c3c3c;
     margin-right: .5em;
+}
+
+.post_content li:last-child {
 }

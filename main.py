@@ -1059,6 +1059,15 @@ def userfill(u):
 def userpage(uid):
     return _userpage(uid)
 
+def get_alias_user_by_name(uname):
+    return aql('''let oname = (
+        for i in aliases filter i.is==@uname return i
+        )[0].name
+        return (for i in users filter i.name==oname return i)[0]
+        ''', uname=uname, silent=True,
+    )[0]
+
+
 def _userpage(uid):
     uobj = get_user(int(uid))
 
@@ -1107,6 +1116,9 @@ def _userpage(uid):
         ''',uid=uid, silent=True)[0]
 
     uobj['stats']=stats
+
+    uobj['alias'] = get_alias_user_by_name(uobj['name'])
+
     invitations = None
     if g.logged_in:
         if user_is_self:
