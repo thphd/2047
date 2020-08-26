@@ -5,7 +5,14 @@ var gebcn = e=> cn=>e.getElementsByClassName(cn)
 var gebtn = e=> n=>e.getElementsByTagName(n)
 var geid = i=>document.getElementById(i)
 var print = console.log
-var foreach = a=> f=>{var r=[];for(var i=0;i<a.length;i++){r.push(f(a[i]))}return r}
+var foreach = a=> f=>{
+  var r = [];
+  var i = 0;
+  var items = [];
+  for(i=0;i<a.length;i++){items.push(a[i])}
+  for(i=0;i<items.length;i++){r.push(f(items[i]))}
+  return r
+}
 
 function dce(t){return document.createElement(t)}
 
@@ -518,7 +525,7 @@ function highlight_hash(){
     var _id = hash.substr(1)
     var elem = geid(_id)
     if(elem){
-      print(elem)
+      print('highlighted:',elem)
       elem.className+=' chosen'
     }
   }
@@ -823,13 +830,14 @@ function process_all_youtube_reference(){
   var divs = gebcn(document)('youtube-player-unprocessed')
 
   foreach(divs)(e=>{
+    print(e)
+
     var did = e.dataset.id
     var div = document.createElement('div')
     div.setAttribute("data-id", did);
     div.innerHTML = labnolThumb(did);
 
     div.onclick = ()=>{
-      // var iframe = document.createElement("iframe");
 
       var iframet = `<iframe src="https://www.youtube.com/embed/${did}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
 
@@ -837,15 +845,11 @@ function process_all_youtube_reference(){
       template.innerHTML = iframet
       var iframe = template.content.firstChild
 
-      // var embed = "https://www.youtube.com/embed/ID?autoplay=1";
-      // iframe.setAttribute("src", embed.replace("ID", div.dataset.id));
-      // iframe.setAttribute("frameborder", "0");
-      // iframe.setAttribute("allowfullscreen", "1");
       div.parentNode.replaceChild(iframe, div);
     }
 
-    e.appendChild(div)
     e.className='youtube-player'
+    e.appendChild(div)
   })
 }
 
