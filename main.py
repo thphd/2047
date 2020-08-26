@@ -105,7 +105,7 @@ def route_static(frompath, topath, maxage=1800):
         return resp
 
 route_static('static', 'static')
-route_static('images', 'templates/images', 3600)
+route_static('images', 'templates/images', 3600*24*5)
 route_static('css', 'templates/css', 300)
 route_static('js', 'templates/js', 300)
 route_static('jgawb', 'jgawb', 1800)

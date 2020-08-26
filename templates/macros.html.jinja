@@ -397,15 +397,16 @@
       {%endif%}
       <textarea placeholder="支持markdown语法，拖动右下角缩放" id="editor_text" class="{{'has_title' if title else ''}}">{{content if content}}</textarea>
       <div class="editor_button_row">
-        <button type="button" id="editor_btnpreview">预览</button>
-        <button type="button" id="editor_btnsubmit">提交</button>
+        <button class="major" type="button" id="editor_btnpreview">预览</button>
+        <button class='major' type="button" id="editor_btnsubmit">提交</button>
         <a href="/t/7140" rel='noreferrer'>Markdown语法参考</a>
 
         <button type="button" id="editor_quote" title='引用文字'>“</button>
         <button type="button" id="editor_code" title='插入程序代码'>code</button>
         <button type="button" id="editor_image" title='插入图片'>img</button>
         <button type="button" id="editor_link" title='简单链接'>{{'<>'}}</button>
-        <button type="button" id="editor_link_label" title="文字链接">[]()</button>
+        <button type="button" id="editor_link_label" title="文字链接">[ ]( )</button>
+        <button type="button" style='font-weight:bold;' id="editor_strike" title='删除线'><s>S</s></button>
         <button type="button" style='font-weight:bold;font-style:italic;' id="editor_italic" title='斜体'>I</button>
         <button type="button" style='font-weight:bold;' id="editor_bold" title='加粗'>B</button>
 

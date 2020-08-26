@@ -366,7 +366,7 @@ if (editor_target){
   var editor_right = geid('editor_right')
 
   var adjustments = foreach(
-    'image,link,link_label,italic,bold,code,quote'
+    'image,link,link_label,italic,bold,code,quote,strike'
     .split(','))(n=>{
     var editor_x = geid('editor_'+n)
     if (editor_x){
@@ -393,6 +393,11 @@ if (editor_target){
             case 'italic':
               et.setRangeText(`*${st}*`,ss,se,'preserve')
               et.setSelectionRange(ss+1, se+1)
+            break;
+
+            case 'strike':
+              et.setRangeText(`~~${st}~~`,ss,se,'preserve')
+              et.setSelectionRange(ss+2, se+2)
             break;
 
             case 'code':
