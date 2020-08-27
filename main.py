@@ -189,7 +189,7 @@ class Paginator:
         pagenumber=1,
         path=''):
 
-        assert sortby in ['t_c','uid','nthreads','nposts','nlikes','nliked'] # future can have more.
+        assert sortby in ['t_c','uid','nthreads','nposts','nlikes','nliked','name'] # future can have more.
         # sortby = 't_c'
         assert order in ['desc', 'asc']
 
@@ -488,8 +488,8 @@ class Paginator:
         sortbys2 = [
         ('UID',querystring(pagenumber, pagesize, order, 'uid'),
             'uid'==sortby),
-        # ('注册时间', querystring(pagenumber, pagesize, order, 't_c'),
-        #     't_c'==sortby),
+        ('户名', querystring(pagenumber, pagesize, order, 'name'),
+            'name'==sortby),
 
         ('主题数', querystring(pagenumber, pagesize, order, 'nthreads'),
             'nthreads'==sortby),
@@ -780,8 +780,9 @@ def alluser():
     uld = user_list_defaults
     pagenumber = rai('page') or uld['pagenumber']
     pagesize = rai('pagesize') or uld['pagesize']
-    order = ras('order') or uld['order']
     sortby = ras('sortby') or uld['sortby']
+    order = ras('order') or uld['get_default_order'](sortby)
+
     rpath = request.path
 
     userlist, pagination = pgnt.get_user_list(

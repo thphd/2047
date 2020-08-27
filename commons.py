@@ -320,6 +320,7 @@ user_list_defaults = dict(
     pagesize=25,
     order='desc',
     sortby='uid',
+    get_default_order=lambda sortby:('asc' if sortby=='name' else 'desc'),
 )
 
 # visitors can't see those on homepage
@@ -431,6 +432,12 @@ cant_login_info = convert_markdown('''
 # 2049bbs老用户请注意
 
 如果你是2049bbs的老用户，请注意2047的数据库中没有你的密码记录（因为2049bbs早前并未公开这些记录），所以你是无法登录的。请按照[这里](/t/7108)的指示取回你的老账号。
+''')
+
+invitation_info = convert_markdown('''
+# 没有邀请码怎么办
+
+参见[这里](/t/7109)。
 ''')
 
 public_key_info = convert_markdown('''
