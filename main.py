@@ -1,18 +1,3 @@
-# import threading, builtins
-# printlock = threading.Lock()
-#
-# vanilla_print = print
-# def orderly_print(*a, **k):
-#     printlock.acquire()
-#     try:
-#         vanilla_print(*a, **k)
-#     except Exception as ex:
-#         printlock.release()
-#         raise ex
-#     else:
-#         printlock.release()
-#
-# builtins.print = orderly_print
 
 import time,os,sched,random,threading,traceback,datetime
 import re,base64
@@ -121,19 +106,15 @@ def ciut(coll, a):
         aqlc.create_index(coll, type='persistent', fields=[ai], unique=True, sparse=False)
 
 ciut('threads', ['tid'])
-ci('threads',
-    indexgen(
+ci('threads', indexgen(
         [['delete'],['uid'],['delete','cid']],
         ['t_u','t_c','nreplies','vc','votes'],
-    )
-)
+))
 
-ci('posts',
-    indexgen(
+ci('posts', indexgen(
         [['tid'],['uid'],['tid','delete']],
         ['t_c','vc','votes'],
-    )
-)
+))
 
 ciut('categories', ['cid'])
 
@@ -569,8 +550,6 @@ def get_user(uid):
 
     return uo
 
-# logged_in = False
-
 # filter bots/DOSes that use a fixed UA
 '''
 不是我说你们，你们要是真会写代码，也不至于过来干这个，我都替你们着急啊
@@ -635,57 +614,68 @@ class UAFilter:
 uaf = UAFilter()
 
 @app.before_request
-def befr():
+def before_request():
+    # request figerprinting
     acceptstr = request.headers['Accept'] if 'Accept' in request.headers else 'NoAccept'
     uas = str(request.user_agent) if request.user_agent else 'NoUA'
-
     ipstr = request.remote_addr
 
+    is_local = ipstr[0:8]=='192.168.'
+
+    g.display_ip_address = '[hidden]' if is_local else ipstr
+    g.request_start_time = time.time()
+    g.get_elapsed = lambda: int((time.time() - g.request_start_time)*1000)
+
+    if 'action' in request.args and request.args['action']=='ping':
+        is_ping = True
+    else:
+        is_ping = False
+
+    # log the user in
     g.selfuid = -1
+    g.logged_in = False
+    g.current_user = False
 
     if 'uid' in session:
         g.logged_in = get_user(int(session['uid']))
         g.current_user = g.logged_in
-
         print_info(g.logged_in['name'])
-
         g.selfuid = g.logged_in['uid']
 
         # print_err(request.headers)
+        if not is_ping:
 
-        # when is the last time you check your inbox?
-        if 't_inbox' not in g.current_user:
-            g.current_user['t_inbox'] = '1989-06-04T00:00:00'
+            # when is the last time you check your inbox?
+            if 't_inbox' not in g.current_user:
+                g.current_user['t_inbox'] = '1989-06-04T00:00:00'
 
-        # when is the last time you check your notifications?
-        if 't_notif' not in g.current_user:
-            g.current_user['t_notif'] = '1989-06-04T00:00:00'
+            # when is the last time you check your notifications?
+            if 't_notif' not in g.current_user:
+                g.current_user['t_notif'] = '1989-06-04T00:00:00'
 
-        # how many unread messages/notifications?
-        num_unread, num_notif = aql('''return [
-            length(for m in messages filter m.to_uid==@uid and m.t_c>@lastcheck return m),
-            length(for n in notifications filter n.to_uid==@uid and n.t_c>@lastcheck_n return n)
-            ]''',
-            uid=g.current_user['uid'],
-            lastcheck=g.current_user['t_inbox'],
-            lastcheck_n=g.current_user['t_notif'],
-            silent=True,
-        )[0]
-        g.current_user['num_unread']=num_unread
-        g.current_user['num_notif']=num_notif
+            if 'nnotif' not in g.current_user:
+                g.current_user['nnotif'] = 0
+            if 'ninbox' not in g.current_user:
+                g.current_user['ninbox'] = 0
+
+            g.current_user['num_unread']=g.current_user['ninbox']
+            g.current_user['num_notif']=g.current_user['nnotif']
 
         uaf.cooldown(uas)
         uaf.cooldown(acceptstr)
-        return
-    else:
-        g.logged_in = False
-        g.current_user = g.logged_in
 
-    if 'action' in request.args and request.args['action']=='ping':
+        # if you're logged in then end of story
+        return
+
+    # now seems you're not logged in. we have to be more strict to you
+
+    # ping can go.
+    if is_ping:
         uaf.cooldown(uas)
         uaf.cooldown(acceptstr)
         return
 
+    # avatar requests can go.
     if request.path.startswith('/avatar/'):
         return
 
@@ -697,7 +687,7 @@ def befr():
     allowed = \
         uaf.judge(uas, weight) and\
         uaf.judge(acceptstr, weight) and\
-        (uaf.judge(ipstr, weight) if ipstr[0:8]!='192.168.' else True)
+        (uaf.judge(ipstr, weight) if not is_local else True)
 
     if not allowed:
         print_err('[{}][{}][{}][{:.2f}][{:.2f}][{:.2f}]'.format(uas, acceptstr, ipstr, uaf.d[uas], uaf.d[acceptstr], uaf.d[ipstr] if ipstr in uaf.d else -1))
@@ -722,7 +712,7 @@ def remove_hidden_from_visitor(threadlist):
 
 @app.route('/')
 @app.route('/c/all')
-def catall():
+def get_all_threads():
     pagenumber = rai('page') or thread_list_defaults['pagenumber']
     pagesize = rai('pagesize') or thread_list_defaults['pagesize']
     order = ras('order') or thread_list_defaults['order']
@@ -828,7 +818,7 @@ def getthreadcode(tid):
     return resp
 
 @app.route('/c/<int:cid>')
-def catspe(cid):
+def get_category_threads(cid):
     catobj = aql('for c in categories filter c.cid==@cid return c',cid=cid, silent=True)
 
     if len(catobj)!=1:
@@ -928,7 +918,7 @@ def remove_duplicate_brief(postlist):
 
 # thread, list of posts
 @app.route('/t/<int:tid>')
-def thrd(tid):
+def get_thread(tid):
 
     selfuid = g.selfuid
 
@@ -1018,7 +1008,7 @@ def uposts(uid):
     )
 
 @app.route('/p/all')
-def allposts():
+def get_all_posts():
     upld = user_post_list_defaults
     pagenumber = rai('page') or upld['pagenumber']
     pagesize = rai('pagesize') or upld['pagesize']
@@ -1303,6 +1293,10 @@ def conversation_page():
     timenow = time_iso_now()
     aql('update @user with {t_inbox:@t} in users',
         user=g.current_user,t=timenow,silent=True)
+
+    # update user
+    update_user_votecount(g.current_user['uid'])
+
     g.current_user['num_unread']=0
 
     return render_template('conversations.html.jinja',
@@ -1381,6 +1375,10 @@ def notification_page():
     timenow = time_iso_now()
     aql('update @user with {t_notif:@t} in users',
         user=g.current_user,t=timenow,silent=True)
+
+    # update user
+    update_user_votecount(g.current_user['uid'])
+
     g.current_user['num_notif']=0
 
     return render_template('notifications.html.jinja',

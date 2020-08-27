@@ -50,6 +50,22 @@ def make_notification_names(names, from_uid, why, url, **kw):
     insert d update {} into notifications
     ''', names=names, k=d, silent=True)
 
+    aql('''
+    let uidlist = (
+        for n in @names
+        let user = (for i in users filter i.name==n return i)[0]
+        return user.uid
+    )
+    let uids = remove_value(uidlist, null)
+
+    for uid in uids
+    let user = (for u in users filter u.uid==uid return u)[0]
+
+    update user with {
+        nnotif: length(for n in notifications filter n.to_uid==user.uid and n.t_c>user.t_notif return n),
+    } in users
+    ''', names=names, silent=True)
+
 def make_notification_uids(uids, from_uid, why, url, **kw):
     # same as above but with uids
     d = dict(
@@ -69,6 +85,16 @@ def make_notification_uids(uids, from_uid, why, url, **kw):
     upsert {to_uid:d.to_uid, from_uid:d.from_uid, why:d.why, url:d.url}
     insert d update {} into notifications
     ''', uids=uids, k=d, silent=True)
+
+    aql('''
+    let uidlist = @uids
+    for uid in uids
+    let user = (for u in users filter u.uid==uid return u)[0]
+
+    update user with {
+        nnotif: length(for n in notifications filter n.to_uid==user.uid and n.t_c>user.t_notif return n),
+    } in users
+    ''', uids=uids, silent=True)
 
 def get_url_to_post(pid):
     # 1. get tid
@@ -594,6 +620,10 @@ def update_user_votecount(uid):
     for u in users filter u.uid==@uid
     update u with
     {
+        ninbox: length(for m in messages filter m.to_uid==u.uid and m.t_c>u.t_inbox return m),
+
+        nnotif: length(for n in notifications filter n.to_uid==u.uid and n.t_c>u.t_notif return n),
+
         nthreads:length(for t in threads filter t.uid==u.uid return t),
         nposts:length(for p in posts filter p.uid==u.uid return p),
         nlikes:length(for v in votes filter v.to_uid==u.uid and v.vote==1 return v),
@@ -963,6 +993,10 @@ def send_message(fromuid, touid, content):
         aql('for i in @c update i with {t_u:@t} in conversations', c=[conv1,conv2], t=timenow)
 
     url = '/m/'+convid
+
+    # update target user's ninbox
+    update_user_votecount(touid)
+
     return url
 
 @register('ban_user')

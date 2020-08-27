@@ -79,11 +79,12 @@ div#site_name {color: #005bac;font-family: arial;/* display: inline-block; *//* 
   /* flex-grow: 1; */
 }
 
-.copyright {
+div.copyright {
   font-size: 80%;
   color: gray;
-  margin: 0.2em 0;
-  display: inline-block;
+  margin: 0.3em 0;
+  min-height: .3em;
+  display: block;
   text-decoration: none;
   /* vertical-align: baseline; */
 }
@@ -847,6 +848,8 @@ span.votenumber {}
 
 .meta .upvote {
     cursor: pointer;
+    font-size: 130%;
+    font-weight: bold;
 }
 
 #overlay {
@@ -1087,4 +1090,8 @@ a.userlist_name {
     vertical-align: middle;
     border-style: none;
     opacity: .5;
+}
+
+.meta .vote_section {
+    align-items: center;
 }
