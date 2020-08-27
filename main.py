@@ -62,10 +62,6 @@ def route(r):
         app.add_url_rule(r, str(random.random()), f)
     return rr
 
-# def route_static(frompath, topath):
-#     @route('/'+frompath+'/<path:path>')
-#     def _(path): return send_from_directory(topath, path)
-
 def calculate_etag(bin):
     checksum = zlib.adler32(bin)
     chksum_encoded = base64.b64encode(checksum.to_bytes(4,'big')).decode('ascii')
@@ -1208,8 +1204,8 @@ def loginpage():
     )
 # print(ptf('2020-07-19T16:00:00'))
 
-@route('/avatar/<int:uid>')
-def _(uid):
+@app.route('/avatar/<int:uid>')
+def route_get_avatar(uid):
     supplied_etags = request.if_none_match
 
     # first check db
@@ -1494,7 +1490,19 @@ if __name__ == '__main__':
     else:
         port = '5000'
 
-    if 'DEBUG' in os.environ:
-        app.run(host='0.0.0.0', port=port, debug=True)
+    if 'PROFILE' not in os.environ:
+        if 'DEBUG' in os.environ:
+            app.run(host='0.0.0.0', port=port, debug=True)
+        else:
+            app.run(host='0.0.0.0', port=port)
+
     else:
+        import yappi # Dobrosław Żybort
+        yappi.start()
         app.run(host='0.0.0.0', port=port)
+        # profile_this("app.run(host='0.0.0.0', port=port)")
+
+        yappi.stop()
+        stats = yappi.get_func_stats()
+        stats.sort('tavg','desc')
+        stats.print_all(out=open('trace/out.txt','w'))
