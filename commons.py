@@ -264,14 +264,14 @@ aql = aqlc.aql
 
 thread_list_defaults = dict(
     pagenumber=1,
-    pagesize=30,
+    pagesize=25,
     order='desc',
     sortby='t_u',
 )
 
 user_thread_list_defaults = dict(
     pagenumber=1,
-    pagesize=30,
+    pagesize=25,
     order='desc',
     sortby='t_c',
 )
@@ -281,6 +281,8 @@ post_list_defaults = dict(
     pagesize=50,
     order='asc',
     sortby='t_c',
+
+    get_default_order=lambda sortby:('asc' if sortby=='t_c' else 'desc'),
 )
 
 user_post_list_defaults = dict(
@@ -288,11 +290,17 @@ user_post_list_defaults = dict(
     pagesize=50,
     order='desc',
     sortby='t_c',
+
+    get_default_order=lambda sortby:('desc' if sortby=='t_c' else 'desc'),
 )
+
+if __name__ == '__main__':
+    print(post_list_defaults['get_default_order']('t_c'))
+    print(post_list_defaults['get_default_order']('votes'))
 
 user_list_defaults = dict(
     pagenumber=1,
-    pagesize=30,
+    pagesize=25,
     order='desc',
     sortby='uid',
 )
@@ -422,13 +430,15 @@ messaging_warning = convert_markdown('''
 
 私信内容不会纳入论坛数据备份。除非FBI敲门，我们不会将私信内容提供给任何第三方。
 
-站长可以阅读所有私信内容，使用私信功能即视为默许。
+站长可以阅读所有私信内容（在这一点上，品葱、膜乎等墙外网站是一样的），使用私信功能即视为默许。
 
 如果您不希望站长阅读私信内容，可以将私信内容加密。
 
 我们不会对私信内容作任何限制，不存在比如说新品葱搞的那种关键词审查/过滤。
 
 但请注意，如果您发送的私信令其他用户感到困扰，在收到举报后我们有可能根据《服务条款》封禁您的账号。
+
+未来2047会添加私信加密功能。
 ''')
 
 register_warning = convert_markdown('''
@@ -437,6 +447,17 @@ register_warning = convert_markdown('''
 使用2047的所有用户都必须遵守[《服务条款》](/t/7110)。违反《服务条款》的用户，其账号将会被封禁。
 
 ''')
+
+def indexgen(condss, sorts):
+    r1 = []
+    for conds in condss:
+        for sort in sorts:
+            r1.append(conds+[sort])
+    return r1
+
+if __name__ == '__main__':
+    print('filtgen')
+    print(indexgen([['cond1'],['cond2'],['cond1','cond2']], ['sort1','sort2']))
 
 if __name__ == '__main__':
     h, s = hash_w_salt('1989')

@@ -111,94 +111,71 @@ route_static('js', 'templates/js', 300)
 route_static('jgawb', 'jgawb', 1800)
 route_static('jicpb', 'jicpb', 1800)
 
-aqlc.create_index('threads',
-    type='persistent', fields=['t_u','t_c'], unique=False, sparse=False)
-aqlc.create_index('threads',
-    type='persistent', fields=['cid','t_u','t_c'], unique=False, sparse=False)
+# create index
+def ci(coll,aa):
+    for a in aa:
+        print('creating index on',coll,a)
+        aqlc.create_index(coll, type='persistent', fields=a,
+            unique=False,sparse=False)
 
-aqlc.create_index('threads',
-    type='persistent', fields=['delete','t_u','t_c'], unique=False, sparse=False)
-aqlc.create_index('threads',
-    type='persistent', fields=['delete','cid','t_u','t_c'], unique=False, sparse=False)
+# create index with unique=True
+def ciut(coll, a):
+    for ai in a:
+        print('creating index on',coll,[ai])
+        aqlc.create_index(coll, type='persistent', fields=[ai], unique=True, sparse=False)
 
-aqlc.create_index('threads',
-    type='persistent', fields=['uid','t_u','t_c'], unique=False, sparse=False)
-aqlc.create_index('threads',
-    type='persistent', fields=['tid'], unique=True, sparse=False)
+ciut('threads', ['tid'])
+ci('threads',
+    indexgen(
+        [['delete'],['uid'],['delete','cid']],
+        ['t_u','t_c','nreplies','vc','votes'],
+    )
+)
 
-aqlc.create_index('posts',
-    type='persistent', fields=['tid','t_c','_key'], unique=False, sparse=False)
-aqlc.create_index('posts',
-    type='persistent', fields=['uid','t_c','_key'], unique=False, sparse=False)
-aqlc.create_index('posts',
-    type='persistent', fields=['tid','delete','t_c','_key'], unique=False, sparse=False)
+ci('posts',
+    indexgen(
+        [['tid'],['uid'],['tid','delete']],
+        ['t_c','vc','votes'],
+    )
+)
 
-aqlc.create_index('categories',
-    type='persistent', fields=['cid'], unique=True, sparse=False)
+ciut('categories', ['cid'])
 
-aqlc.create_index('users',
-    type='persistent', fields=['t_c','t_u'], unique=False, sparse=False)
-aqlc.create_index('users',
-    type='persistent', fields=['t_u','t_c'], unique=False, sparse=False)
-aqlc.create_index('users',
-    type='persistent', fields=['uid'], unique=True, sparse=False)
-aqlc.create_index('users',
-    type='persistent', fields=['name'], unique=False, sparse=False)
+ciut('users',['uid'])
+ci('users',[['invitation']])
+ci('users',indexgen(
+    [[],['delete']],
+    ['t_c','nposts','nthreads','nlikes','nliked','name']
+))
 
-aqlc.create_index('users',
-    type='persistent', fields=['nposts'], unique=False, sparse=False)
-aqlc.create_index('users',
-    type='persistent', fields=['nthreads'], unique=False, sparse=False)
-aqlc.create_index('users',
-    type='persistent', fields=['nlikes'], unique=False, sparse=False)
-aqlc.create_index('users',
-    type='persistent', fields=['nliked'], unique=False, sparse=False)
+ci('invitations',indexgen(
+    [['uid','active'],['uid']],
+    ['t_c'],
+))
 
-aqlc.create_index('users',
-    type='persistent', fields=['invitation'], unique=False, sparse=False)
+ci('votes',indexgen(
+    [
+        ['type','id','vote','uid'],
+        ['type','id','vote'],
+        ['uid','vote'],
+        ['to_uid','vote'],
+    ],
+    ['t_c'],
+))
 
-aqlc.create_index('invitations',
-    type='persistent', fields=['uid','active','t_c'], unique=False, sparse=False)
-aqlc.create_index('invitations',
-    type='persistent', fields=['uid','t_c'], unique=False, sparse=False)
+ci('conversations',[['convid']])
+ci('conversations',indexgen(
+    [['uid'],['to_uid'],['uid','to_uid']],
+    ['t_u'],
+))
 
-aqlc.create_index('votes',
-    type='persistent', fields=['type','id','vote','uid'], unique=False, sparse=False)
-aqlc.create_index('votes',
-    type='persistent', fields=['type','id','uid','vote'], unique=False, sparse=False)
-aqlc.create_index('votes',
-    type='persistent', fields=['to_uid','vote','t_c'], unique=False, sparse=False)
-aqlc.create_index('votes',
-    type='persistent', fields=['uid','vote','t_c'], unique=False, sparse=False)
+ci('messages',indexgen([['convid'],['to_uid']],['t_c']))
 
-aqlc.create_index('votes',
-    type='persistent', fields=['to_uid','t_c'], unique=False, sparse=False)
-aqlc.create_index('votes',
-    type='persistent', fields=['uid','t_c'], unique=False, sparse=False)
+ci('notifications',indexgen([['to_uid'],['to_uid','from_uid','why','url']],['t_c']))
+ci('avatars',[['uid']])
+ci('admins',[['name']])
+ci('aliases',[['is','name'],['name','is']])
 
-aqlc.create_index('conversations',
-    type='persistent', fields=['uid','to_uid','t_u'], unique=False, sparse=False)
-aqlc.create_index('conversations',
-    type='persistent', fields=['uid','t_u'], unique=False, sparse=False)
-
-aqlc.create_index('messages',
-    type='persistent', fields=['convid','t_c'], unique=False, sparse=False)
-aqlc.create_index('messages',
-    type='persistent', fields=['to_uid','t_c'], unique=False, sparse=False)
-
-aqlc.create_index('notifications',
-    type='persistent', fields=['to_uid','t_c'], unique=False, sparse=False)
-aqlc.create_index('notifications',
-    type='persistent', fields=['to_uid','from_uid','why','url'], unique=False, sparse=False)
-
-aqlc.create_index('avatars',
-    type='persistent', fields=['uid'], unique=False, sparse=False)
-aqlc.create_index('admins',
-    type='persistent', fields=['name'], unique=False, sparse=False)
-aqlc.create_index('aliases',
-    type='persistent', fields=['is','name'], unique=False, sparse=False)
-aqlc.create_index('aliases',
-    type='persistent', fields=['name','is'], unique=False, sparse=False)
 
 is_integer = lambda i:isinstance(i, int)
 class Paginator:
@@ -271,7 +248,7 @@ class Paginator:
         tid=0,
         uid=0,
 
-        # sortby='t_c',
+        sortby='t_c',
         order='desc',
         pagesize=50,
         pagenumber=1,
@@ -282,8 +259,8 @@ class Paginator:
         assert is_integer(tid)
         assert is_integer(uid)
 
-        # assert sortby in ['t_c']
-        sortby = 't_c'
+        assert sortby in ['t_c','votes']
+        # sortby = 't_c'
         assert order in ['desc', 'asc']
 
         pagenumber = max(1, pagenumber)
@@ -348,7 +325,7 @@ class Paginator:
         assert by in ['category', 'user']
         assert category=='all' or category=='deleted' or is_integer(category)
         assert is_integer(uid)
-        assert sortby in ['t_u', 't_c']
+        assert sortby in ['t_u', 't_c', 'nreplies', 'vc', 'votes']
         assert order in ['desc', 'asc']
 
         pagenumber = max(1, pagenumber)
@@ -358,7 +335,7 @@ class Paginator:
 
         if by=='category':
             if category=='all':
-                filter = 'filter i.delete!=true'
+                filter = 'filter i.delete==null'
             elif category=='deleted':
                 filter = 'filter i.delete==true'
             else:
@@ -373,7 +350,8 @@ class Paginator:
 
         let u = (for u in users filter u.uid == i.uid return u)[0]
         let fin = (for p in posts filter p.tid == i.tid sort p.t_c desc limit 1 return p)[0]
-        let count = length(for p in posts filter p.tid==i.tid return p)
+        //let count = length(for p in posts filter p.tid==i.tid return p)
+        let count = i.nreplies
         let ufin = (for j in users filter j.uid == fin.uid return j)[0]
         let c = (for c in categories filter c.cid==i.cid return c)[0]
 
@@ -381,7 +359,7 @@ class Paginator:
 
         sort i.{sortby} {order}
         limit {start},{count}
-        return merge(unset(i,'content'), {{user:u, last:fin, lastuser:ufin, cname:c.name, count:count}})
+        return merge(unset(i,'content'), {{user:u, last:unset(fin,'content'), lastuser:ufin, cname:c.name, count:count}})
          '''.format(
                 sortby = sortby,
                 order = order,
@@ -461,11 +439,16 @@ class Paginator:
             if pagesize!=defaults['pagesize']:
                 ql.append(('pagesize', pagesize))
 
-            if order!=defaults['order']:
-                ql.append(('order', order))
-
             if sortby!=defaults['sortby']:
                 ql.append(('sortby', sortby))
+
+            if 'get_default_order' not in defaults:
+                default_order = defaults['order']
+            else:
+                default_order = defaults['get_default_order'](sortby)
+
+            if order!=default_order:
+                ql.append(('order', order))
 
             # join the kv pairs together
             qs = '&'.join(['='.join([str(j) for j in k]) for k in ql])
@@ -486,12 +469,17 @@ class Paginator:
         ]
 
         sortbys = [
-        ('最后回复', querystring(pagenumber, pagesize, order, 't_u'), 't_u'==sortby),
-        ('发布时间', querystring(pagenumber, pagesize, order, 't_c'), 't_c'==sortby),
+        ('更新', querystring(pagenumber, pagesize, order, 't_u'), 't_u'==sortby),
+        ('发表', querystring(pagenumber, pagesize, order, 't_c'), 't_c'==sortby),
+
+        ('回复数', querystring(pagenumber, pagesize, order, 'nreplies'), 'nreplies'==sortby),
+        ('票数', querystring(pagenumber, pagesize, order, 'votes'), 'votes'==sortby),
+        ('浏览量', querystring(pagenumber, pagesize, order, 'vc'), 'vc'==sortby),
         ]
 
         sortbys2 = [
-        ('UID',querystring(pagenumber, pagesize, order, 'uid'), 'uid'==sortby),
+        ('UID',querystring(pagenumber, pagesize, order, 'uid'),
+            'uid'==sortby),
         # ('注册时间', querystring(pagenumber, pagesize, order, 't_c'),
         #     't_c'==sortby),
 
@@ -504,8 +492,18 @@ class Paginator:
             'nliked'==sortby),
         ('被赞', querystring(pagenumber, pagesize, order, 'nlikes'),
             'nlikes'==sortby),
-
         ]
+
+        if mode=='post':
+            sortbys3 = [
+                ('时间',querystring(pagenumber, pagesize, 'asc', 't_c'), 't_c'==sortby),
+                ('票数',querystring(pagenumber, pagesize, 'desc', 'votes'), 'votes'==sortby),
+            ]
+        elif mode=='user_post':
+            sortbys3 = [
+                ('时间',querystring(pagenumber, pagesize, 'desc', 't_c'), 't_c'==sortby),
+                ('票数',querystring(pagenumber, pagesize, 'desc', 'votes'), 'votes'==sortby),
+            ]
 
         button_groups = []
 
@@ -527,6 +525,9 @@ class Paginator:
 
         if mode=='user':
             button_groups.append(sortbys2)
+
+        if mode=='post' or mode=='user_post':
+            button_groups.append(sortbys3)
 
         if count>1:
             button_groups.append([('共 {:d}'.format(count), '')])
@@ -828,10 +829,10 @@ def catspe(cid):
 
     catobj = catobj[0]
 
-    pagenumber = rai('page') or 1
-    pagesize = rai('pagesize') or 30
-    order = ras('order') or 'desc'
-    sortby = ras('sortby') or 't_u'
+    pagenumber = rai('page') or thread_list_defaults['pagenumber']
+    pagesize = rai('pagesize') or thread_list_defaults['pagesize']
+    order = ras('order') or thread_list_defaults['order']
+    sortby = ras('sortby') or thread_list_defaults['sortby']
 
     rpath = request.path
     # print(request.args)
@@ -865,11 +866,11 @@ def userthreads(uid):
         return make_response('user not exist', 404)
 
     uobj = uobj[0]
-
-    pagenumber = rai('page') or 1
-    pagesize = rai('pagesize') or 30
-    order = ras('order') or 'desc'
-    sortby = ras('sortby') or 't_c'
+    utld = user_thread_list_defaults
+    pagenumber = rai('page') or utld['pagenumber']
+    pagesize = rai('pagesize') or utld['pagesize']
+    order = ras('order') or utld['order']
+    sortby = ras('sortby') or utld['sortby']
 
     rpath = request.path
     # print(request.args)
@@ -933,17 +934,18 @@ def thrd(tid):
     ''', cid=thobj['cid'], silent=True)[0]
     thobj['category'] = catobj
 
-    pagenumber = rai('page') or 1
-    pagesize = rai('pagesize') or 50
-    order = ras('order') or 'asc'
-    # sortby = ras('sortby') or 't_u'
+    pld = post_list_defaults
+    pagenumber = rai('page') or pld['pagenumber']
+    pagesize = rai('pagesize') or pld['pagesize']
+    sortby = ras('sortby') or pld['sortby']
+    order = ras('order') or pld['get_default_order'](sortby)
 
     rpath = request.path
 
     postlist, pagination = pgnt.get_post_list(
         by='thread',
         tid=tid,
-        # sortby=sortby,
+        sortby=sortby,
         order=order,
         pagenumber=pagenumber, pagesize=pagesize,
         path = rpath)
@@ -977,10 +979,11 @@ def uposts(uid):
 
     uobj = uobj[0]
 
-    pagenumber = rai('page') or 1
-    pagesize = rai('pagesize') or 50
-    order = ras('order') or 'desc'
-    # sortby = ras('sortby') or 't_u'
+    upld = user_post_list_defaults
+    pagenumber = rai('page') or upld['pagenumber']
+    pagesize = rai('pagesize') or upld['pagesize']
+    sortby = ras('sortby') or upld['sortby']
+    order = ras('order') or upld['get_default_order'](sortby)
 
     rpath = request.path
 
@@ -989,7 +992,7 @@ def uposts(uid):
         by='user',
         # tid=tid,
         uid=uid,
-        # sortby=sortby,
+        sortby=sortby,
         order=order,
         pagenumber=pagenumber, pagesize=pagesize,
         path = rpath)

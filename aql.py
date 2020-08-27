@@ -1,6 +1,7 @@
 from colors import colored_print_generator as cpg, prettify as pfy
 from colors import *
 import requests as r
+import time
 
 # interface with arangodb.
 class AQLController:
@@ -55,7 +56,11 @@ class AQLController:
 
     def aql(self, query, silent=False, **kw):
         self.prepare()
+
         if not silent: print_up('AQL >>',query,kw)
+
+        t0 = time.time()
+
         resp = self.request(
             'POST', '/_db/'+self.dbname+'/_api/cursor',
             query = query,
@@ -63,6 +68,11 @@ class AQLController:
             bindVars = kw,
         )
         res = resp['result']
+
+        t = time.time()-t0
+        if t>0.04:
+            print_info('==AQL took {:.1f}ms=='.format(t*1000))
+
         if not silent: print_down('AQL <<', str(res))
         return res
 

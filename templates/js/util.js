@@ -722,18 +722,26 @@ function at_reply(k){
   }
 
 
+  // function vote2col(v){
+  //     if(v>0){
+  //         v = Math.log10(v+1)
+  //     }else if (v<0) {
+  //         v = -Math.log10(-v+1)
+  //     }else{
+  //         v = 0
+  //     }
+  //     // v *= 0.6
+  //     v*=0.1
+  //     v = Math.max(v,-1)
+  //     v = Math.min(v, 1)
+  //     return colormap(v)
+  // }
   function vote2col(v){
-      if(v>0){
-          v = Math.log10(v+1)
-      }else if (v<0) {
-          v = -Math.log10(-v+1)
-      }else{
-          v = 0
-      }
-      v *= 0.6
-      v = Math.max(v,-1)
-      v = Math.min(v, 1)
-      return colormap(v)
+    var k = Math.max(0,(v-2)/20)
+    k = Math.min(1,k)
+    k = Math.pow(k,1)
+    print(k)
+    return colormap(k)
   }
 
 
