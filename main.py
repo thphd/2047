@@ -359,7 +359,8 @@ class Paginator:
 
         sort i.{sortby} {order}
         limit {start},{count}
-        return merge(unset(i,'content'), {{user:u, last:unset(fin,'content'), lastuser:ufin, cname:c.name, count:count}})
+        let kk = unset(i,'content')
+        return merge(i, {{user:u, last:unset(fin,'content'), lastuser:ufin, cname:c.name, count:count}})
          '''.format(
                 sortby = sortby,
                 order = order,
@@ -379,6 +380,13 @@ class Paginator:
         # print('done',time.time()-ts);ts=time.time()
 
         pagination_obj = self.get_pagination_obj(count, pagenumber, pagesize, order, path, sortby, mode)
+
+        for t in threadlist:
+            if 'content' in t:
+                tc = t['content']
+                ytb_videos = extract_ytb(tc)
+                t['youtube'] = ytb_videos[0] if len(ytb_videos) else None
+                t['content'] = None
 
         return threadlist, pagination_obj
 

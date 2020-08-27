@@ -479,8 +479,9 @@ a.threadlist_title {
     color: #155faa;
     margin-left: 0;
     margin-right: 0;
-    display: block;
+    /* display: block; */
     /* margin-bottom: 3px; */
+    vertical-align: middle;
     font-size: 100%;
     font-weight: bold;
     letter-spacing: 0.03em;
@@ -1079,4 +1080,11 @@ a.userlist_name {
 }
 
 .post_content li:last-child {
+}
+
+.threadlist_title_youtube img {
+    height: 1em;
+    vertical-align: middle;
+    border-style: none;
+    opacity: .5;
 }

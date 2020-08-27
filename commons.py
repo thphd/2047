@@ -119,14 +119,15 @@ def check_hash_salt_pw(hashstr, saltstr, string):
     chash = hash_pw(hexstr2bytes(saltstr), string)
     return chash == hexstr2bytes(hashstr)
 
+# extract non-markdown urls
+url_regex = r'((((http|https|ftp):(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+(:\[0-9]+)?|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)(?![^<]*?(?:<\/\w+>|\/?>))(?![^\(]*?\))'
+# dont use for now
+
 # username rule
 username_regex=r'^[0-9a-zA-Z\u4e00-\u9fff\-\_\.]{2,16}$'
 username_regex_string = str(username_regex).replace('\\\\','\\')
 
 at_extractor_regex = r'@([0-9a-zA-Z\u4e00-\u9fff\-\_\.]{2,16}?)(?=[^0-9a-zA-Z\u4e00-\u9fff\-\_\.]|$)'
-
-post_autolink_regex = r'<#([0-9]{2,16})>'
-thread_autolink_regex = r'<t([0-9]{2,16})>'
 
 def extract_ats(s): # extract @usernames out of text
     groups = re.findall(at_extractor_regex, s, flags=re.MULTILINE)
@@ -139,6 +140,9 @@ def replace_ats(s): # replace occurence
 
     return re.sub(at_extractor_regex, f, s, flags=re.MULTILINE)
 
+post_autolink_regex = r'<[#p]/?([0-9]{1,16})>'
+thread_autolink_regex = r'<t/?([0-9]{1,16})>'
+
 def replace_pal(s):
     def f(match):
         pid = match.group(1)
@@ -149,7 +153,7 @@ def replace_pal(s):
 def replace_tal(s):
     def f(match):
         pid = match.group(1)
-        return '[/t/{}](/t/{})'.format(pid,pid)
+        return '[t{}](/t/{})'.format(pid,pid)
 
     return re.sub(thread_autolink_regex, f, s, flags=re.MULTILINE)
 
@@ -159,14 +163,22 @@ youtube_extractor_regex = r'(?=\n|\r|^)(?:http|https|)(?::\/\/|)(?:www.|)(?:yout
 # match those from 2049bbs
 old_youtube_extractor_regex = r'<div class="videowrapper"><iframe src="https://www\.youtube\.com/embed/([\w\-]{11})" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>'
 
+# combined together
+combined_youtube_extractor_regex = \
+'(?:'+youtube_extractor_regex+'|'+old_youtube_extractor_regex+')'
+
+def replace_ytb_f(match):
+    vid = match.group(1) or match.group(2)
+    return '<div class="youtube-player-unprocessed" data-id="{}"></div>'.format(vid)
+
 def replace_ytb(s):
-    def f(match):
-        vid = match.group(1)
-        return '<div class="youtube-player-unprocessed" data-id="{}"></div>'.format(vid)
-    s = re.sub(old_youtube_extractor_regex, f, s, flags=re.MULTILINE)
-    s = re.sub(youtube_extractor_regex, f, s, flags=re.MULTILINE)
+    s = re.sub(combined_youtube_extractor_regex,
+        replace_ytb_f, s, flags=re.MULTILINE)
     return s
 
+def extract_ytb(s):
+    groups = re.findall(combined_youtube_extractor_regex, s, flags=re.MULTILINE)
+    return [g[0] or g[1] for g in groups]
 youtube_extraction_test_string="""
 youtu.be/DFjD8iOUx0I
 https://youtu.be/DFjD8iOUx0I
@@ -203,6 +215,11 @@ http://www.youtube.com/?feature=player_embedded&v=dQw4w9WgXcQ
 "http://www.youtube.com/user/Scobleizer#p/u/1/1p3vcRhsYGo",
 " http://www.youtube.com/watch?v=6zUVS4kJtrA&feature=c4-overview-vl&list=PLbzoR-pLrL6qucl8-lOnzvhFc2UM1tcZA ",
 "
+#真人献唱#
+
+**《没有倒车档就没有庆丰国》**
+
+<div class="videowrapper"><iframe src="https://www.youtube.com/embed/kfUx7Lv-az8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
 
 https://www.youtube.com/watch?v=FZu097wb8wU&list=RDFZu097wb8wU
  "

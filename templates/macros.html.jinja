@@ -78,6 +78,13 @@
             <a href="/t/{{p.tid}}" class="threadlist_title">
               {{'[已标记为删除] ' if p.delete else ''}}{{text}}
             </a>
+            {%if 'link_after_title'%}
+              {%if p.youtube%}
+                <a class='threadlist_title_youtube' rel='noreferrer' href="https://www.youtube.com/watch?v={{p.youtube}}">
+                  <img src="/images/youtube_small.png" alt="">
+                </a>
+              {%endif%}
+            {%endif%}
 
           {# content is name of an user #}
           {%elif 'userlist' in metas %}
@@ -327,7 +334,7 @@
 {# one line of thread, used in threadlist #}
 {%macro post_threadlist(p)%}
   {{post(p, ['category','publisher','publish_date_thread','last_commenter','vc',
-  'threadlist','delete_thread','thread_votes'])}}
+  'threadlist','delete_thread','thread_votes','link_after_title'])}}
 {%endmacro%}
 
 {# one line of user, used in userpage #}

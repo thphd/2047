@@ -13,3 +13,5 @@ ga.png
 *.tar*
 release_token*
 backup
+*.psd
+test_view*
