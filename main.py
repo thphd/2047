@@ -517,19 +517,18 @@ class Paginator:
                 button_groups.append([('下一页',querystring(pagenumber+1, pagesize, order, sortby))])
 
         # no need to sort if number of items < 2
-        if count>1:
+        if count>3:
             button_groups.append(orders)
 
-        if mode=='thread' or mode=='user_thread':
-            button_groups.append(sortbys)
+            if mode=='thread' or mode=='user_thread':
+                button_groups.append(sortbys)
 
-        if mode=='user':
-            button_groups.append(sortbys2)
+            if mode=='user':
+                button_groups.append(sortbys2)
 
-        if mode=='post' or mode=='user_post':
-            button_groups.append(sortbys3)
+            if mode=='post' or mode=='user_post':
+                button_groups.append(sortbys3)
 
-        if count>1:
             button_groups.append([('共 {:d}'.format(count), '')])
 
         return {
@@ -999,7 +998,7 @@ def uposts(uid):
 
     remove_duplicate_brief(postlist)
 
-    return render_template('postlist.html.jinja',
+    return render_template('postlist_userposts.html.jinja',
         page_title='回复 - '+uobj['name'],
         # threadlist=threadlist,
         postlist=postlist,
