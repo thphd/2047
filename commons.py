@@ -334,7 +334,8 @@ def linkify(s):
     return lines
 
 common_links = linkify('''
-花名册 /u/all 本站用户名册
+用户名录 /u/all 本站用户名册
+评论集合 /p/all 全站评论集合 
 老用户 /t/7108 原2049用户取回账号方式
 邀请码 /t/7109 获取邀请码
 删帖 /c/deleted 本站被删帖子

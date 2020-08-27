@@ -454,7 +454,7 @@
         <a class='makepost' href="/editor?target=category/{{category.cid}}">发新帖</a>
       {%endif%}
 
-      {%if g.logged_in and categories%}
+      {%if g.logged_in and categories and not category%}
         <a class='makepost' href="javascript:alert('请在右边分类列表中选择一个分类')">发新帖</a>
       {%endif%}
 

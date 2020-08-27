@@ -255,7 +255,7 @@ class Paginator:
 
         path=''):
 
-        assert by in ['thread', 'user']
+        assert by in ['thread', 'user','all']
         assert is_integer(tid)
         assert is_integer(uid)
 
@@ -271,8 +271,11 @@ class Paginator:
         if by=='thread':
             filter = 'filter i.tid == {}'.format(tid)
             mode='post'
-        else: # filter by user
+        elif by=='user': # filter by user
             filter = 'filter i.uid == {}'.format(uid)
+            mode='user_post'
+        elif by=='all':
+            filter = ''
             mode='user_post'
 
         selfuid = g.selfuid
@@ -1014,6 +1017,39 @@ def uposts(uid):
         pagination=pagination,
         # t=thobj,
         u=uobj,
+        # threadcount=count,
+        **(globals())
+    )
+
+@app.route('/p/all')
+def allposts():
+    upld = user_post_list_defaults
+    pagenumber = rai('page') or upld['pagenumber']
+    pagesize = rai('pagesize') or upld['pagesize']
+    sortby = ras('sortby') or upld['sortby']
+    order = ras('order') or upld['get_default_order'](sortby)
+
+    rpath = request.path
+
+    postlist, pagination = pgnt.get_post_list(
+        # by='thread',
+        by='all',
+        # tid=tid,
+        # uid=uid,
+        sortby=sortby,
+        order=order,
+        pagenumber=pagenumber, pagesize=pagesize,
+        path = rpath)
+
+    remove_duplicate_brief(postlist)
+
+    return render_template('postlist_userposts.html.jinja',
+        page_title='所有评论',
+        # threadlist=threadlist,
+        postlist=postlist,
+        pagination=pagination,
+        # t=thobj,
+        # u=uobj,
         # threadcount=count,
         **(globals())
     )
