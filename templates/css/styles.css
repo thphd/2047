@@ -81,9 +81,9 @@ div#site_name {color: #005bac;font-family: arial;/* display: inline-block; *//* 
 
 div.copyright {
   font-size: 80%;
-  color: gray;
+  color: #b3b3b3;
   margin: 0.3em 0;
-  min-height: .3em;
+  min-height: .2em;
   display: block;
   text-decoration: none;
   /* vertical-align: baseline; */
@@ -673,7 +673,7 @@ code .nf {
 
 .copyright * {
     text-decoration: none;
-    color: gray;
+    /* color: gray; */
     vertical-align: middle;
 }
 
@@ -1094,4 +1094,13 @@ a.userlist_name {
 
 .meta .vote_section {
     align-items: center;
+}
+
+a.copyright,.copyright>a {
+    margin-right: .5em;
+    color: #9cbcec;
+}
+
+.opaque5 {
+    opacity: .3;
 }

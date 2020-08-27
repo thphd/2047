@@ -100,7 +100,7 @@
           <div class="friendly_link_title copyright">
             友情链接
           </div>
-          <div class="copyright">
+          <div rel='noreferrer' class="copyright">
             {%for item in friendly_links%}
               <a class='copyright' href="{{item.url}}" title={{item.notes}}>{{item.text}}</a>
             {%endfor%}
@@ -113,7 +113,10 @@
             <span>访问者IP {{g.display_ip_address}}</span>
           </div>
           <div class="copyright">
-            <span>页面生成时间 {{g.get_elapsed()}}ms</span>
+          </div>
+
+          <div class="copyright opaque5">
+            <span>{{g.get_elapsed()}}ms</span>
           </div>
         </div>
 
