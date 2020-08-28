@@ -1503,4 +1503,4 @@ if __name__ == '__main__':
         yappi.stop()
         stats = yappi.get_func_stats()
         stats.sort('tavg','desc')
-        stats.print_all(out=open('trace/out.txt','w'))
+        stats.print_all(out=open('prof/out.txt','w'))
