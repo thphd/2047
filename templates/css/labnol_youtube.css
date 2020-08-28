@@ -4,7 +4,7 @@
     /* Use 75% for 4:3 videos */
     /* max-width: 500px; */
     overflow: hidden;
-    /* max-width: 100%; */
+    min-width: 200px;
     background: #000;
     margin-bottom: 1em;
     margin-top: 0.8em;

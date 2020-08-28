@@ -420,8 +420,15 @@ if (editor_target){
             break;
 
             case 'link_label':
-              et.setRangeText(`[](${st.trim()})`,ss,se,'preserve')
-              et.setSelectionRange(ss+1, ss+1)
+              if (!st.trim().length){
+                et.setRangeText(`[]()`,ss,se,'preserve')
+                et.setSelectionRange(ss+1, ss+1)
+              }else{
+                var link = ''
+                et.setRangeText(`[${st.trim()}](${link})`,ss,se,'preserve')
+                var lll = st.trim().length + link.length
+                et.setSelectionRange(ss+1+lll+2, ss+1+lll+2)
+              }
             break;
 
             case 'image':
