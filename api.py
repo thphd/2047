@@ -170,6 +170,13 @@ def get_user_by_id(id):
     else:
         return None
 
+def get_user_by_id_admin(uid):
+    uo = aql('for i in users filter i.uid==@k \
+        let admin = length(for a in admins filter a.name==i.name return a)\
+        return merge(i, {admin})',
+        k=uid, silent=True)
+    return uo[0] if uo else False
+
 @register('test')
 def _():
     # raise Exception('ouch')

@@ -542,14 +542,6 @@ def ras(k):
     v = key(request.args,k)
     return str(v) if v else ''
 
-def get_user(uid):
-    uo = aql('for i in users filter i.uid==@k \
-        let admin = length(for a in admins filter a.name==i.name return a)\
-        return merge(i, {admin})',
-        k=uid, silent=True)[0]
-
-    return uo
-
 # filter bots/DOSes that use a fixed UA
 '''
 不是我说你们，你们要是真会写代码，也不至于过来干这个，我都替你们着急啊
@@ -637,7 +629,7 @@ def before_request():
     g.current_user = False
 
     if 'uid' in session:
-        g.logged_in = get_user(int(session['uid']))
+        g.logged_in = get_user_by_id_admin(int(session['uid']))
         g.current_user = g.logged_in
         print_info(g.logged_in['name'])
         g.selfuid = g.logged_in['uid']
@@ -1102,7 +1094,7 @@ def get_alias_user_by_name(uname):
 
 
 def _userpage(uid):
-    uobj = get_user(int(uid))
+    uobj = get_user_by_id_admin(int(uid))
 
     if not uobj:
         return make_response('user not exist', 404)
