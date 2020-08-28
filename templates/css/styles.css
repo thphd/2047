@@ -287,9 +287,9 @@ body>#content {
 }
 
 .post_content blockquote {
-    background: #f3f3ac80;
+    background: #e2e2be80;
     margin: 2px 0 8px 0;
-    padding: 10px;
+    padding: .8em 1.0em;
     border-style: solid;
     border-width: 0 0 0 3px;
     border-color: #b7b76061;

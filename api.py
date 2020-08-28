@@ -533,6 +533,7 @@ def _():
 
         inserted = aql('insert @i into histories return NEW',i=thread)[0]
         inserted['url'] = '/t/{}'.format(_id)
+        url = inserted['url']
 
         # notifications
         # extract_ats
