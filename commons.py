@@ -3,6 +3,7 @@
 import os, hashlib, binascii as ba
 import base64, re
 from colors import *
+from functools import lru_cache
 
 def init_directory(d):
     try:
@@ -129,10 +130,12 @@ username_regex_string = str(username_regex).replace('\\\\','\\')
 
 at_extractor_regex = r'@([0-9a-zA-Z\u4e00-\u9fff\-\_\.]{2,16}?)(?=[^0-9a-zA-Z\u4e00-\u9fff\-\_\.]|$)'
 
+@lru_cache(maxsize=4096)
 def extract_ats(s): # extract @usernames out of text
     groups = re.findall(at_extractor_regex, s, flags=re.MULTILINE)
     return groups
 
+@lru_cache(maxsize=4096)
 def replace_ats(s): # replace occurence
     def f(match):
         uname = match.group(1)
@@ -143,6 +146,7 @@ def replace_ats(s): # replace occurence
 post_autolink_regex = r'<[#p]/?([0-9]{1,16})>'
 thread_autolink_regex = r'<t/?([0-9]{1,16})>'
 
+@lru_cache(maxsize=4096)
 def replace_pal(s):
     def f(match):
         pid = match.group(1)
@@ -150,6 +154,7 @@ def replace_pal(s):
 
     return re.sub(post_autolink_regex, f, s, flags=re.MULTILINE)
 
+@lru_cache(maxsize=4096)
 def replace_tal(s):
     def f(match):
         pid = match.group(1)
@@ -167,15 +172,18 @@ old_youtube_extractor_regex = r'<div class="videowrapper"><iframe src="https://w
 combined_youtube_extractor_regex = \
 '(?:'+youtube_extractor_regex+'|'+old_youtube_extractor_regex+')'
 
+@lru_cache(maxsize=4096)
 def replace_ytb_f(match):
     vid = match.group(1) or match.group(2)
     return '<div class="youtube-player-unprocessed" data-id="{}"></div>'.format(vid)
 
+@lru_cache(maxsize=4096)
 def replace_ytb(s):
     s = re.sub(combined_youtube_extractor_regex,
         replace_ytb_f, s, flags=re.MULTILINE)
     return s
 
+@lru_cache(maxsize=4096)
 def extract_ytb(s):
     groups = re.findall(combined_youtube_extractor_regex, s, flags=re.MULTILINE)
     return [g[0] or g[1] for g in groups]
@@ -235,6 +243,8 @@ if 0:
 
 elif 1:
     import mistletoe
+
+    @lru_cache(maxsize=4096)
     def convert_markdown(s):
         s = replace_pal(s)
         s = replace_tal(s)
@@ -335,7 +345,7 @@ def linkify(s):
 
 common_links = linkify('''
 用户名录 /u/all 本站用户名册
-评论集合 /p/all 全站评论集合 
+评论集合 /p/all 全站评论集合
 老用户 /t/7108 原2049用户取回账号方式
 邀请码 /t/7109 获取邀请码
 删帖 /c/deleted 本站被删帖子
