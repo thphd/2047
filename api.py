@@ -1082,6 +1082,28 @@ def _():
     else:
         raise Exception('user not exist')
 
+@register('browser_check')
+def _():
+    j = g.j
+    return {'error':False,'setbrowser':1}
+
+@register('viewed_target')
+def _():
+    j = g.j
+    ty, _id = parse_target(j['target'])
+
+    if not g.using_browser:
+        print_err('someone without a browser tried viewed_target()')
+        return {'error':False, 'info':'nicework'}
+
+    if ty=='thread':
+        increment_view_counter('thread', _id)
+    elif ty=='user':
+        increment_view_counter('user', _id)
+    else:
+        raise Exception('unsupported target')
+    return {'error':False, 'info':'nicework'}
+
 # feedback regulated ping service
 # average 1 ping every 3 sec
 lastping = time.time()

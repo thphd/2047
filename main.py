@@ -550,7 +550,7 @@ class UAFilter:
     def __init__(self):
         self.d = {}
         self.dt = {}
-        self.blacklist = ''
+        self.blacklist = 'text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2'
 
     def timedelta(self, ua):
         this_time = time.time()
@@ -604,6 +604,7 @@ class UAFilter:
         return k, self.d[k]
 
 uaf = UAFilter()
+sessiondict = dict()
 
 @app.before_request
 def before_request():
@@ -628,10 +629,15 @@ def before_request():
     g.logged_in = False
     g.current_user = False
 
+    if 'browser' not in session:
+        g.using_browser = False
+    else:
+        g.using_browser = True
+
     if 'uid' in session:
         g.logged_in = get_user_by_id_admin(int(session['uid']))
         g.current_user = g.logged_in
-        print_info(g.logged_in['name'])
+        print_info(g.logged_in['name'], 'browser' if g.using_browser else '')
         g.selfuid = g.logged_in['uid']
 
         # print_err(request.headers)
@@ -658,6 +664,9 @@ def before_request():
 
         # if you're logged in then end of story
         return
+    else:
+        if g.using_browser:
+            print_info(ipstr, 'using browser')
 
     # now seems you're not logged in. we have to be more strict to you
 
@@ -672,8 +681,8 @@ def before_request():
         return
 
     weight = 1.
-    if 'application/x-php' in acceptstr:
-        weight = 2.
+    # if 'application/x-php' in acceptstr:
+    #     weight = 2.
 
     # filter bot/dos requests
     allowed = \
@@ -788,8 +797,8 @@ def getpost(pid):
     resp.headers['Location'] = url
     resp.headers['Cache-Control']= 'max-age=86400'
 
-    user_is_self = p['uid'] == g.selfuid
-    if not user_is_self: increment_view_counter('post', pid)
+    # user_is_self = p['uid'] == g.selfuid
+    # if not user_is_self: increment_view_counter('post', pid)
 
     return resp
 
@@ -942,8 +951,7 @@ def get_thread(tid):
     # remove duplicate brief string within a page
     remove_duplicate_brief(postlist)
 
-    if selfuid != thobj['uid']:
-        increment_view_counter('thread', tid)
+    user_is_self = selfuid==thobj['uid']
 
     return render_template('postlist.html.jinja',
         page_title=thobj['title'],
@@ -952,6 +960,7 @@ def get_thread(tid):
         pagination=pagination,
         t=thobj,
         # threadcount=count,
+        viewed_target='thread/'+str(tid) if not user_is_self else '',
         **(globals())
     )
 
@@ -1153,7 +1162,9 @@ def _userpage(uid):
             invitations = k
 
     if not user_is_self:
-        increment_view_counter('user', u['uid'])
+        viewed_target='user/'+str(uobj['uid'])
+    else:
+        viewed_target=''
 
     return render_template('userpage.html.jinja',
         page_title=uobj['name'],
@@ -1162,8 +1173,8 @@ def _userpage(uid):
         user_is_self=user_is_self,
 
         sc_ts = sc_ts, # showcase_threads
-
-        **(globals())
+        viewed_target=viewed_target,
+        **(globals()),
     )
 @app.route('/register')
 def regpage():
@@ -1411,9 +1422,10 @@ def apir():
     action = j['action']
     j['logged_in'] = g.logged_in
     if action in api_registry:
-        if action != 'ping':
+        g.j = j
+
+        if action not in ('ping','viewed_target','browser_check'):
             print_up('API >>', j)
-            g.j = j
 
         try:
             answer = api_registry[action]()
@@ -1427,10 +1439,12 @@ def apir():
         else:
             if answer is None:
                 raise Exception('return value is None, what the fuck?')
-            if action != 'ping':
+            if action not in ('ping','viewed_target','browser_check'):
                 print_down('API <<', answer)
             if 'setuid' in answer:
                 session['uid'] = answer['setuid']
+            if 'setbrowser' in answer:
+                session['browser'] = 1
             if 'logout' in answer:
                 if 'uid' in session:
                     del session['uid']

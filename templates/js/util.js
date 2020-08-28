@@ -163,15 +163,15 @@ function upload_file(target){
 
 
 // access api
-function api(j){
-  display_notice('连接服务器...')
+function api(j, display){
+  if(!display){display_notice('连接服务器...')}
   var p = xhr('post', '/api', JSON.stringify(j))
   return p.then(r=>{
-    display_notice('')
+    if(!display){display_notice('')}
     return r
   })
   .catch(e=>{
-    display_notice('')
+    if(!display){display_notice('')}
     throw e
   })
 }
@@ -633,6 +633,8 @@ foreach(upvote_buttons)(e=>{
 
 function display_notice(str){
   if(str){
+    var ot = geid('overlay_text')
+    if(!ot){return}
     geid('overlay_text').innerText = str
     geid('overlay').style.display = 'block'
   }else{
@@ -861,4 +863,33 @@ function process_all_youtube_reference(){
   })
 }
 
+function browser_check(){
+  var bc = geid('browser_check').innerText
+  if (!bc){
+    api({
+      action:'browser_check'
+    }, true)
+    .then(print)
+    .catch(console.error)
+  }else{
+    print('browser, skip check')
+  }
+}
+
+function viewed(){
+  setTimeout(function(){
+    var target = geid('viewed_target').innerText
+    if (target){
+      api({
+        action:'viewed_target',
+        target:target,
+      })
+      .then(print)
+      .catch(console.error)
+    }
+  },10*1000)
+}
+
 document.addEventListener("DOMContentLoaded", process_all_youtube_reference);
+document.addEventListener("DOMContentLoaded", browser_check);
+document.addEventListener("DOMContentLoaded", viewed);
