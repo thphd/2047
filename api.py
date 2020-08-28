@@ -88,6 +88,8 @@ def make_notification_uids(uids, from_uid, why, url, **kw):
 
     aql('''
     let uidlist = @uids
+    let uids = remove_value(uidlist, null)
+
     for uid in uids
     let user = (for u in users filter u.uid==uid return u)[0]
 
