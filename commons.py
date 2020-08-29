@@ -321,6 +321,13 @@ user_post_list_defaults = dict(
     get_default_order=lambda sortby:('desc' if sortby=='t_c' else 'desc'),
 )
 
+inv_list_defaults = dict(
+    pagenumber=1,
+    pagesize=25,
+    order='desc',
+    sortby='t_c',
+)
+
 if __name__ == '__main__':
     print(post_list_defaults['get_default_order']('t_c'))
     print(post_list_defaults['get_default_order']('votes'))

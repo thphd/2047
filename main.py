@@ -393,7 +393,7 @@ class Paginator:
 
         return threadlist, pagination_obj
 
-    def get_pagination_obj(self, count, pagenumber, pagesize, order, path, sortby, mode='thread'):
+    def get_pagination_obj(self, count, pagenumber, pagesize, order, path, sortby, mode='thread', postfix=''):
         # total number of pages
         total_pages = max(1, (count-1) // pagesize +1)
 
@@ -437,6 +437,8 @@ class Paginator:
             defaults = user_post_list_defaults
         elif mode=='user':
             defaults = user_list_defaults
+        elif mode=='invitation':
+            defaults = inv_list_defaults
         else:
             raise Exception('unsupported mode')
 
@@ -470,7 +472,7 @@ class Paginator:
             else:
                 qs = path
 
-            return qs
+            return qs+postfix
 
         slots = [(i, querystring(i, pagesize, order, sortby), i==pagenumber) for i in slots]
 
@@ -1219,12 +1221,33 @@ def _userpage(uid):
     uobj['alias'] = get_alias_user_by_name(uobj['name'])
 
     invitations = None
+    pagination = None
     if g.logged_in:
         if user_is_self:
-            k = aql('for i in invitations filter i.uid==@k\
+            pagenumber=rai('page') or inv_list_defaults['pagenumber']
+            pagesize=inv_list_defaults['pagesize']
+            order = ras('order') or inv_list_defaults['order']
+            sortby = 't_c'
+
+            ninvs = aql('return length(for i in invitations filter i.uid==@k\
+            return i)',k=selfuid)[0]
+
+            k = aql(f'for i in invitations filter i.uid==@k\
             let users = (for u in users filter u.invitation==i._key return u)\
-            sort i.t_c desc limit 25 return merge(i,{users})',k=uid,silent=True)
+            sort i.t_c {order} limit {pagesize*(pagenumber-1)},{pagesize} return merge(i,{{users}})', k=selfuid,silent=True)
             invitations = k
+
+            pagination = pgnt.get_pagination_obj(
+                pagenumber=pagenumber,
+                pagesize=pagesize,
+                order = order,
+                sortby = sortby,
+                count = ninvs,
+                path = request.path,
+                postfix = '#invitation_list',
+                mode='invitation',
+            )
+            print(pagination)
 
     if not user_is_self:
         viewed_target='user/'+str(uobj['uid'])
@@ -1239,6 +1262,7 @@ def _userpage(uid):
 
         sc_ts = sc_ts, # showcase_threads
         viewed_target=viewed_target,
+        pagination = pagination,
         **(globals()),
     )
 @app.route('/register')

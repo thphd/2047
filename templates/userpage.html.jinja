@@ -143,12 +143,13 @@
   {%endif%}
 
   {%if (invitations!=None)%}
-  <div class="invitations">
+  <div class="invitations" id='invitation_list'>
     <div class="invitation_list_title">
       我的邀请码（生成邀请码派给别人，让别人也可以注册2047）
     </div>
-    <div class="invitation_list">
+    <div class="invitation_list" >
 
+      {{macros.paginate(pagination)}}
       {%for i in invitations%}
       <div class="invitation{{'' if i.active else ' inactive'}}">
         <a href="/register?code={{i._key}}">{{i._key}}</a>
@@ -159,6 +160,7 @@
         {%endif%}
       </div>
       {%endfor%}
+      {{macros.paginate(pagination)}}
 
     </div>
     <button type="button" onclick='generate_invitation_code()'>生成邀请码</button>
