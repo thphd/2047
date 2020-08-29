@@ -1,3 +1,20 @@
+from logging.config import dictConfig
+
+dictConfig({
+    'version': 1,
+    'formatters': {'default': {
+        'format': '%(levelname)s/%(module)s %(message)s',
+    }},
+    'handlers': {'wsgi': {
+        'class': 'logging.StreamHandler',
+        'stream': 'ext://flask.logging.wsgi_errors_stream',
+        'formatter': 'default'
+    }},
+    'root': {
+        'level': 'INFO',
+        'handlers': ['wsgi']
+    }
+})
 
 import time,os,sched,random,threading,traceback,datetime
 import re,base64
@@ -35,6 +52,7 @@ def get_secret():
     return r
 
 app = Flask(__name__, static_url_path='')
+
 app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
 
@@ -313,6 +331,7 @@ class Paginator:
         assert order in ['desc', 'asc']
 
         pagenumber = max(1, pagenumber)
+        assert pagesize<=50
 
         start = (pagenumber-1)*pagesize
         count = pagesize
@@ -610,6 +629,19 @@ class UAFilter:
 uaf = UAFilter()
 sessiondict = dict()
 
+def log_info(*a):
+    text = ' '.join(map(lambda i:str(i), a))
+    app.logger.warning(colored_info(text))
+def log_up(*a):
+    text = ' '.join(map(lambda i:str(i), a))
+    app.logger.warning(colored_up(text))
+def log_down(*a):
+    text = ' '.join(map(lambda i:str(i), a))
+    app.logger.warning(colored_down(text))
+def log_err(*a):
+    text = ' '.join(map(lambda i:str(i), a))
+    app.logger.warning(colored_err(text))
+
 @app.before_request
 def before_request():
     # request figerprinting
@@ -623,29 +655,40 @@ def before_request():
     g.request_start_time = time.time()
     g.get_elapsed = lambda: int((time.time() - g.request_start_time)*1000)
 
+    if 'browser' not in session:
+        g.using_browser = False
+    else:
+        g.using_browser = True
+
+    # ----
+
     if 'action' in request.args and request.args['action']=='ping':
         is_ping = True
     else:
         is_ping = False
+
+    # avatar requests can go.
+
+    path_critical = (
+        (not is_ping)
+        and (not request.path.startswith('/avatar/'))
+    )
 
     # log the user in
     g.selfuid = -1
     g.logged_in = False
     g.current_user = False
 
-    if 'browser' not in session:
-        g.using_browser = False
-    else:
-        g.using_browser = True
-
     if 'uid' in session:
         g.logged_in = get_user_by_id_admin(int(session['uid']))
         g.current_user = g.logged_in
-        print_info(g.logged_in['name'], 'browser' if g.using_browser else '')
         g.selfuid = g.logged_in['uid']
 
+        # print_info(g.logged_in['name'], 'browser' if g.using_browser else '')
+        log_info(g.logged_in['name'], 'browser' if g.using_browser else '')
+
         # print_err(request.headers)
-        if not is_ping:
+        if path_critical:
 
             # when is the last time you check your inbox?
             if 't_inbox' not in g.current_user:
@@ -668,20 +711,15 @@ def before_request():
 
         # if you're logged in then end of story
         return
-    else:
-        if g.using_browser:
-            print_info(ipstr, 'using browser')
+
+    if g.using_browser and path_critical:
+        log_info(ipstr, 'using browser')
 
     # now seems you're not logged in. we have to be more strict to you
 
-    # ping can go.
-    if is_ping or using_browser:
+    if not path_critical or g.using_browser:
         uaf.cooldown(uas)
         uaf.cooldown(acceptstr)
-        return
-
-    # avatar requests can go.
-    if request.path.startswith('/avatar/'):
         return
 
     weight = 1.
@@ -695,7 +733,7 @@ def before_request():
         (uaf.judge(ipstr, weight) if not is_local else True)
 
     if not allowed:
-        print_err('[{}][{}][{}][{:.2f}][{:.2f}][{:.2f}]'.format(uas, acceptstr, ipstr, uaf.d[uas], uaf.d[acceptstr], uaf.d[ipstr] if ipstr in uaf.d else -1))
+        log_err('[{}][{}][{}][{:.2f}][{:.2f}][{:.2f}]'.format(uas, acceptstr[-50:], ipstr, uaf.d[uas], uaf.d[acceptstr], uaf.d[ipstr] if ipstr in uaf.d else -1))
 
         if random.random()>0:
             return ('rate limit exceeded', 429)
@@ -704,7 +742,8 @@ def before_request():
         else:
             pass
     else:
-        print_up('max: [{}][{:.2f}][{}]'.format(*uaf.get_max(), uaf.blacklist))
+        m = uaf.get_max()
+        log_up('max: [{}][{:.2f}][{}]'.format(m[0][-50:],m[1], uaf.blacklist))
 
 def remove_hidden_from_visitor(threadlist):
     ntl = []
