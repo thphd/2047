@@ -658,9 +658,9 @@ def _():
     return {'ok':'done'}
 
 updateable_personal_info = [
-    ('brief', '个人简介（80字符）'),
-    ('url', '个人URL（80字符）'),
-    ('showcase', '个人主页展示帖子或评论（例如“t7113”或者“p247105”，中间逗号或空格隔开），暂限4项'),
+    ('brief', '个人简介（80字符，帖子中显示在用户名旁边）'),
+    ('url', '个人URL（80字符，显示在用户个人主页）'),
+    ('showcase', '个人主页展示帖子或评论（例如“t7113”或者“p247105”，中间逗号或空格隔开），限4项'),
 ]
 
 @register('update_personal_info')

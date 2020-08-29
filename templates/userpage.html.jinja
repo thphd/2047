@@ -95,7 +95,10 @@
 
 </div>
 
-<hr>
+{%if user_is_self%}
+<div class='post_content'><hr></div>
+{%endif%}
+
 <div class="threadlist">
   {%if user_is_self and updateable_personal_info%}
     <div class="invitations">
@@ -142,7 +145,7 @@
   {%if (invitations!=None)%}
   <div class="invitations">
     <div class="invitation_list_title">
-      我的邀请码
+      我的邀请码（生成邀请码派给别人，让别人也可以注册2047）
     </div>
     <div class="invitation_list">
 
@@ -163,7 +166,10 @@
   {%endif%}
 
   {%if user_is_self%}
-  <form class="register">
+  <form class="register invitations">
+    <div class="invitation_list_title">
+      修改当前账户的密码（如果当前账户没有密码才留空，如果有密码必须输密码）
+    </div>
     <label>用户名</label>
     <input type="text" id="username" value="{{g.logged_in.name}}" disabled="true">
     <br>

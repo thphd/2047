@@ -472,6 +472,11 @@ img.headerbtn {
 
 .invitations {
     margin: 1em 0 0 0;
+    padding: .7em;
+    border-style: dashed;
+    border-color: #84848436;
+    border-width: 3px;
+    /* border-radius: 8px; */
 }
 
 a.title {}
@@ -1107,4 +1112,8 @@ a.copyright,.copyright>a {
 
 .adminstuff.move_to_category {
     color: #007958;
+}
+
+.invitations:first-child {
+    margin-top: 0;
 }
