@@ -1105,6 +1105,27 @@ def get_alias_user_by_name(uname):
         ''', uname=uname, silent=True,
     )[0]
 
+@app.route('/member/<string:name>')
+def userpage_byname(name):
+    # check if user exists
+    res = aql('for u in users filter u.name==@n return u', n=name)
+    if len(res)==0:
+        return make_response(f'''
+        <p>
+        找不到用户: {name}
+        <br>
+        你可以试试: <a href='https://pincong.rocks/people/{name}'>
+        {name}(品葱)
+        </a>
+        <br>
+        或者试试: <a href='https://mohu.rocks/people/{name}'>
+        {name}(膜乎)
+        </a>
+        </p>
+        ''', 404)
+
+    u = res[0]
+    return _userpage(u['uid'])
 
 def _userpage(uid):
     uobj = get_user_by_id_admin(int(uid))
@@ -1257,16 +1278,6 @@ def route_get_avatar(uid):
     resp.headers['Location'] = '/images/logo.png'
     resp.headers['Cache-Control']= 'max-age=1800'
     return resp
-
-@app.route('/member/<string:name>')
-def userpage_byname(name):
-    # check if user exists
-    res = aql('for u in users filter u.name==@n return u', n=name)
-    if len(res)==0:
-        return make_response('no such user', 500)
-
-    u = res[0]
-    return _userpage(u['uid'])
 
 @app.route('/m')
 def conversation_page():
