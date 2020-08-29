@@ -92,67 +92,71 @@ route_static('js', 'templates/js', 300)
 route_static('jgawb', 'jgawb', 1800)
 route_static('jicpb', 'jicpb', 1800)
 
-# create index
-def ci(coll,aa):
-    for a in aa:
-        print('creating index on',coll,a)
-        aqlc.create_index(coll, type='persistent', fields=a,
-            unique=False,sparse=False)
+def create_all_necessary_indices():
+    # create index
+    def ci(coll,aa):
+        for a in aa:
+            print('creating index on',coll,a)
+            aqlc.create_index(coll, type='persistent', fields=a,
+                unique=False,sparse=False)
 
-# create index with unique=True
-def ciut(coll, a):
-    for ai in a:
-        print('creating index on',coll,[ai])
-        aqlc.create_index(coll, type='persistent', fields=[ai], unique=True, sparse=False)
+    # create index with unique=True
+    def ciut(coll, a):
+        for ai in a:
+            print('creating index on',coll,[ai])
+            aqlc.create_index(coll, type='persistent', fields=[ai], unique=True, sparse=False)
 
-ciut('threads', ['tid'])
-ci('threads', indexgen(
-        [['delete'],['uid'],['delete','cid']],
-        ['t_u','t_c','nreplies','vc','votes'],
-))
+    ciut('threads', ['tid'])
+    ci('threads', indexgen(
+            [['delete'],['uid'],['delete','cid']],
+            ['t_u','t_c','nreplies','vc','votes'],
+    ))
 
-ci('posts', indexgen(
-        [['tid'],['uid'],['tid','delete']],
-        ['t_c','vc','votes'],
-))
+    ci('posts', indexgen(
+            [['tid'],['uid'],['tid','delete']],
+            ['t_c','vc','votes'],
+    ))
 
-ciut('categories', ['cid'])
+    ciut('categories', ['cid'])
 
-ciut('users',['uid'])
-ci('users',[['invitation']])
-ci('users',indexgen(
-    [[],['delete']],
-    ['t_c','nposts','nthreads','nlikes','nliked','name']
-))
+    ciut('users',['uid'])
+    ci('users',[['invitation']])
+    ci('users',indexgen(
+        [[],['delete']],
+        ['t_c','nposts','nthreads','nlikes','nliked','name']
+    ))
 
-ci('invitations',indexgen(
-    [['uid','active'],['uid']],
-    ['t_c'],
-))
+    ci('invitations',indexgen(
+        [['uid','active'],['uid']],
+        ['t_c'],
+    ))
 
-ci('votes',indexgen(
-    [
-        ['type','id','vote','uid'],
-        ['type','id','vote'],
-        ['uid','vote'],
-        ['to_uid','vote'],
-    ],
-    ['t_c'],
-))
+    ci('votes',indexgen(
+        [
+            ['type','id','vote','uid'],
+            ['type','id','vote'],
+            ['uid','vote'],
+            ['to_uid','vote'],
+        ],
+        ['t_c'],
+    ))
 
-ci('conversations',[['convid']])
-ci('conversations',indexgen(
-    [['uid'],['to_uid'],['uid','to_uid']],
-    ['t_u'],
-))
+    ci('conversations',[['convid']])
+    ci('conversations',indexgen(
+        [['uid'],['to_uid'],['uid','to_uid']],
+        ['t_u'],
+    ))
 
-ci('messages',indexgen([['convid'],['to_uid']],['t_c']))
+    ci('messages',indexgen([['convid'],['to_uid']],['t_c']))
 
-ci('notifications',indexgen([['to_uid'],['to_uid','from_uid','why','url']],['t_c']))
-ci('avatars',[['uid']])
-ci('admins',[['name']])
-ci('aliases',[['is','name'],['name','is']])
+    ci('notifications',indexgen([['to_uid'],['to_uid','from_uid','why','url']],['t_c']))
+    ci('avatars',[['uid']])
+    ci('admins',[['name']])
+    ci('aliases',[['is','name'],['name','is']])
 
+def dispatch(f):
+    t = threading.Thread(target=f, daemon=True)
+    t.start()
 
 is_integer = lambda i:isinstance(i, int)
 class Paginator:
@@ -1488,6 +1492,8 @@ def e404(e):
     ), 500
 
 if __name__ == '__main__':
+    dispatch(create_all_necessary_indices)
+
     import os
     if 'PORT' in os.environ:
         port = os.environ['PORT']

@@ -352,8 +352,7 @@ def get_post(pid):
 
 @register('post')
 def _():
-    if not g.current_user:
-        raise Exception('you are not logged in')
+    must_be_logged_in()
 
     uid = g.current_user['uid']
 
@@ -643,7 +642,7 @@ def update_user_votecount(uid):
 
 @register('update_votecount')
 def _():
-    if not g.current_user: raise Exception('you are not logged in')
+    must_be_logged_in()
     target_type,_id = parse_target(es('target'))
 
     if target_type=='thread':
@@ -662,7 +661,7 @@ updateable_personal_info = [
 
 @register('update_personal_info')
 def _():
-    if not g.current_user: raise Exception('you are not logged in')
+    must_be_logged_in()
 
     upd=dict()
     for item,explain in updateable_personal_info:
@@ -795,8 +794,7 @@ def _():
 
 @register('mark_delete')
 def _():
-    if not g.current_user:
-        raise Exception('you are not logged in')
+    must_be_logged_in()
     uobj = g.current_user
     uid = uobj['uid']
 
@@ -865,7 +863,7 @@ def _():
 
 @register('render')
 def _():
-    if not g.current_user: raise Exception('you are not logged in')
+    must_be_logged_in()
 
     content = es('content').strip()
     content_length_check(content, allow_short=True)
@@ -877,7 +875,7 @@ def r8():return os.urandom(8)
 
 @register('generate_invitation_code')
 def _():
-    if not g.current_user: raise Exception('you are not logged in')
+    must_be_logged_in()
     uid = g.current_user['uid']
 
     invs = aql('''for i in invitations
@@ -905,7 +903,7 @@ def _():
 def _():
     j = g.j
 
-    if not g.current_user: raise Exception('you are not logged in')
+    must_be_logged_in()
     uid = g.current_user['uid']
 
     pwo = j['old_password_hash']
@@ -1012,7 +1010,7 @@ def send_message(fromuid, touid, content):
 @register('ban_user')
 def _():
     j = g.j
-    if not g.current_user: raise Exception('you are not logged in')
+    must_be_logged_in()
     if not g.current_user['admin']:
         raise Exception("you are not admin")
 
@@ -1059,7 +1057,7 @@ def _():
 def _():
     j = g.j
     # @掀翻小池塘
-    if not g.current_user: raise Exception('you are not logged in')
+    must_be_logged_in()
     if not g.current_user['admin']:
         raise Exception("you are not admin")
 
@@ -1103,6 +1101,9 @@ def _():
     else:
         raise Exception('unsupported target')
     return {'error':False, 'info':'nicework'}
+
+def must_be_logged_in():
+    if not g.logged_in: raise Exception('you are not logged in')
 
 # feedback regulated ping service
 # average 1 ping every 3 sec
