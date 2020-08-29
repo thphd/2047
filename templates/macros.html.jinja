@@ -33,7 +33,9 @@
     ) %}
     {% set uid = uid if 'notification' not in metas else (p.from_uid or 5132) %}
 
-    <a href="/u/{{uid}}"><img class="avatar" src="/avatar/{{uid}}" alt=""></a>
+    {%set pt = p.personal_title or (p.user and p.user.personal_title)%}
+
+    <a href="/u/{{uid}}">{%if pt%}<span class='personal_title'>{{pt}}</span>{%endif%}<img class="avatar" src="/avatar/{{uid}}" alt=""></a>
 
     {%if 'thread_header' in metas and 0%}
     {# publisher #}
@@ -71,7 +73,7 @@
         {%if caller%}
           {{caller()}}
         {%else%}
-          {% set text = p.content or p.title or p.text or p.profile_string or p.name or (p.last and p.last.content) or '' %}
+          {% set text = p.content or p.text or p.profile_string or p.name or p.title or (p.last and p.last.content) or '' %}
 
           {# content is title to a thread #}
           {%if 'threadlist' in metas %}

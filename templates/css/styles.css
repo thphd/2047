@@ -526,6 +526,7 @@ a.threadlist_title {
 
 .left > a {
     display: flex;
+    position: relative;
 }
 
 
@@ -1116,4 +1117,18 @@ a.copyright,.copyright>a {
 
 .invitations:first-child {
     margin-top: 0;
+}
+
+span.personal_title {
+    position: absolute;
+    white-space: nowrap;
+    background-color: #a3d700;
+    color: #fff;
+    text-align: center;
+    padding: 1px 2px;
+    line-height: 12px;
+    font-size: 12px;
+    border-radius: 3px;
+    left: -7px;
+    top: -8px;
 }
