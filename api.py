@@ -387,6 +387,7 @@ def _():
             tid=tid,
         )
         inserted = aql('insert @p in posts return NEW', p=newpost)[0]
+        inserted['content']=None
 
         # update thread update time
         aql('''
@@ -486,6 +487,7 @@ def _():
         )
 
         inserted = aql('insert @p in threads return NEW', p=newthread)[0]
+        inserted['content']=None
 
         # assemble url to the new thread
         url = '/t/{}'.format(inserted['tid'])
@@ -540,6 +542,7 @@ def _():
         thread['t_h']=timenow
 
         inserted = aql('insert @i into histories return NEW',i=thread)[0]
+        inserted['content']=None
         inserted['url'] = '/t/{}'.format(_id)
         url = inserted['url']
 
@@ -583,6 +586,7 @@ def _():
         post['t_h']=timenow
 
         inserted = aql('insert @i into histories return NEW',i=post)[0]
+        inserted['content']=None
         url = get_url_to_post(str(_id))
         inserted['url'] = url
 
@@ -1104,6 +1108,40 @@ def _():
 
 def must_be_logged_in():
     if not g.logged_in: raise Exception('you are not logged in')
+
+@register('get_categories_info')
+def _():
+    must_be_logged_in()
+    return {'categories':get_categories_info()}
+
+@register('move_thread')
+def _():
+    must_be_logged_in()
+
+    j = g.j
+    ty, _id = parse_target(j['target'])
+    cid = int(j['cid'])
+
+    t = get_thread(_id)
+    if not can_do_to(g.current_user, 'move', t['uid']):
+        raise Exception('not enought priviledge')
+
+    c = aql('for c in categories filter c.cid==@cid return c', cid=cid, silent=True)
+    if not c:
+        raise Exception('no such category')
+
+    aql('for i in threads filter i.tid==@_id \
+        update i with {cid:@cid} in threads', _id=_id, cid=cid)
+
+    aql('insert @k in operations',k={
+        'uid':g.current_user['uid'],
+        'op':'move',
+        'target':j['target'],
+        't_c':time_iso_now(),
+        'cid':cid,
+    })
+
+    return {'error':False}
 
 # feedback regulated ping service
 # average 1 ping every 3 sec

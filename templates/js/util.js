@@ -833,6 +833,58 @@ function add_alias(curr_name){
   }
 }
 
+var categories = false
+function move_to_category(targ){
+  function ask_for_category_then_move(){
+    var cat_display_str = categories.map(c=>{
+      var base = `${c.cid}-${c.name}`
+      while(base.length<10){base+=' '}
+      return base
+    })
+    var buf = `请输入分类数字编号\n`
+    for(var i = 0; i<categories.length; i++){
+      buf+=cat_display_str[i]
+      if (i%3==1){
+        buf+='\n'
+      }
+    }
+
+    var cid = prompt(buf)
+    if(!cid){
+      return
+    }
+    cid = parseInt(cid)
+    api({
+      action:'move_thread',
+      target:targ,
+      cid:cid,
+    })
+    .then(res=>{
+      // do nothing
+      display_notice(`${targ} 已移动至 ${cid}`)
+      setTimeout(()=>{
+        display_notice('')
+      },2000)
+    })
+    .catch(alert)
+  }
+
+  if (!categories){
+    api({
+      action:'get_categories_info',
+    })
+    .catch(alert)
+    .then(res=>{
+      // print(res['categories'])
+      categories = res['categories']
+      ask_for_category_then_move()
+    })
+    .catch(alert)
+  }else{
+    ask_for_category_then_move()
+  }
+}
+
 /* Light YouTube Embeds by @labnol */
 /* Web: http://labnol.org/?p=27941 */
 // modified by thphd

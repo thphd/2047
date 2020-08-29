@@ -1104,3 +1104,7 @@ a.copyright,.copyright>a {
 .opaque5 {
     opacity: .3;
 }
+
+.adminstuff.move_to_category {
+    color: #007958;
+}

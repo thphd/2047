@@ -234,6 +234,9 @@
               <a class='adminstuff undelete' href="javascript:mark_delete('{{'uthread/'~p.tid}}')">取消删除</a>
               {%endif%}
             {%endif%}
+            {%if can_do_to(g.logged_in,'move',p.uid)%}
+              <a class='adminstuff move_to_category' href="javascript:move_to_category('{{'thread/'~p.tid}}')">移动</a>
+            {%endif%}
 
           {%elif m=='delete_post'%}
             {%if can_do_to(g.logged_in, 'delete', p.uid)%}

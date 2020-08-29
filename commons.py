@@ -355,6 +355,7 @@ common_links = linkify('''
 
 friendly_links = linkify('''
 火光 https://2049post.wordpress.com/ 薪火相传光明不息
+英雄 https://nodebe4.github.io/hero/ 人民英雄永垂不朽
 BE4 https://nodebe4.github.io/ BE4的网络服务
 XsDen https://xsden.info/ 講粵語嘅討論區
 連登 https://lihkg.com/ 光復香港冷氣革命
@@ -394,6 +395,10 @@ def can_do_to(u1, operation, u2id):
             return True
 
     elif operation == 'ban_user':
+        if is_admin:
+            return True
+
+    elif operation == 'move':
         if is_admin:
             return True
 
