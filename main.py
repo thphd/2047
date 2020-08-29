@@ -70,6 +70,27 @@ def calculate_etag(bin):
     chksum_encoded = base64.b64encode(checksum.to_bytes(4,'big')).decode('ascii')
     return chksum_encoded
 
+# hash all resource files see if they change
+def hash_these(path_arr, pattern='*.*'):
+    resource_files_contents = b''
+    for path in path_arr:
+        import glob
+        files = glob.glob(path+pattern)
+
+        for fn in files:
+            print_info('checking file:', fn)
+            with open(fn, 'rb') as f:
+                resource_files_contents += f.read()
+
+    resource_files_hash = calculate_etag(resource_files_contents)
+    return resource_files_hash
+
+resource_files_hash = hash_these(['templates/css/', 'templates/js/'])
+print_info('resource_files_hash:', resource_files_hash)
+
+images_resources_hash = hash_these(['templates/images/'], '*.png')
+print_info('images_resources_hash:', images_resources_hash)
+
 def route_static(frompath, topath, maxage=1800):
     @route('/'+frompath+'/<path:path>')
     def _(path):
@@ -105,8 +126,8 @@ def route_static(frompath, topath, maxage=1800):
 
 route_static('static', 'static')
 route_static('images', 'templates/images', 3600*24*5)
-route_static('css', 'templates/css', 300)
-route_static('js', 'templates/js', 300)
+route_static('css', 'templates/css', 3600*24*5)
+route_static('js', 'templates/js', 3600*24*5)
 route_static('jgawb', 'jgawb', 1800)
 route_static('jicpb', 'jicpb', 1800)
 

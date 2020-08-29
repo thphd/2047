@@ -7,9 +7,9 @@
 <html lang="zh" dir="ltr">
 <head>
   <meta charset="utf-8">
-  <link rel="stylesheet" href="/css/normalize.css">
-  <link rel="stylesheet" href="/css/styles.css">
-  <link rel="stylesheet" href="/css/labnol_youtube.css">
+  <link rel="stylesheet" href="/css/normalize.css?v={{resource_files_hash}}">
+  <link rel="stylesheet" href="/css/styles.css?v={{resource_files_hash}}">
+  <link rel="stylesheet" href="/css/labnol_youtube.css?v={{resource_files_hash}}">
   <link rel="icon" type="image/png" href="/images/favicon.png">
   <title>{{page_title}} - {{site_name}}</title>
   {%block meta%}{%endblock%}
@@ -19,7 +19,7 @@
     <div id="header" class="">
       {# left 2 right: logo, [links], search, [uavatar, uname, login/logout] #}
       <a class="leftalign" href="/">
-        <img id="site_logo" src="/images/logo.png" alt=""><div id="site_name">{{site_name_header}}</div>
+        <img id="site_logo" src="/images/logo.png?v={{images_resources_hash}}" alt=""><div id="site_name">{{site_name_header}}</div>
       </a>
 
       <div class="rightalign">
@@ -80,7 +80,7 @@
 
           {%if 0%}
           <div class="copyright">
-            <img src="/images/ga.png">
+            <img src="/images/ga.png?v={{images_resources_hash}}">
             <a href="/jgawb/全国互联网安全管理服务平台.html">京公网安备 11040102700068号</a>
             <a href="/jicpb/ICP_IP地址_域名信息备案管理系统.html">京ICP备 04000001号</a>
           </div>
@@ -134,7 +134,7 @@
 
   <div id='viewed_target' style='display:none;'>{{viewed_target}}</div>
   <div id='browser_check' style='display:none;'>{{'1' if g.using_browser else ''}}</div>
-  <script src="/js/md5.js" charset="utf-8"></script>
-  <script src="/js/util.js" charset="utf-8"></script>
+  <script src="/js/md5.js?v={{resource_files_hash}}" charset="utf-8"></script>
+  <script src="/js/util.js?v={{resource_files_hash}}" charset="utf-8"></script>
 </body>
 </html>

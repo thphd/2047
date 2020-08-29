@@ -1,7 +1,7 @@
 {%extends 'base.html.jinja'%}
 {%block content%}
 <div class="c404">
-  <img src="/images/exc.png" alt="">
+  <img src="/images/exc.png?v={{images_resources_hash}}" alt="">
 
   {%if not e500%}
   <div class="firstline">
