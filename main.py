@@ -668,10 +668,10 @@ def before_request():
         is_ping = False
 
     # avatar requests can go.
-
+    is_avatar = request.path.startswith('/avatar/')
     path_critical = (
         (not is_ping)
-        and (not request.path.startswith('/avatar/'))
+        and (not is_avatar)
     )
 
     # log the user in
@@ -684,8 +684,9 @@ def before_request():
         g.current_user = g.logged_in
         g.selfuid = g.logged_in['uid']
 
-        # print_info(g.logged_in['name'], 'browser' if g.using_browser else '')
-        log_info(g.logged_in['name'], 'browser' if g.using_browser else '')
+        if not is_avatar:
+            # print_info(g.logged_in['name'], 'browser' if g.using_browser else '')
+            log_info(g.logged_in['name'], 'browser' if g.using_browser else '')
 
         # print_err(request.headers)
         if path_critical:
@@ -1529,14 +1530,71 @@ def upload_file():
         uid=avatar_object['uid'], k=avatar_object)
     return {'error':False}
 
+@app.route('/qr/<path:to_encode>')
+def qr(to_encode):
+    supplied_etags = request.if_none_match
+
+    to_encode = request.full_path[4:]
+    if to_encode[-1]=='?':
+        to_encode = to_encode[:-1]
+
+    import qrcode
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=8,
+        border=2,
+    )
+    qr.add_data(to_encode)
+    qr.make(fit=True)
+    img = qr.make_image()
+    import io
+    out = io.BytesIO()
+    img.save(out, format='PNG')
+
+    bin = out.getvalue()
+
+    resp = make_response(bin, 200)
+
+    etag = calculate_etag(resp.data)
+    if etag in supplied_etags:
+        resp = make_response('', 304)
+    else:
+        resp.set_etag(etag)
+
+    resp.headers['Content-Type']='image/png'
+
+    if 'no-cache' in request.args:
+        resp.headers['Cache-Control']= 'no-cache'
+    else:
+        resp.headers['Cache-Control']= 'max-age=8640000'
+    return resp
+
+
+@app.route('/404/<string:to_show>')
+def f404(to_show):
+    if 'reason' in request.args:
+        reason = request.args['reason']
+    else:
+        reason = ''
+
+    return render_template('404.html.jinja',
+        page_title='404',
+        to_show=to_show,
+        reason = reason,
+        **(globals())
+    )
+
 @app.errorhandler(404)
 def e404(e):
     return render_template('404.html.jinja',
+        page_title='404',
         **(globals())
     ), 404
 @app.errorhandler(500)
 def e404(e):
     return render_template('404.html.jinja',
+        page_title='500',
         e500=True,
         **(globals())
     ), 500

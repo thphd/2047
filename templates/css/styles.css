@@ -917,7 +917,7 @@ a.adminstuff {}
 
 
 .c404 {
-    margin: 100px auto;
+    margin: 80px auto 100px;
     text-align: center;
 }
 
@@ -1131,4 +1131,9 @@ span.personal_title {
     border-radius: 3px;
     left: -7px;
     top: -8px;
+}
+
+.secondline>p {
+    max-width: 500px;
+    line-height: 150%;
 }

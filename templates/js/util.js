@@ -952,3 +952,10 @@ function viewed(){
 document.addEventListener("DOMContentLoaded", process_all_youtube_reference);
 document.addEventListener("DOMContentLoaded", browser_check);
 document.addEventListener("DOMContentLoaded", viewed);
+
+function qr_current(){
+  qr(window.location.href)
+}
+function qr(s){
+  window.open('/qr/'+s, '_blank')
+}

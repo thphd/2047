@@ -38,6 +38,7 @@ python3.7 -m pip install Flask
 python3.7 -m pip install flask_cors
 python3.7 -m pip install Flask_gzip
 python3.7 -m pip install githubrelease
+python3.7 -m pip install qrcode
 
 git clone https://github.com/flavono123/identicon
 python3.7 -m pip install -e ./identicon
