@@ -1058,13 +1058,16 @@ def _():
 
         return {'error':False}
 
+def must_be_admin():
+    if not g.current_user['admin']:
+        raise Exception("you are not admin")
+
 @register('add_alias')
 def _():
     j = g.j
     # @掀翻小池塘
     must_be_logged_in()
-    if not g.current_user['admin']:
-        raise Exception("you are not admin")
+    must_be_admin()
 
     name = es('name')
     _is = es('is')
@@ -1143,6 +1146,14 @@ def _():
     })
 
     return {'error':False}
+
+@register('become')
+def _():
+    must_be_logged_in()
+    must_be_admin()
+
+    uid = g.j['uid']
+    return {'setuid':uid}
 
 # feedback regulated ping service
 # average 1 ping every 3 sec

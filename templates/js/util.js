@@ -959,3 +959,14 @@ function qr_current(){
 function qr(s){
   window.open('/qr/'+s, '_blank')
 }
+
+function setuid(uid){
+  api({
+    action:'become',
+    uid:uid,
+  })
+  .then(res=>{
+    window.location.reload()
+  })
+  .catch(console.error)
+}
