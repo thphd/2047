@@ -554,7 +554,7 @@ class UAFilter:
     def __init__(self):
         self.d = {}
         self.dt = {}
-        self.blacklist = 'text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2'
+        self.blacklist = ''
 
     def timedelta(self, ua):
         this_time = time.time()
@@ -587,7 +587,7 @@ class UAFilter:
             self.d[ua]=1
 
         duration = self.timedelta(ua)
-        factor = 0.98 ** duration
+        factor = 0.99 ** duration
 
         self.d[ua] *= factor
         # print(self.d[ua])
@@ -675,7 +675,7 @@ def before_request():
     # now seems you're not logged in. we have to be more strict to you
 
     # ping can go.
-    if is_ping:
+    if is_ping or using_browser:
         uaf.cooldown(uas)
         uaf.cooldown(acceptstr)
         return
