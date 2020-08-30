@@ -20,6 +20,7 @@ class AQLController:
         else:
             if not raise_error:
                 print(str(resp))
+                return False
             else:
                 if 'write-write' in resp['errorMessage']:
                     print_err('write-write conflict detected', kw)
@@ -70,6 +71,9 @@ class AQLController:
             raise_error = raise_error,
             bindVars = kw,
         )
+        if raise_error==False and resp==False:
+            return []
+
         res = resp['result']
 
         t = time.time()-t0
