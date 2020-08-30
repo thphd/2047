@@ -148,7 +148,7 @@ def create_all_necessary_indices():
     ciut('threads', ['tid'])
     ci('threads', indexgen(
             [['delete'],['uid'],['delete','cid']],
-            ['t_u','t_c','nreplies','vc','votes','t_hn','t_hn_u'],
+            ['t_u','t_c','nreplies','vc','votes','t_hn'],
     ))
     ci('threads', indexgen([[]], ['t_hn_u']))
 
@@ -627,7 +627,7 @@ class UAFilter:
             self.d[ua]=1
 
         duration = self.timedelta(ua)
-        factor = 0.99 ** duration
+        factor = 0.98 ** duration
 
         self.d[ua] *= factor
         # print(self.d[ua])
@@ -1275,7 +1275,7 @@ def _userpage(uid):
                 postfix = '#invitation_list',
                 mode='invitation',
             )
-            print(pagination)
+            # print(pagination)
 
     if not user_is_self:
         viewed_target='user/'+str(uobj['uid'])

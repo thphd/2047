@@ -33,7 +33,7 @@
     ) %}
     {% set uid = uid if 'notification' not in metas else (p.from_uid or 5132) %}
 
-    {%set pt = p.personal_title or (p.user and p.user.personal_title)%}
+    {%set pt = g.logged_in.personal_title if 'editor'in metas else ((p.user and p.user.personal_title) or p.personal_title) %}
 
     <a href="/u/{{uid}}">{%if pt%}<span class='personal_title'>{{pt}}</span>{%endif%}<img class="avatar" src="/avatar/{{uid}}" alt=""></a>
 
@@ -241,7 +241,7 @@
             {%endif%}
 
           {%elif m=='delete_post'%}
-            {%if can_do_to(g.logged_in, 'delete', p.uid)%}
+            {%if can_do_to(g.logged_in, 'delete', p.uid) or (t and can_do_to(g.logged_in, 'delete', t.uid))%}
               {%if not p.delete%}
               <a class='adminstuff delete' href="javascript:mark_delete('{{'post/'~p._key}}')">删除</a>
               {%else%}

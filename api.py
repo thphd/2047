@@ -332,7 +332,7 @@ def content_length_check(content, allow_short=False):
         raise Exception('content too short')
 
 def title_length_check(title):
-    if len(title)>45:
+    if len(title)>65:
         raise Exception('title too long')
     if len(title)<3:
         raise Exception('title too short')
@@ -911,6 +911,7 @@ def _():
     if 'post' in target_type:
         _id = str(_id)
         pobj = get_post(_id)
+        tobj = get_thread(pobj['tid'])
 
     elif 'thread' in target_type:
         pobj = get_thread(_id)
@@ -918,8 +919,13 @@ def _():
     else:
         raise Exception('target type not supported')
 
-    if not can_do_to(uobj,'delete',pobj['uid']):
-        raise Exception('you don\'t have the required permissions for this operation')
+    if 'post' in target_type:
+        if not can_do_to(uobj,'delete',pobj['uid']) and not can_do_to(uobj, 'delete', tobj['uid']):
+            raise Exception('you don\'t have the required permissions for this operation')
+
+    elif 'thread' in target_type:
+        if not can_do_to(uobj,'delete',pobj['uid']):
+            raise Exception('you don\'t have the required permissions for this operation')
 
     if target_type=='thread':
         upd = aql('for i in threads filter i.tid==@_id\

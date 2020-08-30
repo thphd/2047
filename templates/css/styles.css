@@ -543,7 +543,7 @@ div#navigator {
     display: flex;
     flex-flow: column;
     /* flex-direction: column; */
-    /* max-width: 200px; */
+    max-width: 200px;
     /* flex-grow: 1; */
     border-style: none none none solid;
     border-color: #e8e8e8;
