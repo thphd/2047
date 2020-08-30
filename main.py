@@ -667,6 +667,15 @@ def log_err(*a):
 
 @app.before_request
 def before_request():
+    # redirection
+    if request.host[0:4]=='www.':
+        resp = make_response('For Aesthetics', 307)
+        goto = request.scheme+'://'+request.host[4:]+ request.full_path
+        goto = goto[:-1] if goto[-1]=='?' else goto
+        resp.headers['Location'] = goto
+        log_err('307 from',request.host,'to', goto)
+        return resp
+
     # request figerprinting
     acceptstr = request.headers['Accept'] if 'Accept' in request.headers else 'NoAccept'
     uas = str(request.user_agent) if request.user_agent else 'NoUA'
