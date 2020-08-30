@@ -495,18 +495,18 @@ class Paginator:
         slots = [(i, querystring(i, pagesize, order, sortby), i==pagenumber) for i in slots]
 
         orders = [
-            ('降序', querystring(pagenumber, pagesize, 'desc', sortby), order=='desc'),
-            ('升序', querystring(pagenumber, pagesize, 'asc', sortby), order=='asc')
+            ('降序', querystring(pagenumber, pagesize, 'desc', sortby), order=='desc','大的排前面'),
+            ('升序', querystring(pagenumber, pagesize, 'asc', sortby), order=='asc','小的排前面')
         ]
 
         sortbys = [
-        ('HN', querystring(pagenumber, pagesize, order, 't_hn'), 't_hn'==sortby),
-        ('更新', querystring(pagenumber, pagesize, order, 't_u'), 't_u'==sortby),
-        ('发表', querystring(pagenumber, pagesize, order, 't_c'), 't_c'==sortby),
+        ('综合', querystring(pagenumber, pagesize, order, 't_hn'), 't_hn'==sortby,'HackerNews 排序'),
+        ('更新', querystring(pagenumber, pagesize, order, 't_u'), 't_u'==sortby,'按最后回复时间排序'),
+        ('发表', querystring(pagenumber, pagesize, order, 't_c'), 't_c'==sortby,'按发表时间排序'),
 
-        ('回复数', querystring(pagenumber, pagesize, order, 'nreplies'), 'nreplies'==sortby),
-        ('票数', querystring(pagenumber, pagesize, order, 'votes'), 'votes'==sortby),
-        ('浏览量', querystring(pagenumber, pagesize, order, 'vc'), 'vc'==sortby),
+        ('回复数', querystring(pagenumber, pagesize, order, 'nreplies'), 'nreplies'==sortby,'按照回复数量排序'),
+        ('票数', querystring(pagenumber, pagesize, order, 'votes'), 'votes'==sortby,'按照得票（赞）数排序'),
+        ('浏览量', querystring(pagenumber, pagesize, order, 'vc'), 'vc'==sortby,'按照被浏览次数排序'),
         ]
 
         sortbys2 = [

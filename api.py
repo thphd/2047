@@ -648,26 +648,28 @@ or, what exact time should we push the post to (time_passed_advanced)?
 
 '''
 
+hn_formula = 'let points = ((t.votes or 0) + 0.1 + t.nreplies*0.1) * 10'
+
 def update_thread_hackernews_batch():
-    res = aql('''
+    res = aql(f'''
 let stampnow = date_now()
 
 for t in threads
 
-filter t.t_hn_u < (stampnow - 300*1000)
-// only update those that are not updated in 5 minutes
+filter t.t_hn_u < (stampnow - 600*1000)
+// only update those that are not updated in 10 minutes
 sort t.t_hn_u asc
 
 let t_submitted = date_timestamp(t.t_c)
 let t_now = date_now()
-let points = ((t.votes or 0) + 0.2 + t.nreplies*0.2) * 5
+{hn_formula}
 
 let t_hn = t_now - (t_now - t_submitted) / sqrt(points)
 let t_hn_iso = left(date_format(t_hn,'%z'), 19)
 
 limit 100
 
-update t with {t_hn:t_hn_iso, t_hn_u:stampnow} in threads return 1
+update t with {{t_hn:t_hn_iso, t_hn_u:stampnow}} in threads return 1
 ''', silent=True, raise_error=False)
     return len(res)
 
@@ -682,12 +684,12 @@ def update_forever():
         l = update_thread_hackernews_batch()
         print_info(f'updated hackernews: {l} itvl: {itvl:.2f}')
 
-        itvl *= max(0.9, 1+((50-l)*0.005))
+        itvl *= max(0.9, 1+((50-l)*0.0005))
 
 dispatch(update_forever)
 
 def update_thread_hackernews(tid):
-    aql('''
+    aql(f'''
 let stampnow = date_now()
 
 for t in threads
@@ -695,12 +697,12 @@ filter t.tid==@tid
 
 let t_submitted = date_timestamp(t.t_c)
 let t_now = date_now()
-let points = ((t.votes or 0) + 0.2 + t.nreplies*0.2) * 5
+{hn_formula}
 
 let t_hn = t_now - (t_now - t_submitted) / sqrt(points)
 let t_hn_iso = left(date_format(t_hn,'%z'), 19)
 
-update t with {t_hn:t_hn_iso, t_hn_u:stampnow} in threads
+update t with {{t_hn:t_hn_iso, t_hn_u:stampnow}} in threads
 ''', tid=tid, silent=True)
 
 
