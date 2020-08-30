@@ -148,8 +148,9 @@ def create_all_necessary_indices():
     ciut('threads', ['tid'])
     ci('threads', indexgen(
             [['delete'],['uid'],['delete','cid']],
-            ['t_u','t_c','nreplies','vc','votes'],
+            ['t_u','t_c','nreplies','vc','votes','t_hn','t_hn_u'],
     ))
+    ci('threads', indexgen([[]], ['t_hn_u']))
 
     ci('posts', indexgen(
             [['tid'],['uid'],['tid','delete']],
@@ -192,10 +193,6 @@ def create_all_necessary_indices():
     ci('avatars',[['uid']])
     ci('admins',[['name']])
     ci('aliases',[['is','name'],['name','is']])
-
-def dispatch(f):
-    t = threading.Thread(target=f, daemon=True)
-    t.start()
 
 is_integer = lambda i:isinstance(i, int)
 class Paginator:
@@ -348,7 +345,7 @@ class Paginator:
         assert by in ['category', 'user']
         assert category=='all' or category=='deleted' or is_integer(category)
         assert is_integer(uid)
-        assert sortby in ['t_u', 't_c', 'nreplies', 'vc', 'votes']
+        assert sortby in ['t_u', 't_c', 'nreplies', 'vc', 'votes','t_hn']
         assert order in ['desc', 'asc']
 
         pagenumber = max(1, pagenumber)
@@ -503,6 +500,7 @@ class Paginator:
         ]
 
         sortbys = [
+        ('HN', querystring(pagenumber, pagesize, order, 't_hn'), 't_hn'==sortby),
         ('更新', querystring(pagenumber, pagesize, order, 't_u'), 't_u'==sortby),
         ('发表', querystring(pagenumber, pagesize, order, 't_c'), 't_c'==sortby),
 

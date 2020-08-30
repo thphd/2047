@@ -506,6 +506,7 @@ def _():
             )
 
         update_user_votecount(g.current_user['uid'])
+        update_thread_votecount(inserted['tid'])
 
         return inserted
 
@@ -558,6 +559,7 @@ def _():
                 from_uid=uid,
             )
 
+        update_thread_votecount(_id)
         return inserted
 
     elif target_type == 'edit_post':
@@ -606,6 +608,102 @@ def _():
     else:
         raise Exception('unsupported target type')
 
+'''
+hackernews ranking algorithm
+
+instead of calculating a score, this version calculates a new timestamp relative to the old timestamp.
+
+i can't read arc so i copied this:
+https://medium.com/hacking-and-gonzo/how-hacker-news-ranking-algorithm-works-1d9b0cf2c08d
+
+in essence,
+score = 1 / (time_passed ** 2) * points[or votes, assume min(points)=1]
+
+now if a post go from 1 points to 5 points, it's score should raise five times.
+which will push the post forward in time, in front of other posts with score 1.
+
+but exactly how much time forward (time_advance) to push?
+or, what exact time should we push the post to (time_passed_advanced)?
+
+    old_score = 1/(time_passed**2) * 1 # default score if you got 1 point
+    now_score = 1/(time_passed**2) * points
+
+    # now assume we push the post forward by time_advance,
+    # reaching time_passed_advanced.
+
+    time_passed_advanced = time_passed - time_advance
+    advanced_score = 1/(time_passed_advanced**2) = now_score
+
+    time_passed_advanced = sqrt(1/now_score)
+    = sqrt(1/( points/(time_passed**2) ))
+    = sqrt((time_passed**2)/points)
+    = time_passed / sqrt(points) # voila!
+
+    hence,
+    time_hackernews = time_now - time_passed_advanced
+    = time_now - time_passed / sqrt(points)
+    = time_now - (time_now - time_submitted) / sqrt(points)
+
+    a very high points of score will make a post's time_hackernews very close to time_now.
+
+'''
+
+def update_thread_hackernews_batch():
+    res = aql('''
+let stampnow = date_now()
+
+for t in threads
+
+filter t.t_hn_u < (stampnow - 300*1000)
+// only update those that are not updated in 5 minutes
+sort t.t_hn_u asc
+
+let t_submitted = date_timestamp(t.t_c)
+let t_now = date_now()
+let points = ((t.votes or 0) + 0.2 + t.nreplies*0.2) * 5
+
+let t_hn = t_now - (t_now - t_submitted) / sqrt(points)
+let t_hn_iso = left(date_format(t_hn,'%z'), 19)
+
+limit 100
+
+update t with {t_hn:t_hn_iso, t_hn_u:stampnow} in threads return 1
+''', silent=True, raise_error=False)
+    return len(res)
+
+once = False
+def update_forever():
+    global once
+    if once == True: return
+    once=True
+    itvl = 10
+    while 1:
+        time.sleep(itvl)
+        l = update_thread_hackernews_batch()
+        print_info(f'updated hackernews: {l} itvl: {itvl:.2f}')
+
+        itvl *= max(0.9, 1+((50-l)*0.005))
+
+dispatch(update_forever)
+
+def update_thread_hackernews(tid):
+    aql('''
+let stampnow = date_now()
+
+for t in threads
+filter t.tid==@tid
+
+let t_submitted = date_timestamp(t.t_c)
+let t_now = date_now()
+let points = ((t.votes or 0) + 0.2 + t.nreplies*0.2) * 5
+
+let t_hn = t_now - (t_now - t_submitted) / sqrt(points)
+let t_hn_iso = left(date_format(t_hn,'%z'), 19)
+
+update t with {t_hn:t_hn_iso, t_hn_u:stampnow} in threads
+''', tid=tid, silent=True)
+
+
 def update_thread_votecount(tid):
     res = aql('''
 let t = (for i in threads filter i.tid==@_id return i)[0]
@@ -617,6 +715,7 @@ let t_u = ((for p in posts filter p.tid==t.tid and p.delete==null sort p.t_c des
 update t with {votes:upv, nreplies, t_u} in threads return NEW
     ''', _id=int(tid), silent=True)
 
+    update_thread_hackernews(int(tid))
     return res[0]
 
 def update_post_votecount(pid):

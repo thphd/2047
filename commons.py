@@ -5,6 +5,11 @@ import base64, re
 from colors import *
 from functools import lru_cache
 
+def dispatch(f):
+    import threading
+    t = threading.Thread(target=f, daemon=True)
+    t.start()
+
 def init_directory(d):
     try:
         os.mkdir(d)

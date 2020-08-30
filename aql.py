@@ -21,6 +21,8 @@ class AQLController:
             if not raise_error:
                 print(str(resp))
             else:
+                if 'write-write' in resp['errorMessage']:
+                    print_err('write-write conflict detected', kw)
                 raise Exception(str(resp))
 
     def __init__(self, dburl, dbname, collections):
@@ -54,7 +56,7 @@ class AQLController:
         self.prepare()
         return self.request('post', '/_db/'+self.dbname+'/_api/index?collection='+collection, raise_error=False, **kw)
 
-    def aql(self, query, silent=False, **kw):
+    def aql(self, query, silent=False, raise_error=True, **kw):
         self.prepare()
 
         if not silent: print_up('AQL >>',query,kw)
@@ -65,13 +67,14 @@ class AQLController:
             'POST', '/_db/'+self.dbname+'/_api/cursor',
             query = query,
             batchSize = 1000,
+            raise_error = raise_error,
             bindVars = kw,
         )
         res = resp['result']
 
         t = time.time()-t0
-        if t>0.04:
-            print_info('==AQL took {:.1f}ms=='.format(t*1000))
+        if t>0.15:
+            print_info('== AQL took {:d}ms =='.format(int(t*1000)))
 
         if not silent: print_down('AQL <<', str(res))
         return res
