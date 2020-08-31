@@ -7,8 +7,9 @@
   <div class="userpage_lr">
     <div class="userpage_let">
       <div class='userpage_name'>
-        <span>用户名</span>{{u.name}}
-        {{'（已封禁于 '~format_time_dateifnottoday(u.t_d)~'）'if u.delete else ''}}
+        <span>用户名</span>
+        <span class='userpage_username'>{{u.name}}{{'（已封禁于 '~format_time_dateifnottoday(u.t_d)~'）'if u.delete else ''}}</span>
+
         {%if g.logged_in%}
         <a href="/editor?target=username/{{u.name}}">发私信给ta</a>
         {%endif%}
@@ -33,17 +34,20 @@
       {%endif%}
 
       <div class="userpage_name">
-        <span>UID</span>{{u.uid}}
+        <span>UID</span>
+        <span>{{u.uid}}</span>
         {%if u.admin%}<span title='管理员'>&nbsp;#&nbsp</span>{%endif%}
       </div>
 
       <div class="userpage_name">
-        <span>注册时间</span>{{format_time_datetime(u.t_c)}}
+        <span>注册时间</span>
+        <span>{{format_time_datetime(u.t_c)}}</span>
       </div>
       <div class="userpage_name">
-        <span>个人简介</span>{%if u.brief %}{{u.brief}}
+        <span>个人简介</span>
+        <span>{%if u.brief %}{{u.brief}}
         {%else%}（个人简介暂无）
-        {%endif%}
+        {%endif%}</span>
       </div>
 
       {%if u.url %}
@@ -67,14 +71,14 @@
       </div>
 
       <div class="userpage_name">
-        <span>收到赞</span>{{u.stats.nlikes or 0}}
+        <span>收到赞</span><span>{{u.stats.nlikes or 0}}</span>
       </div>
       <div class="userpage_name">
-        <span>送出赞</span>{{u.stats.nliked or 0}}
+        <span>送出赞</span>{{u.stats.nliked or 0}}</span>
       </div>
 
       <div class="userpage_name">
-        <span>资料被浏览</span>{{u.vc or 0}} 次
+        <span>资料浏览</span><span>{{u.vc or 0}} 次</span>
       </div>
 
     </div>

@@ -130,16 +130,16 @@ var btn_upload = geid('button_upload')
 
 if (file_selector&&btn_upload){
   btn_upload.onclick=function(){
-    btn_upload.disabled=true
     upload_file('/upload')
   }
 }
 
 function upload_file(target){
-
+  btn_upload.disabled=true
   var files = file_selector.files
   if(files.length==0){
     alert('请先选择一个文件')
+    btn_upload.disabled=false
     return
   }
 
