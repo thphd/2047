@@ -34,8 +34,10 @@
     {% set uid = uid if 'notification' not in metas else (p.from_uid or 5132) %}
 
     {%set pt = g.logged_in.personal_title if 'editor'in metas else ((p.user and p.user.personal_title) or p.personal_title) %}
+    {%set pp = g.logged_in.personal_party if 'editor' in metas else ((p.user and p.user.personal_party) or p.personal_party)%}
+    
 
-    <a href="/u/{{uid}}">{%if pt%}<span class='personal_title'>{{pt}}</span>{%endif%}<img class="avatar" src="/avatar/{{uid}}" alt=""></a>
+    <a href="/u/{{uid}}">{%if pp%}<img class='personal_title' src='/avatar/{{pp}}'>{%elif pt%}<span class='personal_title'>{{pt}}</span>{%endif%}<img class="avatar" src="/avatar/{{uid}}" alt=""></a>
 
     {%if 'thread_header' in metas and 0%}
     {# publisher #}

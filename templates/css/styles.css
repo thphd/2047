@@ -157,7 +157,7 @@ span.last_commented_date {
   max-width: 60px;
   /* width: 55px; */
   text-align: center;
-  padding: 2px 0;
+  padding: 2px 4px;
   font-size: 12px;
   border-radius: 5px;
   margin-right: 4px;
@@ -993,6 +993,8 @@ a.adminstuff {}
 .thread_header_info .brief {
     color: #c5c5c5;
     font-size: 80%;
+    display: inline-flex;
+    word-break: break-all;
 }
 
 .thread_header_info .user_name {
@@ -1243,3 +1245,10 @@ span.userpage_username {
 }
 
 .box .category_name {}
+
+img.personal_title {
+    position: absolute;
+    height: 18px;
+    left: -8px;
+    top: -10px;
+}
