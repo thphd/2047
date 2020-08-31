@@ -298,7 +298,8 @@ thread_list_defaults = dict(
     pagenumber=1,
     pagesize=25,
     order='desc',
-    sortby='t_u',
+    sortby='t_hn',
+    # sortby='t_u',
 )
 
 user_thread_list_defaults = dict(

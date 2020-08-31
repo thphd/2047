@@ -11,7 +11,7 @@
     background-color: #989898;
     padding: 0.1em 0.6em;
     border-radius: 0.9em;
-    opacity: 0.5;
+    opacity: .35;
     color: white;
     text-decoration: none;
     margin-right: .3em;
@@ -54,6 +54,7 @@ div#site_name {color: #005bac;font-family: arial;/* display: inline-block; *//* 
   justify-content: flex-start;
   align-items: center;
   flex-flow: row;
+  flex-wrap: wrap;
   overflow: visible;
   /* opacity: .6; */
   display: flex;
@@ -64,6 +65,7 @@ div#site_name {color: #005bac;font-family: arial;/* display: inline-block; *//* 
   width: 48px;
   height: 48px;
   border-radius: 4px;
+  margin-right: 15px;
 }
 .threadlistitem .avatar {
   vertical-align: middle;
@@ -153,7 +155,7 @@ span.last_commented_date {
   display: inline-flex;
   background-color: #989898;
   max-width: 60px;
-  width: 70px;
+  width: 55px;
   text-align: center;
   padding: 2px 0;
   font-size: 12px;
@@ -203,7 +205,7 @@ span.last_commented_date {
 
 
 .pagination>.group {
-    margin: 6px 6px 6px 0;
+    margin: 0px 6px 6px 0;
     display: inline-block;
 }
 
@@ -218,6 +220,7 @@ span.last_commented_date {
     justify-content: flex-start;
     /* padding-bottom: 2px; */
     margin-right: 8px;
+    margin-bottom: 3px;
 }
 
 .details>.post_content {
@@ -230,13 +233,16 @@ span.last_commented_date {
     /* align-content: baseline; */
     justify-content: flex-start;
     /* background-color: green; */
+    flex-direction: row;
+    position: relative;
 }
 
 
 .left {
     /* height: 100%; */
-    min-width: 63px;
+    /* min-width: 63px; */
     vertical-align: top;
+    display: flex;
 }
 
 .right {
@@ -259,6 +265,7 @@ span.last_commented_date {
     display: flex;
     flex-flow: column;
     flex-grow: 1;
+    max-width: 690px;
 }
 
 body>#content {
@@ -402,7 +409,7 @@ img.headerbtn {
     /* width: 500px; */
     min-height: 10em;
     max-width: 60em;
-    width: 50em;
+    /* width: 100%; */
     display: flex;
     /* align-self: flex-end; */
     padding: 7px;
@@ -415,6 +422,7 @@ img.headerbtn {
 .editor_button_row {
     display: flex;
     flex-direction: row-reverse;
+    flex-wrap: wrap;
     align-items: center;
     margin-top: 10px;
 }
@@ -423,6 +431,7 @@ img.headerbtn {
     /* margin-left: 5px; */
     padding: 4px 6px;
     font-size: 90%;
+    margin-bottom: 6px;
 }
 
 #editor_btnsubmit {
@@ -534,8 +543,8 @@ a.threadlist_title {
     padding: 0 20px;
     display: flex;
     flex-flow: row;
-    flex-wrap: nowrap;
-    /* justify-content: space-between; */
+    flex-wrap: wrap;
+    justify-content: space-between;
     /* background-color: white; */
 }
 
@@ -545,6 +554,7 @@ div#navigator {
     /* flex-direction: column; */
     max-width: 200px;
     /* flex-grow: 1; */
+    /* align-content: center; */
     border-style: none none none solid;
     border-color: #e8e8e8;
     margin-left: .5em;
@@ -556,16 +566,17 @@ div#navigator {
     display: flex;
     align-items: center;
     flex-direction: column;
-    margin: 0 0 5px 0;
+    margin: 0 2px 5px 2px;
     /* max-width: 70px; */
     padding: 5px 3px;
 }
 
 .categories {
     display: flex;
-    flex-flow: wrap;
+    /* flex-flow: wrap; */
     align-items: center;
-    flex-flow: column;
+    /* flex-direction: column; */
+    flex-wrap: wrap;
 }
 
 .box {
@@ -824,7 +835,8 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    width: 2em;
+    margin-right: 5px;
+    /* width: 2em; */
 }
 
 .leftmost .upvote {
@@ -961,6 +973,7 @@ a.adminstuff {}
     display: flex;
     /* align-items: flex-end; */
     margin-top: .7em;
+    margin-bottom: .7em;
     min-width: 10em;
     /* margin-left: 1em; */
 }
@@ -1141,4 +1154,32 @@ span.personal_title {
 
 .c49 {
     background-color: #8372de;
+}
+
+.rightmost {
+    display: flex;
+    flex-direction: column;
+    align-content: space-around;
+    justify-content: center;
+    position: absolute;
+    right: 0;
+    top: 1.42em;
+}
+
+.thread_header_info {}
+
+@media only screen and (max-width: 600px) {
+  .avatar {
+    /* background-color: green; */
+    width: 40px;
+    height: 40px;
+    margin-right: 5px;
+  }
+  .rightalign >* {
+      margin-left: 5px;
+  }
+  .header{font-size: 18px;}
+  .lr{
+    padding: 0 8px;
+}
 }

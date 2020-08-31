@@ -649,7 +649,7 @@ or, what exact time should we push the post to (time_passed_advanced)?
 '''
 
 hn_formula = '''
-let points = ((t.votes or 0) + 0.1 + t.nreplies*0.1) * 10
+let points = (t.votes or 0) * 5 + 1 + t.nreplies * .3
 let t_hn = t_now - (t_now - t_submitted + 3600*1000*5) / sqrt(points)
 // 5hr ahead
 '''
@@ -660,8 +660,8 @@ let stampnow = date_now()
 
 for t in threads
 
-filter t.t_hn_u < (stampnow - 600*1000)
-// only update those that are not updated in 10 minutes
+filter t.t_hn_u < (stampnow - 30*60*1000)
+// only update those that are not updated in 30 minutes
 sort t.t_hn_u asc
 
 let t_submitted = date_timestamp(t.t_c)
