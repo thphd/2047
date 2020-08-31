@@ -575,6 +575,7 @@ div#navigator {
     display: flex;
     flex-flow: column;
     align-items: center;
+    opacity: .5;
 }
 .boxtitle {
     padding: 10px 0;
