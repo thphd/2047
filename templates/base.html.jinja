@@ -18,10 +18,15 @@
 <body>
   <div class="outerbox">
     <div id="header" class="">
-      {# left 2 right: logo, [links], search, [uavatar, uname, login/logout] #}
-      <a class="leftalign" href="/">
-        <img id="site_logo" src="/images/logo.png?v={{images_resources_hash}}" alt=""><div id="site_name">{{site_name_header}}</div>
-      </a>
+      <div class="leftalign">
+        {# left 2 right: logo, [links], search, [uavatar, uname, login/logout] #}
+        <a href="/">
+          <img id="site_logo" src="/images/logo.png?v={{images_resources_hash}}" alt=""><div id="site_name">{{site_name_header}}</div>
+        </a>
+
+        <a class='headerlink' href="/">首页</a>
+        <a class="headerlink" href="/p/all">最新</a>
+      </div>
 
       <div class="rightalign">
 

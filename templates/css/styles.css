@@ -155,7 +155,7 @@ span.last_commented_date {
   display: inline-flex;
   background-color: #989898;
   max-width: 60px;
-  width: 55px;
+  /* width: 55px; */
   text-align: center;
   padding: 2px 0;
   font-size: 12px;
@@ -382,6 +382,7 @@ img.headerbtn {
 
 .leftalign > * {
     display: inline-flex;
+    align-items: center;
 }
 
 .rightalign * {
@@ -554,13 +555,13 @@ div#navigator {
     flex-flow: column;
     /* flex-direction: column; */
     /* align-items: center; */
-    max-width: 220px;
+    max-width: 188px;
     flex-grow: 1;
-    /* align-content: center; */
-    /* border-style: none none none solid; */
-    /* border-color: #e8e8e8; */
-    /* margin-left: .5em; */
-    /* padding-left: .9em; */
+    align-content: center;
+    border-style: none none none solid;
+    border-color: #e8e8e8;
+    margin-left: 15px;
+    padding-left: 15px;
     /* width: 200px; */
     /* width: 1900px; */
 }
@@ -569,9 +570,9 @@ div#navigator {
     display: flex;
     align-items: center;
     flex-direction: column;
-    margin: 0 2px 5px 2px;
+    margin: 0 4px 8px 4px;
     /* max-width: 70px; */
-    padding: 3px 3px;
+    padding: 3px 5px;
     font-size: 12px;
 }
 
@@ -582,17 +583,20 @@ div#navigator {
     flex-direction: row;
     justify-content: center;
     flex-wrap: wrap;
+    /* width: 80px; */
 }
 
 .box {
     /* padding: 10px; */
     /* margin: 10px; */
-    /* margin-left: 10px; */
+    margin-left: 15px;
+    margin-top: 10px;
     display: flex;
     flex-flow: column;
-    /* align-items: center; */
+    align-items: center;
     align-content: center;
     opacity: .5;
+    /* padding-left: 5px; */
 }
 .boxtitle {
     padding: 10px 0;
@@ -982,7 +986,7 @@ a.adminstuff {}
     margin-bottom: .7em;
     /* min-width: 10em; */
     /* margin-left: 1em; */
-    padding-left: 1em;
+    /* padding-left: 1em; */
     /* margin-left: .8em; */
 }
 
@@ -1233,3 +1237,9 @@ span.userpage_username {
 .threadlist > * {
     max-width: 100%;
 }
+
+.headerlink {
+    margin-left: 1em;
+}
+
+.box .category_name {}
