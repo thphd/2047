@@ -696,7 +696,7 @@ code .nf {
 
 .meta .category_name {
     opacity: 0.5;
-    width: 60px;
+    /* width: 60px; */
 }
 
 .copyright * {
@@ -1248,7 +1248,7 @@ span.userpage_username {
 
 img.personal_title {
     position: absolute;
-    height: 18px;
+    height: 16px;
     left: -8px;
-    top: -10px;
+    top: -8px;
 }
