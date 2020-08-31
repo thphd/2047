@@ -98,26 +98,17 @@ def route_static(frompath, topath, maxage=1800):
         if not os.path.exists(cc):
             return make_response('File not found', 404)
 
-        supplied_etags = request.if_none_match
-
         with open(cc,'rb') as f:
             b = f.read()
 
-        etag = calculate_etag(b)
+        resp = make_response(b, 200)
+        resp = etag304(resp)
 
-        if etag in supplied_etags: # 304 not changed
-            resp = make_response('', 304)
-
-        else:
-            resp = make_response(b)
-
-            resp.set_etag(etag)
-
-            type, encoding = mt.guess_type(cc)
-            if encoding:
-                resp.headers['Content-Encoding'] = encoding
-            if type:
-                resp.headers['Content-Type'] = type
+        type, encoding = mt.guess_type(cc)
+        if encoding:
+            resp.headers['Content-Encoding'] = encoding
+        if type:
+            resp.headers['Content-Type'] = type
 
         if maxage!=0:
             resp.headers['Cache-Control']= 'max-age='+str(maxage)
@@ -1316,7 +1307,6 @@ def loginpage():
 
 @app.route('/avatar/<int:uid>')
 def route_get_avatar(uid):
-    supplied_etags = request.if_none_match
 
     # first check db
     res = aql('for a in avatars filter a.uid==@uid return a', uid=uid, silent=True)
@@ -1352,11 +1342,7 @@ def route_get_avatar(uid):
         resp = make_response(identicon, 200)
         resp.headers['Content-Type'] = 'image/png'
 
-    etag = calculate_etag(resp.data)
-    if etag in supplied_etags:
-        resp = make_response('', 304)
-    else:
-        resp.set_etag(etag)
+    resp = etag304(resp)
 
     if 'no-cache' in request.args:
         resp.headers['Cache-Control']= 'no-cache'
@@ -1582,9 +1568,16 @@ def upload_file():
         uid=avatar_object['uid'], k=avatar_object)
     return {'error':False}
 
+def etag304(resp):
+    etag = calculate_etag(resp.data)
+    if etag in request.if_none_match:
+        return make_response('', 304)
+    else:
+        resp.set_etag(etag)
+        return resp
+
 @app.route('/qr/<path:to_encode>')
 def qr(to_encode):
-    supplied_etags = request.if_none_match
 
     to_encode = request.full_path[4:]
     if to_encode[-1]=='?':
@@ -1607,12 +1600,7 @@ def qr(to_encode):
     bin = out.getvalue()
 
     resp = make_response(bin, 200)
-
-    etag = calculate_etag(resp.data)
-    if etag in supplied_etags:
-        resp = make_response('', 304)
-    else:
-        resp.set_etag(etag)
+    resp = etag304(resp)
 
     resp.headers['Content-Type']='image/png'
 
