@@ -1252,3 +1252,19 @@ img.personal_title {
     left: -8px;
     top: -8px;
 }
+.unread .conv_title {
+    font-weight: bold;
+}
+
+a.conv_title {
+    color: #1d609a;
+}
+
+.conv_delete {
+    /* display: none; */
+    opacity: .2;
+    height: 0px;
+    overflow: hidden;
+}
+
+.conv_delete .conv_title {display: none;}

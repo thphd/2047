@@ -7,7 +7,7 @@
 {% set _ide = 'id="editor"' if 'editor' in metas %}
 {% set _idp = 'id="' ~ p._key ~ '"' if 'postlist' in metas %}
 
-<div class="threadlistitem{{ ' deleted' if p.delete and t else ''}} {{'thread_header' if 'thread_header' in metas else ''}} {{'unread' if p.unread else ''}}" {{_ide or _idt or _idp}}>
+<div class="threadlistitem{{ ' deleted' if (p.delete and t) else ''}} {{'conv_delete' if p.delete and 'conversation' in metas else ''}} {{'thread_header' if 'thread_header' in metas else ''}} {{'unread' if p.unread else ''}}" {{_ide or _idt or _idp}}>
 
     {%if 'thread_votes' in metas%}
     <div class="leftmost">
@@ -35,7 +35,7 @@
 
     {%set pt = g.logged_in.personal_title if 'editor'in metas else ((p.user and p.user.personal_title) or p.personal_title) %}
     {%set pp = g.logged_in.personal_party if 'editor' in metas else ((p.user and p.user.personal_party) or p.personal_party)%}
-    
+
 
     <a href="/u/{{uid}}">{%if pp%}<img class='personal_title' src='/avatar/{{pp}}'>{%elif pt%}<span class='personal_title'>{{pt}}</span>{%endif%}<img class="avatar" src="/avatar/{{uid}}" alt=""></a>
 
@@ -106,7 +106,7 @@
 
           {# content is link to conversation #}
           {%elif 'conversation' in metas %}
-              <a href="/m/{{p.convid}}" class="threadlist_title">
+              <a href="/m/{{p.convid}}" class="conv_title">
                 {{text}}
               </a>
 
@@ -165,7 +165,11 @@
 
           {%elif m=='conversation_date'%}
             <span>{{format_time_dateifnottoday(p.last.t_c)}}</span>
-
+            {%if not p.delete%}
+              <a href="javascript:mark_delete('conversation/{{p.convid}}')" class='adminstuff'>屏蔽对话</a>
+            {%else%}
+              <a href="javascript:mark_delete('uconversation/{{p.convid}}')" class='adminstuff'>取消屏蔽</a>
+            {%endif%}
           {%elif m=='notification'%}
             <span>{{format_time_datetime(p.t_c)}}</span>
 
@@ -356,7 +360,7 @@
 
 {# one line of conv, used in convlist #}
 {%macro post_conversation(p)%}
-  {{post(p, ['conversation','conversation_with','conversation_date'])}}
+  {{post(p, ['conversation','conversation_with','conversation_date','conversation_delete'])}}
 {%endmacro%}
 
 {# one line of message, used in messagelist #}

@@ -908,16 +908,20 @@ def _():
     uid = uobj['uid']
 
     target = es('target')
-    target_type,_id = parse_target(target)
+    target_type,_id = parse_target(target,force_int=False)
 
     # get target obj
     if 'post' in target_type:
-        _id = str(_id)
+        # _id = str(_id)
         pobj = get_post(_id)
         tobj = get_thread(pobj['tid'])
 
     elif 'thread' in target_type:
+        _id = int(_id)
         pobj = get_thread(_id)
+
+    elif 'conversation' in target_type:
+        cobj = aqlc.from_filter('conversations','i.convid==@cid and i.uid==@uid',cid=_id, uid=uid)[0]
 
     else:
         raise Exception('target type not supported')
@@ -928,6 +932,10 @@ def _():
 
     elif 'thread' in target_type:
         if not can_do_to(uobj,'delete',pobj['uid']):
+            raise Exception('you don\'t have the required permissions for this operation')
+
+    elif 'conversation' in target_type:
+        if not can_do_to(uobj, 'delete', cobj['uid']):
             raise Exception('you don\'t have the required permissions for this operation')
 
     if target_type=='thread':
@@ -945,6 +953,22 @@ def _():
 
         if len(upd)<1:
             raise Exception('pid not found')
+
+    elif target_type == 'conversation':
+        upd = aql('for i in conversations filter i.convid==@_id and i.uid==@uid\
+            update i with {delete:true} in conversations return NEW',
+            _id=_id, uid=uid)
+
+        if len(upd)<1:
+            raise Exception('convid not found')
+
+    elif target_type == 'uconversation':
+        upd = aql('for i in conversations filter i.convid==@_id and i.uid==@uid\
+            update i with {delete:null} in conversations return NEW',
+            _id=_id, uid=uid)
+
+        if len(upd)<1:
+            raise Exception('convid not found')
 
     # prefix 'u' means to un-mark an entity of deleted status
 
