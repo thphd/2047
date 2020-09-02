@@ -768,11 +768,28 @@ def before_request():
         m = uaf.get_max()
         log_up('max: [{}][{:.2f}][{}]'.format(m[0][-50:],m[1], uaf.blacklist))
 
+def tryint(str):
+    try:
+        a = int(str)
+    except:
+        a = False
+    return a
+
 def remove_hidden_from_visitor(threadlist):
+    if g.current_user and 'ignored_categories' in g.current_user:
+        cats = g.current_user['ignored_categories']
+        cats = cats.split(',')
+        cats = [tryint(c.strip()) for c in cats]
+        cats = [c for c in cats if c]
+
+        hidden_list = cats
+    else:
+        hidden_list = hidden_from_visitor
+
     ntl = []
     for i in threadlist:
         if 'cid' in i:
-            if i['cid'] not in hidden_from_visitor:
+            if i['cid'] not in hidden_list:
                 ntl.append(i)
     threadlist=ntl
     return threadlist
@@ -798,6 +815,8 @@ def get_all_threads():
     if not g.logged_in:
         threadlist = remove_hidden_from_visitor(threadlist)
         categories = remove_hidden_from_visitor(categories)
+    else:
+        threadlist = remove_hidden_from_visitor(threadlist)
 
     return render_template('threadlist.html.jinja',
         page_title='所有分类',

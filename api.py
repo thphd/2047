@@ -766,6 +766,7 @@ updateable_personal_info = [
     ('personal_title', '个性抬头（原创功能）（6字符，显示在用户头像左上角）'),
     ('personal_party', '个性党徽（原创功能）（数字UID，所对应用户头像的缩小版会显示在用户头像左上角）（会屏蔽个性抬头）'),
     ('showcase', '个人主页展示帖子或评论（例如“t7113”或者“p247105”，中间逗号或空格隔开），限4项'),
+    ('ignored_categories', '主页不显示的分类（数字ID，中间用逗号隔开，例如不想看水区和江湖，就写“4,21”）'),
 ]
 
 @register('update_personal_info')
@@ -780,7 +781,7 @@ def _():
         value = es(item)
 
         # if item=='brief' or item=='showcase':
-        if len(value)>80 or (item=='title' and len(value)>6):
+        if len(value)>80 or (item=='personal_title' and len(value)>6) or (item=='ignored_categories' and len(value)>40):
             raise Exception('其中一项超出长度限制')
 
         upd[item] = value
