@@ -537,7 +537,7 @@ class Paginator:
                 button_groups.insert(0,[('上一页',querystring(pagenumber-1, pagesize, order,sortby))])
 
             if pagenumber!=total_pages:
-                button_groups.append([('下一页',querystring(pagenumber+1, pagesize, order, sortby))])
+                button_groups.insert(0, [('下一页',querystring(pagenumber+1, pagesize, order, sortby))])
 
         # no need to sort if number of items < 2
         if count>3:
