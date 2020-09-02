@@ -649,7 +649,7 @@ or, what exact time should we push the post to (time_passed_advanced)?
 '''
 
 hn_formula = '''
-let points = (t.votes or 0) * 5 + 1 + t.nreplies * .3
+let points = (t.votes or 0) * 15 + 1 + t.nreplies * .3
 let t_hn = t_now - (t_now - t_submitted + 3600*1000*5) / sqrt(points)
 // 5hr ahead
 '''
