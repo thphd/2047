@@ -495,9 +495,9 @@ class Paginator:
         ('更新', querystring(pagenumber, pagesize, order, 't_u'), 't_u'==sortby,'按最后回复时间排序'),
         ('发表', querystring(pagenumber, pagesize, order, 't_c'), 't_c'==sortby,'按发表时间排序'),
 
-        ('回复数', querystring(pagenumber, pagesize, order, 'nreplies'), 'nreplies'==sortby,'按照回复数量排序'),
+        ('回复', querystring(pagenumber, pagesize, order, 'nreplies'), 'nreplies'==sortby,'按照回复数量排序'),
         ('票数', querystring(pagenumber, pagesize, order, 'votes'), 'votes'==sortby,'按照得票（赞）数排序'),
-        ('浏览量', querystring(pagenumber, pagesize, order, 'vc'), 'vc'==sortby,'按照被浏览次数排序'),
+        ('浏览', querystring(pagenumber, pagesize, order, 'vc'), 'vc'==sortby,'按照被浏览次数排序'),
         ]
 
         sortbys2 = [
@@ -531,13 +531,14 @@ class Paginator:
         button_groups = []
 
         if len(slots):
+            button_groups.append([])
             button_groups.append(slots)
 
             if pagenumber!=1:
-                button_groups.insert(0,[('上一页',querystring(pagenumber-1, pagesize, order,sortby))])
+                button_groups[0].insert(0,('上一页',querystring(pagenumber-1, pagesize, order,sortby)))
 
             if pagenumber!=total_pages:
-                button_groups.insert(0, [('下一页',querystring(pagenumber+1, pagesize, order, sortby))])
+                button_groups[0].insert(0, ('下一页',querystring(pagenumber+1, pagesize, order, sortby)))
 
         # no need to sort if number of items < 2
         if count>3:

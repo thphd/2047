@@ -1,6 +1,7 @@
 .pagination a {
 text-decoration: none;
-display: inline-block;
+display: inline-flex;
+/* margin: 0; */
 }
 .reply_count {
     display: inline-flex;
@@ -174,9 +175,10 @@ span.last_commented_date {
   color: #8e8787;
   border-width: 1px;
   /* border-style: solid; */
-  border-radius: 5px;
-  padding: 3px 3px;
+  border-radius: 3px;
+  padding: 2px 3px;
   font-size: 80%;
+  margin: 0;
 }
 
 
@@ -206,7 +208,7 @@ span.last_commented_date {
 
 .pagination>.group {
     margin: 0px 6px 6px 0;
-    display: inline-block;
+    display: inline-flex;
 }
 
 
@@ -1252,6 +1254,27 @@ img.personal_title {
     left: -8px;
     top: -8px;
 }
+
+.choice {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: .5em;
+}
+
+.choice span {
+    margin-left: .6em;
+    color: #616161;
+}
+
+.qcat {
+    color: #b3b3b3;
+}
+
+.question .description {
+    margin-bottom: 1em;
+}
+
 .unread .conv_title {
     font-weight: bold;
 }
@@ -1267,4 +1290,6 @@ a.conv_title {
     overflow: hidden;
 }
 
-.conv_delete .conv_title {display: none;}
+.conv_delete .conv_title {
+  display: none;
+}
