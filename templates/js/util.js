@@ -526,19 +526,6 @@ function generate_invitation_code(){
   .catch(alert)
 }
 
-function highlight_hash(){
-  var hash = location.hash
-  if(hash[0]=='#'){
-    var _id = hash.substr(1)
-    var elem = geid(_id)
-    if(elem){
-      print('highlighted:',elem)
-      elem.className+=' chosen'
-    }
-  }
-}
-highlight_hash()
-
 function mark_delete(targ){
   api({
     action:'mark_delete',
@@ -771,6 +758,20 @@ function at_reply(k){
   })
 })()
 
+function highlight_hash(){
+  var hash = location.hash
+  if(hash[0]=='#'){
+    var _id = hash.substr(1)
+    var elem = geid(_id)
+    if(elem){
+      print('highlighted:',elem)
+      elem.className+=' chosen'
+      elem.style=''
+    }
+  }
+}
+highlight_hash()
+
 function ban_user(uid){
   if (!confirm('确定要封禁用户 '+uid.toString()+' 吗？')){
     return
@@ -969,4 +970,45 @@ function setuid(uid){
     window.location.reload()
   })
   .catch(console.error)
+}
+
+var submit_exam = geid('btn_submit_exam')
+if(submit_exam){
+  submit_exam.onclick = function(){
+    var examid = parseInt(geid('examid').content)
+    print(examid)
+
+    var radios = gebtn(document)('input')
+    radios = foreach(radios)(e=>e.type=='radio'?e:null).filter(e=>e)
+    // print(radios)
+
+    var nquestions = gebcn(document)('choices').length
+
+    var answers = []
+    while (nquestions--){answers.push(-1)}
+
+    foreach(radios)(e=>{
+      if (e.checked){
+        answers[parseInt(e.name)]=parseInt(e.value)
+      }
+    })
+
+    print(answers)
+
+    submit_exam.disabled=true
+    api({
+      action:'submit_exam',
+      answers:answers,
+      examid:examid,
+    })
+    .then(res=>{
+      alert('恭喜你通过考试。你的邀请码是：'+res.code)
+      window.location.href = res.url
+    })
+    .catch(err=>{
+      alert(err)
+      alert('考试未通过，请稍后重试。')
+    })
+  }
+
 }

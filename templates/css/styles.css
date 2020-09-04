@@ -276,7 +276,7 @@ body>#content {
 }
 
 .post_content p {
-    margin: 0 0 .8em 0;
+    margin-bottom: .8em;
     word-break: break-all;
     line-height: 170%;
 }
@@ -438,7 +438,7 @@ img.headerbtn {
 }
 
 #editor_btnsubmit {
-    background-color: #c6fbc6;
+    background-color: #d9fbb5;
 }
 
 .editor_right {
@@ -740,6 +740,7 @@ code .nf {
 
 .meta .user_name:first-child {
     justify-content: flex-start;
+    margin-bottom: 0;
 }
 
 #editor_text.has_title {
@@ -968,7 +969,7 @@ a.adminstuff {}
 }
 
 .meta.upper {
-    margin-bottom: 0.3em;
+    margin-bottom: 0.2em;
 }
 
 .threadlistitem.thread_header {
@@ -1199,7 +1200,7 @@ span.personal_title {
   .rightalign >* {
       margin-left: 5px;
   }
-  .header{font-size: 18px;}
+  .header{font-size: 18px;flex-flow: wrap;}
   #header{
     padding: 7px;
 }
@@ -1213,6 +1214,10 @@ span.personal_title {
 .userpage_let:first-child{
     max-width: 100%;
 }
+
+a.headerlink{margin-left: .2em;}
+
+#site_logo{display: none;}
 }
 
 #content:not(:only-child){
@@ -1292,4 +1297,46 @@ a.conv_title {
 
 .conv_delete .conv_title {
   display: none;
+}
+
+
+button#btn_submit_exam {
+    padding: 10px;
+}
+
+.question {
+    margin-left: .4em;
+}
+
+input[type="radio"] {
+    width: 1.5em;
+    height: 1.5em;
+}
+
+.post_content th, .post_content td {
+    border-style: solid;
+    border-color: gray;
+    padding: 4px;
+}
+
+.post_content table {border-collapse: collapse;/* display: inline-table; *//* flex-direction: column; *//* overflow-x: hidden; */}
+
+.post_content th {
+    background-color: #e4f1ff;
+}
+
+
+.post_content thead tr {
+    /* display: block; */
+    /* overflow: auto; */
+}
+
+.post_content tbody {
+    /* display: block; */
+    /* overflow: auto; */
+}
+
+.header .category_name {
+    /* flex-grow: 2; */
+    /* flex-flow: nowrap; */
 }
