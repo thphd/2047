@@ -1,0 +1,43 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+
+<div class="threadlist">
+
+  <div class="post_content">
+
+    <p>本考试开卷，请考生于15分钟内完成，未按时提交答题卡的，作零分处理。</p>
+
+    <meta id='examid' name="" content="{{exam._key}}">
+    <hr>
+    <ol>
+      {%for q in exam.questions %}
+      {% set qi = loop.index0 %}
+      <li>
+        <div class="question">
+          <div class="description">
+            {{convert_markdown(q.question)|safe}}
+          </div>
+          <div class="choices">
+            {%for choice in q.choices%}
+            {%set ci = loop.index0%}
+            <div class="choice">
+              <input type="radio" name="{{qi}}" value="{{ci}}">
+              <span>{{choice}}</span>
+            </div>
+            {%endfor%}
+          </div>
+          <div class="qcat">
+            （{{q.category}}）
+          </div>
+        </div>
+
+      </li>
+
+      {%endfor%}
+    </ol>
+  
+    <button type="button" name="" id='btn_submit_exam'>提交答题卡</button>
+
+  </div>
+</div>
+{%endblock%}

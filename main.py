@@ -39,6 +39,8 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from api import api_registry, get_categories_info, get_url_to_post, get_url_to_post_given_details
 from api import *
 
+from quotes import get_quote
+
 # init_directory('./static/')
 # init_directory('./static/upload/')
 
@@ -218,7 +220,11 @@ class Paginator:
         //    nposts:length(for p in posts filter p.uid==u.uid return p),
         //}}
 
-        return u //merge(u, stat)
+        let invite = (for i in invitations filter i._key==u.invitation return i)[0]
+        let invited_by = invite.uid
+        let ip_addr = invite.ip_addr
+
+        return merge(u, {{invited_by, ip_addr}}) //merge(u, stat)
         '''.format(sortby=sortby, order=order,
         start=start, count=count,)
 
@@ -496,7 +502,7 @@ class Paginator:
         ('发表', querystring(pagenumber, pagesize, order, 't_c'), 't_c'==sortby,'按发表时间排序'),
 
         ('回复', querystring(pagenumber, pagesize, order, 'nreplies'), 'nreplies'==sortby,'按照回复数量排序'),
-        ('票数', querystring(pagenumber, pagesize, order, 'votes'), 'votes'==sortby,'按照得票（赞）数排序'),
+        ('点赞', querystring(pagenumber, pagesize, order, 'votes'), 'votes'==sortby,'按照得票（赞）数排序'),
         ('浏览', querystring(pagenumber, pagesize, order, 'vc'), 'vc'==sortby,'按照被浏览次数排序'),
         ]
 
@@ -694,17 +700,26 @@ def before_request():
     path_critical = (
         (not is_ping)
         and (not is_avatar)
+        and (not request.path.startswith('/login'))
+        and (not request.path=='/')
+        and (not request.path.startswith('/js/'))
+        and (not request.path.startswith('/css/'))
+        and (not request.path.startswith('/images/'))
+        and (not request.path.startswith('/api'))
     )
 
     # log the user in
     g.selfuid = -1
     g.logged_in = False
     g.current_user = False
+    g.is_admin = False
 
     if 'uid' in session:
         g.logged_in = get_user_by_id_admin(int(session['uid']))
         g.current_user = g.logged_in
         g.selfuid = g.logged_in['uid']
+        # print(g.selfuid,'selfuid')
+        g.is_admin = 'admin' in g.current_user
 
         if not is_avatar:
             # print_info(g.logged_in['name'], 'browser' if g.using_browser else '')
@@ -741,13 +756,17 @@ def before_request():
     # now seems you're not logged in. we have to be more strict to you
 
     if not path_critical or g.using_browser:
-        uaf.cooldown(uas)
+        # uaf.cooldown(uas)
         uaf.cooldown(acceptstr)
         return
 
     weight = 1.
-    # if 'application/x-php' in acceptstr:
-    #     weight = 2.
+    if is_local:
+        weight = 5.
+
+    # if is_local:
+    #     # no tor crawler allowed
+    #     return ('rate limit exceeded. if you think this is a mistake, please notify our engineers.', 429)
 
     # filter bot/dos requests
     allowed = \
@@ -793,6 +812,11 @@ def remove_hidden_from_visitor(threadlist):
                 ntl.append(i)
     threadlist=ntl
     return threadlist
+
+def visitor_error_if_hidden(cid):
+    if cid in hidden_harder_from_visitor:
+        if not g.logged_in:
+            raise Exception('you must log in to see whatever\'s inside')
 
 @app.route('/')
 @app.route('/c/all')
@@ -910,6 +934,8 @@ def get_category_threads(cid):
     if len(catobj)!=1:
         return make_response('category not exist', 404)
 
+    visitor_error_if_hidden(cid)
+
     catobj = catobj[0]
 
     pagenumber = rai('page') or thread_list_defaults['pagenumber']
@@ -1016,6 +1042,8 @@ def get_thread(tid):
     for c in categories filter c.cid==@cid return c
     ''', cid=thobj['cid'], silent=True)[0]
     thobj['category'] = catobj
+
+    visitor_error_if_hidden(thobj['cid'])
 
     pld = post_list_defaults
     pagenumber = rai('page') or pld['pagenumber']
@@ -1630,6 +1658,57 @@ def qr(to_encode):
         resp.headers['Cache-Control']= 'max-age=8640000'
     return resp
 
+aqlc.create_collection('exams')
+aqlc.create_collection('answersheets')
+aqlc.create_collection('questions')
+
+@app.route('/exam')
+def get_exam():
+    ipstr = request.remote_addr
+    timenow = time_iso_now()[:15] # every 10 min
+    from questions import make_exam
+    exam_questions = make_exam(ipstr+timenow, 5)
+    exam = {}
+    exam['questions'] = exam_questions
+    exam['t_c'] = time_iso_now()
+    inserted = aql('insert @k into exams return NEW',k=exam,silent=True)[0]
+
+    return render_template(
+        'exam.html.jinja',
+        page_title='考试',
+        exam=inserted,
+        **(globals()),
+    )
+
+@app.route('/questions')
+def list_questions():
+    must_be_logged_in()
+    must_be_admin()
+
+    qs = aql('''
+    for i in questions sort i.t_c desc
+    let user = (for u in users filter u.uid==i.uid return u)[0]
+    return merge(i,{user})
+    ''', silent=True)
+
+    return render_template(
+        'qs.html.jinja',
+        page_title='题库',
+        questions = qs,
+        **(globals()),
+    )
+
+@app.route('/invitation/<string:iid>')
+def get_invitation(iid):
+    i = aql('for i in invitations filter i._key==@k return i', k=iid, silent=True)[0]
+
+    if i['uid']:
+        resp = make_response('',307)
+        resp.headers['Location'] = '/u/'+str(i['uid'])
+    else:
+        resp=make_response(str(i),200)
+        resp.headers['content-type']='text/plain'
+    return resp
 
 @app.route('/404/<string:to_show>')
 def f404(to_show):
@@ -1645,18 +1724,28 @@ def f404(to_show):
         **(globals())
     )
 
+@app.route('/robots.txt')
+def robots():
+    with open('templates/robots.txt', 'r') as f:
+        s = f.read()
+    resp = make_response(s, 200)
+    resp.headers['content-type'] = 'text/plain'
+    return resp
+
 @app.errorhandler(404)
 def e404(e):
     return render_template('404.html.jinja',
         page_title='404',
         **(globals())
     ), 404
+
 @app.errorhandler(500)
-def e404(e):
+def e5001(e):
     return render_template('404.html.jinja',
         page_title='500',
         e500=True,
-        **(globals())
+        err=e,
+        **(globals()),
     ), 500
 
 if __name__ == '__main__':

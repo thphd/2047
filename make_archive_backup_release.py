@@ -17,7 +17,7 @@ tar.close()
 print('written to', basename)
 
 def accept(fn):
-    nope = 'conversations histories messages logs passwords invitations admins'.split(' ')
+    nope = 'conversations histories messages logs passwords invitations exams answersheets operations notifications questions'.split(' ')
     # for obvious reasons
     for k in nope:
         if k in fn:

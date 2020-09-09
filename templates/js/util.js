@@ -629,10 +629,10 @@ function display_notice(str){
   if(str){
     var ot = geid('overlay_text')
     if(!ot){return}
-    geid('overlay_text').innerText = str
-    geid('overlay').style.display = 'block'
+    geid('overlay_text_body').innerText = str
+    geid('overlay').style.opacity=1.
   }else{
-    geid('overlay').style.display = 'none'
+    geid('overlay').style.opacity=0.
   }
 }
 
@@ -1011,4 +1011,35 @@ if(submit_exam){
     })
   }
 
+}
+
+function add_question(){
+  // var qs = prompt('请输入题目（格式请参考其他人的题目格式）')
+  var qs = geid('add_question_text').value
+  if(qs){
+    api({
+      action:'add_question',
+      question:qs,
+    })
+    .then(res=>{
+      window.location.reload()
+    })
+    .catch(alert)
+  }else{
+    alert('请输入题目内容')
+  }
+}
+
+function modify_question(k){
+  var qv = geid(k).value
+  print(qv)
+  api({
+    action:'modify_question',
+    question:qv,
+    qid:k,
+  })
+  .then(res=>{
+    window.location.reload()
+  })
+  .catch(alert)
 }

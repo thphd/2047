@@ -93,6 +93,7 @@
 
           {%endif%}
           <div class="copyright">
+            <a href="/t/7110">服务条款</a>
             <a rel='noreferrer' href="https://github.com/thphd/2047">GitHub</a>
             <a rel='noreferrer' href="http://line-count.herokuapp.com/thphd/2047">line_count</a>
             <a href="https://2047.name/qr/https://2047.name{{request.full_path[:-1] if request.full_path[-1]=='?' else request.full_path}}">二维码分享此页</a>
@@ -132,9 +133,16 @@
     </div>
   </div>
 
-  <div id="overlay">
+  <div id="overlay" style='opacity:0;'>
     <div id="overlay_text">
-      test
+      <div id="overlay_text_body">
+
+      </div>
+      <div class="quote_section">
+        {%set quote,quoting = get_quote()%}
+        <span class='quote'>{{quote}}</span>
+        {%if quoting%}<span class='quoting'>——{{quoting}}</span>{%endif%}
+      </div>
     </div>
   </div>
 

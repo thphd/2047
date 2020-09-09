@@ -348,6 +348,8 @@ user_list_defaults = dict(
 
 # visitors can't see those on homepage
 hidden_from_visitor = [int(i) for i in '4 19'.split(' ')]
+# visitors can't see those anywhere
+hidden_harder_from_visitor = [19]
 
 def linkify(s):
     lines = s.split('\n')
@@ -377,7 +379,7 @@ Tor上的2047 http://terminusnemheqvy.onion/ 特殊情况下使用
 新品葱 https://pincong.rocks/ 带关键词审查的墙外论坛
 ''')
 
-site_name='2047论坛'
+site_name='2047论坛，自由人的精神角落'
 site_name_header='2047'
 
 num_max_used_invitation_codes = 20

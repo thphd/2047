@@ -290,7 +290,7 @@ def _():
     aql('''insert @i into users''', i=newuser)
 
     aql('''for i in invitations filter i._key==@ik
-        update i with {active:false} in invitations''', ik=ik)
+        update i with {active:false, ip_addr:@ip} in invitations''', ik=ik, ip=g.display_ip_address)
 
     return newuser
 
@@ -350,14 +350,16 @@ def get_post(pid):
         raise Exception('pid not found')
     return post[0]
 
+def banned_check():
+    if 'delete' in g.current_user and g.current_user['delete']:
+        raise Exception('your account has been banned')
+
 @register('post')
 def _():
     must_be_logged_in()
+    banned_check()
 
     uid = g.current_user['uid']
-
-    if 'delete' in g.current_user and g.current_user['delete']:
-        raise Exception('your account has been banned')
 
     target_type, _id = parse_target(es('target'), force_int=False)
 
@@ -649,8 +651,14 @@ or, what exact time should we push the post to (time_passed_advanced)?
 '''
 
 hn_formula = '''
-let points = (t.votes or 0) * 15 + 1 + t.nreplies * .3
-let t_hn = t_now - (t_now - t_submitted + 3600*1000*5) / sqrt(points)
+let t_submitted = date_timestamp(t.t_c)
+let t_updated = date_timestamp(t.t_u)
+let t_now = date_now()
+
+let points = (t.votes or 0) * 10 + 1 + t.nreplies * .3
+let t_offset = 3600*1000*7
+let t_hn = max([t_now + t_offset - (t_now - t_submitted + t_offset) / sqrt(points), t.t_manual])
+//let t_hn = max([t_now - (t_now - t_updated + 3600*1000*2) / sqrt(points), t.t_manual])
 // 5hr ahead
 '''
 
@@ -660,12 +668,10 @@ let stampnow = date_now()
 
 for t in threads
 
-filter t.t_hn_u < (stampnow - 30*60*1000)
-// only update those that are not updated in 30 minutes
+filter t.t_hn_u < (stampnow - 10*60*1000)
+// only update those that are not updated in 10 minutes
 sort t.t_hn_u asc
 
-let t_submitted = date_timestamp(t.t_c)
-let t_now = date_now()
 {hn_formula}
 
 let t_hn_iso = left(date_format(t_hn,'%z'), 19)
@@ -698,8 +704,6 @@ let stampnow = date_now()
 for t in threads
 filter t.tid==@tid
 
-let t_submitted = date_timestamp(t.t_c)
-let t_now = date_now()
 {hn_formula}
 
 let t_hn_iso = left(date_format(t_hn,'%z'), 19)
@@ -772,6 +776,7 @@ updateable_personal_info = [
 @register('update_personal_info')
 def _():
     must_be_logged_in()
+    banned_check()
 
     upd=dict()
     for item,explain in updateable_personal_info:
@@ -793,7 +798,9 @@ def _():
 
 @register('cast_vote')
 def _():
-    if not g.current_user: raise Exception('you are not logged in')
+    must_be_logged_in()
+    banned_check()
+
     target_type,_id = parse_target(es('target'))
     vote_number = int(es('vote'))
 
@@ -905,6 +912,8 @@ def _():
 @register('mark_delete')
 def _():
     must_be_logged_in()
+    banned_check()
+
     uobj = g.current_user
     uid = uobj['uid']
 
@@ -1013,30 +1022,42 @@ def _():
 import os, base64
 def r8():return os.urandom(8)
 
+def generate_invitation_code(uid):
+    if uid:
+        num_invs = aql('''return length(for i in invitations
+            filter i.uid==@k and i.active == true
+            return i)''',
+            k=uid, silent=True)[0]
+
+        if num_invs>=num_max_used_invitation_codes:
+            raise Exception('you can only generate so much unused invitation code({})'.format(num_max_used_invitation_codes))
+    else:
+        uid=False
+
+    while 1:
+        code = '2047'+base64.b16encode(r8()).decode('ascii')
+        inv = dict(
+            active=True,
+            uid=uid,
+            _key=code,
+            t_c=time_iso_now(),
+        )
+        if aql('return length(for i in invitations filter i._key==@k return i)',k=code)[0]:
+            continue
+        else:
+            aql('insert @k in invitations', k=inv)
+            break
+
+    return code
+
 @register('generate_invitation_code')
 def _():
     must_be_logged_in()
+    banned_check()
+
     uid = g.current_user['uid']
 
-    invs = aql('''for i in invitations
-        filter i.uid==@k and i.active == true
-        return i''',
-        k=uid, silent=True)
-
-    if len(invs)>=num_max_used_invitation_codes:
-        raise Exception('you can only generate so much unused invitation code({})'.format(num_max_used_invitation_codes))
-
-    code = '2047'+base64.b16encode(r8()).decode('ascii')
-
-    inv = dict(
-        active=True,
-        uid=uid,
-        _key=code,
-        t_c=time_iso_now(),
-    )
-
-    aql('insert @k in invitations', k=inv)
-
+    code = generate_invitation_code(uid)
     return {'error':False}
 
 @register('change_password')
@@ -1194,6 +1215,7 @@ def _():
         return {'error':False}
 
 def must_be_admin():
+    must_be_logged_in()
     if not g.current_user['admin']:
         raise Exception("you are not admin")
 
@@ -1289,6 +1311,77 @@ def _():
 
     uid = g.j['uid']
     return {'setuid':uid}
+
+from questions import *
+
+@register('submit_exam')
+def _():
+    eid = es('examid')
+    answers = g.j['answers']
+    now = time_iso_now()
+
+    exam = aql('for e in exams filter e._key==@eid return e', eid=eid)[0]
+    if 'submitted' in exam and exam['submitted']:
+        raise Exception('please do not re-submit to the same exam.')
+
+    aql('update @k with {submitted:true} in exams', k=exam)
+
+    if dfs(now) - dfs(exam['t_c']) > dttd(seconds=15*60):
+        raise Exception('time limit exceeded. please try again later')
+
+    # from questions import qs, qsd
+
+    total = len(answers)
+    # assert total==5
+    score = 0
+    for idx, choice in enumerate(answers):
+        if choice == -1:
+            # -1 means no choice
+            continue
+
+        question = exam['questions'][idx]
+        chosen = question['choices'][choice]
+
+        found = find_question(question['question'])
+
+        if not found:
+            raise Exception('question not found in db')
+        print(found)
+        if chosen == found[0]['choices'][0]:
+            # answer is correct
+            score+=1
+
+    print_err('score:', score)
+    if score<4:
+        raise Exception('your score is too low. please try again')
+
+    # obtain an invitation code
+    code = generate_invitation_code(None)
+
+    aql('insert @k into answersheets',k=dict(
+        invitaiton=code,
+        examid=eid,
+        answers=answers,
+        t_c = now,
+    ))
+
+    return {'url':'/register?code='+code, 'code':code}
+
+@register('add_question')
+def _():
+    must_be_admin()
+    j = g.j
+    qs = j['question']
+    add_question(qs)
+    return {'error':False}
+@register('modify_question')
+def _():
+    must_be_admin()
+    qv = g.j['question']
+    qid = g.j['qid']
+    modify_question(qid, qv)
+    return {'error':False}
+
 
 # feedback regulated ping service
 # average 1 ping every 3 sec

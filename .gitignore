@@ -20,3 +20,5 @@ trace/
 trace.txt
 prof/*
 hash.py
+default_ques*
+*creds*

@@ -97,6 +97,11 @@
     {%endif%}
   {%endfor%}
 
+{%if g.is_admin%}
+  <div class="">
+    <span>invitation:</span> <a href='/invitation/{{u.invitation}}'>{{u.invitation}}</a>
+  </div>
+{%endif%}
 </div>
 
 {%if user_is_self%}

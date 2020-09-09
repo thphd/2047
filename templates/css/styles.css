@@ -12,7 +12,7 @@
     background-color: #989898;
     padding: 0.1em 0.6em;
     border-radius: 0.9em;
-    opacity: .35;
+    opacity: .25;
     color: white;
     text-decoration: none;
     margin-right: .3em;
@@ -27,7 +27,7 @@ img#site_logo {
 
 
 body {
-  background-color: #888;
+  background-color: hsl(0 0% 92% / 1);
 }
 
 #header {
@@ -118,7 +118,7 @@ span.last_commented_date {
   white-space: nowrap;
   /* overflow-x: hidden; */
   /* overflow-y: auto; */
-  overflow: hidden;
+  /* overflow: hidden; */
   /* text-overflow: ellipsis; */
   max-width: 16em;
 }
@@ -243,8 +243,10 @@ span.last_commented_date {
 .left {
     /* height: 100%; */
     /* min-width: 63px; */
-    vertical-align: top;
+    /* vertical-align: top; */
     display: flex;
+    flex-direction: column;
+    justify-content: start;
 }
 
 .right {
@@ -276,7 +278,8 @@ body>#content {
 }
 
 .post_content p {
-    margin-bottom: .8em;
+    margin-block-start: .4em;
+    margin-block-end: .5em;
     word-break: break-all;
     line-height: 170%;
 }
@@ -297,8 +300,8 @@ body>#content {
 
 .post_content blockquote {
     background: #e2e2be80;
-    margin: 2px 0 8px 0;
-    padding: .8em 1.0em;
+    margin: 2px 0 2px 0;
+    padding: .5em 1.0em;
     border-style: solid;
     border-width: 0 0 0 3px;
     border-color: #b7b76061;
@@ -494,7 +497,7 @@ img.headerbtn {
 a.title {}
 
 a.threadlist_title {
-    color: #155faa;
+    color: #22568c;
     margin-left: 0;
     margin-right: 0;
     /* display: block; */
@@ -552,7 +555,7 @@ a.threadlist_title {
     /* background-color: white; */
 }
 
-div#navigator {
+#navigator {
     display: flex;
     flex-flow: column;
     /* flex-direction: column; */
@@ -823,7 +826,7 @@ body {
 }
 
 .vote_section .has_vote {
-    opacity: 0.7;
+    opacity: 0.6;
 }
 
 .vote_section>.enabled:hover {
@@ -838,7 +841,7 @@ body {
     /* border-width: 1px 0; */
 }
 
-.self_voted {background-color: #00800024;}
+.self_voted {background-color: #0baf0036;}
 
 .self_voted {}
 
@@ -886,7 +889,7 @@ span.votenumber {}
 
 #overlay {
     position: fixed; /* Sit on top of the page content */
-    display: none; /* Hidden by default */
+    /* display: none; */ /* Hidden by default */
     width: 100%; /* Full width (cover the whole page) */
     height: 100%; /* Full height (cover the whole page) */
     top: 0;
@@ -897,6 +900,8 @@ span.votenumber {}
     z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
     /* cursor: pointer; */ /* Add a pointer on hover */
     pointer-events: none;
+    opacity: 0;
+    transition: opacity 5s;
 }
 
 #overlay text {}
@@ -970,6 +975,7 @@ a.adminstuff {}
 
 .meta.upper {
     margin-bottom: 0.2em;
+    align-items: baseline;
 }
 
 .threadlistitem.thread_header {
@@ -1227,7 +1233,9 @@ a.headerlink{margin-left: .2em;}
 @media only screen and (max-width: 960px) {
   #content{}
   #content:not(:only-child){}
-  #navigator{}
+  #navigator{
+    max-width: none;
+}
 }
 
 span.userpage_username {
@@ -1339,4 +1347,64 @@ input[type="radio"] {
 .header .category_name {
     /* flex-grow: 2; */
     /* flex-flow: nowrap; */
+    white-space: nowrap;
+}
+
+
+.vote_section .has_vote.self_voted {
+    opacity: .9;
+}
+
+.user_name sup {
+    top: -0em;
+    font-size: 11px;
+    margin-left: 2px;
+}
+
+.meta.upper .user_name {
+    margin-right: .4em;
+}
+
+.c47 {
+    background-color: red;
+}
+
+.c47 {
+    background-color: #4e4e4e;
+}
+
+#overlay_text_body {
+    text-align: center;
+    font-size: 20px;
+    margin-bottom: 1em;
+}
+
+.quote_section {
+    color: #9c9c9c;
+}
+
+span.quoting {
+    display: block;
+    text-align: right;
+    font-style: italic;
+    color: #b5b5b5;
+    margin-top: .5em;
+}
+
+.c46 {
+    background-color: #219268;
+}
+
+.qboxes {
+    display: flex;
+    flex-flow: row wrap;
+}
+
+.qbox {
+    margin: .7em .5em;
+    font-size: 12px;
+}
+
+.qmeta {
+    color: #dadada;
 }
