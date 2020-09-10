@@ -61,7 +61,7 @@ def choose_questions(seed, nquestions):
             sort i._key
             limit {i},1
             return i
-        ''')[0]
+        ''', silent=True)[0]
         chosen_qs.append(q)
 
     return chosen_qs

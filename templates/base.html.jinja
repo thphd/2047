@@ -84,14 +84,6 @@
             版权所有 北京市五道口计算机技术有限公司 地址：北京市海淀区中关村东路1号院3号
           </div>
 
-          {%if 0%}
-          <div class="copyright">
-            <img src="/images/ga.png?v={{images_resources_hash}}">
-            <a href="/jgawb/全国互联网安全管理服务平台.html">京公网安备 11040102700068号</a>
-            <a href="/jicpb/ICP_IP地址_域名信息备案管理系统.html">京ICP备 04000001号</a>
-          </div>
-
-          {%endif%}
           <div class="copyright">
             <a href="/t/7110">服务条款</a>
             <a rel='noreferrer' href="https://github.com/thphd/2047">GitHub</a>
@@ -117,15 +109,21 @@
           <div class="copyright">
           </div>
 
+          {%if 1%}
           <div class="copyright">
-            <span>访问者IP {{g.display_ip_address}}</span>
-          </div>
-          <div class="copyright">
+            <img src="/images/ga.png?v={{images_resources_hash}}">
+            京公网安备 11010502000728号 京ICP备11027288号
+            {#
+            <a href="/jgawb/全国互联网安全管理服务平台.html">京公网安备 11040102700068号</a>
+            <a href="/jicpb/ICP_IP地址_域名信息备案管理系统.html">京ICP备 04000001号</a>#}
           </div>
 
-          <div class="copyright opaque5">
-            <span>{{g.get_elapsed()}}ms</span>
+          {%endif%}
+          <div class="copyright">
+            <span>访问者IP {{g.display_ip_address}} </span>
+            <span class='opaque5'> {{g.get_elapsed()}}ms</span>
           </div>
+
         </div>
 
       </div>

@@ -688,6 +688,8 @@ def before_request():
     else:
         g.using_browser = True
 
+    session.permanent = True
+
     # ----
 
     if 'action' in request.args and request.args['action']=='ping':
@@ -1584,6 +1586,7 @@ def apir():
                 print_down('API <<', answer)
             if 'setuid' in answer:
                 session['uid'] = answer['setuid']
+                session.permanent = True
             if 'setbrowser' in answer:
                 session['browser'] = 1
             if 'logout' in answer:

@@ -6,25 +6,30 @@ import time
 # interface with arangodb.
 class AQLController:
     def request(self, method, endp, raise_error=True, **kw):
-        resp = r.request(
-            method,
-            self.dburl + endp,
-            auth = r.auth.HTTPBasicAuth('root',''),
-            json = kw,
-            timeout = 10,
-            proxies = {},
-        ).json()
+        while 1:
+            resp = r.request(
+                method,
+                self.dburl + endp,
+                auth = r.auth.HTTPBasicAuth('root',''),
+                json = kw,
+                timeout = 10,
+                proxies = {},
+            ).json()
 
-        if resp['error'] == False: # server returned success
-            return resp
-        else:
-            if not raise_error:
-                print(str(resp))
-                return False
+            if resp['error'] == False: # server returned success
+                return resp
             else:
-                if 'write-write' in resp['errorMessage']:
-                    print_err('write-write conflict detected', kw)
-                raise Exception(str(resp))
+                if not raise_error:
+                    print(str(resp))
+                    return False
+                else:
+                    em = resp['errorMessage']
+                    if 'write-write' in em and 'conflict' in em:
+                        print_err('WWC: write-write conflict detected, retry...', kw)
+                        time.sleep(0.5)
+                        continue
+                    else:
+                        raise Exception(str(resp))
 
     def __init__(self, dburl, dbname, collections):
         self.dburl = dburl

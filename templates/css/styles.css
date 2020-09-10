@@ -299,12 +299,12 @@ body>#content {
 }
 
 .post_content blockquote {
-    background: #e2e2be80;
+    background: #f5f59d80;
     margin: 2px 0 2px 0;
     padding: .5em 1.0em;
     border-style: solid;
     border-width: 0 0 0 3px;
-    border-color: #b7b76061;
+    border-color: #caca4c61;
     display: inline-block;
 }
 
@@ -1224,6 +1224,9 @@ span.personal_title {
 a.headerlink{margin-left: .2em;}
 
 #site_logo{display: none;}
+span.personal_title{
+  font-size: 8px;
+}
 }
 
 #content:not(:only-child){
