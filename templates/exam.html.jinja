@@ -13,7 +13,7 @@
       {%for q in exam.questions %}
       {% set qi = loop.index0 %}
       <li>
-        <div class="question">
+        <div class="question" {%if not exam._key %}id="{{q._key}}"{%endif%}>
           <div class="description">
             {{convert_markdown(q.question)|safe}}
           </div>
@@ -35,7 +35,7 @@
 
       {%endfor%}
     </ol>
-  
+
     <button type="button" name="" id='btn_submit_exam'>提交答题卡</button>
 
   </div>

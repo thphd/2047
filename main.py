@@ -325,6 +325,8 @@ class Paginator:
 
         pagination_obj = self.get_pagination_obj(count, pagenumber, pagesize, order, path, sortby, mode=mode)
 
+        remove_duplicate_brief(postlist)
+
         return postlist, pagination_obj
 
     def get_thread_list(self,
@@ -405,6 +407,8 @@ class Paginator:
                 ytb_videos = extract_ytb(tc)
                 t['youtube'] = ytb_videos[0] if len(ytb_videos) else None
                 t['content'] = None
+
+        remove_duplicate_brief(threadlist)
 
         return threadlist, pagination_obj
 
@@ -1023,10 +1027,22 @@ def remove_duplicate_brief(postlist):
     bd = dict()
     for p in postlist:
         if 'user' in p:
-            if 'brief' in p['user']:
-                b = p['user']['brief']
+            pu = p['user']
+            if 'brief' in pu:
+                b = pu['brief']+pu['name']
                 if b in bd:
-                    p['user']['brief']=''
+                    pu['brief']=''
+                else:
+                    bd[b] = 1
+
+    bd = dict()
+    for p in postlist:
+        if 'user' in p:
+            pu = p['user']
+            if 'personal_title' in pu:
+                b = pu['personal_title']+pu['name']
+                if b in bd:
+                    pu['personal_title']=''
                 else:
                     bd[b] = 1
 
@@ -1064,7 +1080,7 @@ def get_thread(tid):
         path = rpath)
 
     # remove duplicate brief string within a page
-    remove_duplicate_brief(postlist)
+    # remove_duplicate_brief(postlist)
 
     user_is_self = selfuid==thobj['uid']
 
@@ -1110,7 +1126,7 @@ def uposts(uid):
         pagenumber=pagenumber, pagesize=pagesize,
         path = rpath)
 
-    remove_duplicate_brief(postlist)
+    # remove_duplicate_brief(postlist)
 
     return render_template('postlist_userposts.html.jinja',
         page_title='回复 - '+uobj['name'],
@@ -1143,7 +1159,7 @@ def get_all_posts():
         pagenumber=pagenumber, pagesize=pagesize,
         path = rpath)
 
-    remove_duplicate_brief(postlist)
+    # remove_duplicate_brief(postlist)
 
     return render_template('postlist_userposts.html.jinja',
         page_title='所有评论',
@@ -1685,7 +1701,6 @@ def get_exam():
 
 @app.route('/questions')
 def list_questions():
-    must_be_logged_in()
     must_be_admin()
 
     qs = aql('''
@@ -1698,6 +1713,25 @@ def list_questions():
         'qs.html.jinja',
         page_title='题库',
         questions = qs,
+        **(globals()),
+    )
+@app.route('/questions/preview')
+def list_q_preview():
+    must_be_admin()
+
+    qs = aql('''
+    for i in questions sort i.t_c desc
+    let user = (for u in users filter u.uid==i.uid return u)[0]
+    return merge(i,{user})
+    ''', silent=True)
+
+    exam = {}
+    exam['questions'] = qs
+
+    return render_template(
+        'exam.html.jinja',
+        page_title='题目预览',
+        exam=exam,
         **(globals()),
     )
 
