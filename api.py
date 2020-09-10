@@ -152,11 +152,11 @@ def register(name):
 
 def es(k):
     j = g.j
-    return (str(j[k]) if (k in j) else None)
+    return (str(j[k]) if ((k in j) and (k is not None)) else None)
 
 def ei(k):
     j = g.j
-    return (int(j[k]) if (k in j) else None)
+    return (int(j[k]) if ((k in j) and (k is not None)) else None)
 
 def get_user_by_name(name):
     res = aql('for u in users filter u.name==@n return u', n=name, silent=True)
@@ -413,8 +413,10 @@ def _():
                 url=url,
                 from_uid=uid,
             )
+
         # replies
-        if thread['uid']!=uid:
+        publisher = get_user_by_id(thread['uid'])
+        if thread['uid']!=uid and (publisher['name'] not in ats):
             make_notification_uids(
                 uids=[thread['uid']],
                 why='reply_thread',
@@ -458,6 +460,10 @@ def _():
         title = es('title').strip()
         title_length_check(title)
 
+        mode = es('mode')
+        mode = None if mode!='question' else mode
+        assert mode in [None, 'question']
+
         # check if cat exists
         cid = _id
         cat = aql('for c in categories filter c.cid==@k return c',k=cid,silent=True)
@@ -483,6 +489,7 @@ def _():
             t_c = timenow,
             t_u = timenow,
             content = content,
+            mode = mode,
             tid = tid,
             cid = cid,
             title = title,
@@ -518,11 +525,17 @@ def _():
         title = es('title').strip()
         title_length_check(title)
 
+        mode = es('mode')
+        mode = None if mode!='question' else mode
+        assert mode in [None, 'question']
+
         thread = get_thread(_id)
         if not can_do_to(g.current_user,'edit',thread['uid']):
             raise Exception('insufficient priviledge')
 
-        if 'title' in thread and title==thread['title']:
+        if 'title' in thread and title==thread['title'] and\
+            mode==(thread['mode']if 'mode' in thread else None):
+
             if 'content' in thread and content==thread['content']:
                 return {'url':'/t/{}'.format(_id)}
 
@@ -533,6 +546,7 @@ def _():
             title = title,
             content = content,
             editor = g.current_user['uid'],
+            mode = mode,
             t_e = timenow,
         )
 

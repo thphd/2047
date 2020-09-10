@@ -318,6 +318,15 @@ post_list_defaults = dict(
     get_default_order=lambda sortby:('asc' if sortby=='t_c' else 'desc'),
 )
 
+post_list_defaults_q = dict(
+    pagenumber=1,
+    pagesize=50,
+    order='desc',
+    sortby='votes',
+
+    get_default_order=lambda sortby:('asc' if sortby=='t_c' else 'desc'),
+)
+
 user_post_list_defaults = dict(
     pagenumber=1,
     pagesize=50,

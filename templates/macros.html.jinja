@@ -95,7 +95,7 @@
             <a href='/u/{{p.uid}}' class='userlist_name'>
               {{text}}
             </a>
-              
+
               {%if p.invited_by and g.is_admin %}
               (由<a href="/u/{{p.invited_by}}">{{p.invited_by}}</a>邀请)
               {%endif%}
@@ -427,13 +427,17 @@
   </a>
 {%endmacro%}
 
-{%macro editor(target, content=None, title=None, checked=False, has_title=False)%}
+{%macro editor(target, content=None, title=None, mode=None, has_title=False)%}
   <meta id="editor_target" _target="{{target}}">
   <div class="editor" id="editor_inline">
     <div class="editor_left">
       {%if has_title%}
         <input placeholder="标题" type='text' id="editor_title" value="{{title if title}}">
-        <input type="checkbox" id='editor_checkbox'>
+
+        <div class="editor_checkbox_row">
+          <input type="checkbox" id='editor_checkbox' {{'checked' if mode=='question' else ''}}><span>作为问题（评论按赞排序）</span>
+        </div>
+
       {%endif%}
       <textarea placeholder="支持markdown语法，拖动右下角缩放" id="editor_text" class="{{'has_title' if title else ''}}">{{content if content}}</textarea>
       <div class="editor_button_row">

@@ -372,6 +372,8 @@ if (editor_target){
   var editor_title = geid('editor_title')
   var editor_right = geid('editor_right')
 
+  var editor_checkbox = geid('editor_checkbox')
+
   var adjustments = foreach(
     'image,link,link_label,italic,bold,code,quote,strike'
     .split(','))(n=>{
@@ -495,7 +497,8 @@ if (editor_target){
       action:'post',
       target:_target,
       content:editor_text.value,
-      title:editor_title?editor_title.value:null
+      title:editor_title?editor_title.value:null,
+      mode:editor_checkbox?(editor_checkbox.checked?'question':null):null,
     })
     .then(j=>{
       // window.location.reload()

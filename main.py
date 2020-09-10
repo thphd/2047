@@ -267,7 +267,8 @@ class Paginator:
         pagesize=50,
         pagenumber=1,
 
-        path=''):
+        path='',
+        mode=''):
 
         assert by in ['thread', 'user','all']
         assert is_integer(tid)
@@ -284,7 +285,12 @@ class Paginator:
 
         if by=='thread':
             filter = 'filter i.tid == {}'.format(tid)
-            mode='post'
+
+            if mode=='question':
+                mode='post_q'
+            else:
+                mode='post'
+
         elif by=='user': # filter by user
             filter = 'filter i.uid == {}'.format(uid)
             mode='user_post'
@@ -450,6 +456,9 @@ class Paginator:
             defaults = thread_list_defaults
         elif mode=='post':
             defaults = post_list_defaults
+        elif mode=='post_q':
+            defaults = post_list_defaults_q
+
         elif mode=='user_thread':
             defaults = user_thread_list_defaults
         elif mode=='user_post':
@@ -527,7 +536,7 @@ class Paginator:
             'nlikes'==sortby),
         ]
 
-        if mode=='post':
+        if mode=='post' or mode=='post_q':
             sortbys3 = [
                 ('时间',querystring(pagenumber, pagesize, 'asc', 't_c'), 't_c'==sortby),
                 ('票数',querystring(pagenumber, pagesize, 'desc', 'votes'), 'votes'==sortby),
@@ -560,7 +569,7 @@ class Paginator:
             if mode=='user':
                 button_groups.append(sortbys2)
 
-            if mode=='post' or mode=='user_post':
+            if mode=='post' or mode=='user_post' or mode=='post_q':
                 button_groups.append(sortbys3)
 
             button_groups.append([('共 {:d}'.format(count), '')])
@@ -1063,7 +1072,13 @@ def get_thread(tid):
 
     visitor_error_if_hidden(thobj['cid'])
 
-    pld = post_list_defaults
+    if 'mode' in thobj and thobj['mode']=='question':
+        mode = 'question'
+        pld = post_list_defaults_q
+    else:
+        mode = ''
+        pld = post_list_defaults
+
     pagenumber = rai('page') or pld['pagenumber']
     pagesize = rai('pagesize') or pld['pagesize']
     sortby = ras('sortby') or pld['sortby']
@@ -1077,7 +1092,7 @@ def get_thread(tid):
         sortby=sortby,
         order=order,
         pagenumber=pagenumber, pagesize=pagesize,
-        path = rpath)
+        path = rpath, mode=mode)
 
     # remove duplicate brief string within a page
     # remove_duplicate_brief(postlist)
@@ -1197,6 +1212,7 @@ def editor_handler():
 
         details['content'] = thread_original['content']
         details['title'] = thread_original['title']
+        details['mode'] = thread_original['mode'] if 'mode' in thread_original else None
 
     if target_type=='user':
         _id = int(_id)

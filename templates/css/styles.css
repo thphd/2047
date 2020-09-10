@@ -1411,3 +1411,16 @@ span.quoting {
 .qmeta {
     color: #dadada;
 }
+
+
+.editor_checkbox_row {
+    font-size: 13px;
+    display: flex;
+    margin-bottom: 9px;
+    flex-direction: row;
+    opacity: .4;
+}
+
+.editor_checkbox_row #editor_checkbox {
+    margin-right: 4px;
+}
