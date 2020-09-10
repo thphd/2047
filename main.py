@@ -732,7 +732,7 @@ def before_request():
             log_info(g.logged_in['name'], 'browser' if g.using_browser else '')
 
         # print_err(request.headers)
-        if path_critical:
+        if path_critical or 1:
 
             # when is the last time you check your inbox?
             if 't_inbox' not in g.current_user:
