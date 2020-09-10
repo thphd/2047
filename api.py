@@ -1382,6 +1382,19 @@ def _():
     modify_question(qid, qv)
     return {'error':False}
 
+@register('change_time')
+def _():
+    must_be_admin()
+    tid = g.j['tid']
+    ts = g.j['t_manual']
+    ttttt = dfs(ts) # sanity check
+
+    aql('for i in threads filter i.tid==@tid update i with {t_manual:@t} in threads', tid=tid, t=ts)
+
+    update_thread_votecount(tid)
+
+    return {'error':False}
+
 
 # feedback regulated ping service
 # average 1 ping every 3 sec

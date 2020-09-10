@@ -943,7 +943,7 @@ function viewed(){
       api({
         action:'viewed_target',
         target:target,
-      })
+      }, true)
       .then(print)
       .catch(console.error)
     }
@@ -1038,6 +1038,14 @@ function modify_question(k){
     question:qv,
     qid:k,
   })
+  .then(res=>{
+    window.location.reload()
+  })
+  .catch(alert)
+}
+
+function change_time(tid, timestamp){
+  api({action:'change_time', t_manual:timestamp,tid:tid})
   .then(res=>{
     window.location.reload()
   })
