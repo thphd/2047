@@ -667,7 +667,7 @@ or, what exact time should we push the post to (time_passed_advanced)?
 hn_formula = '''
 let t_submitted = date_timestamp(t.t_c)
 let t_updated = date_timestamp(t.t_u)
-let t_now = date_now()
+let t_now = date_timestamp(@now)
 
 let points = (t.votes or 0) * 20 + 1 + t.nreplies * .3
 let t_offset = 3600*1000*7
@@ -690,10 +690,10 @@ sort t.t_hn_u asc
 
 let t_hn_iso = left(date_format(t_hn,'%z'), 19)
 
-limit 60
+limit 360
 
 update t with {{t_hn:t_hn_iso, t_hn_u:stampnow}} in threads return 1
-''', silent=True, raise_error=False)
+''', now=time_iso_now(), silent=True, raise_error=False)
     return len(res)
 
 once = False
@@ -723,7 +723,7 @@ filter t.tid==@tid
 let t_hn_iso = left(date_format(t_hn,'%z'), 19)
 
 update t with {{t_hn:t_hn_iso, t_hn_u:stampnow}} in threads
-''', tid=tid, silent=True)
+''', tid=tid, now=time_iso_now(), silent=True)
 
 
 def update_thread_votecount(tid):
