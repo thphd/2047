@@ -670,7 +670,7 @@ let t_updated = date_timestamp(t.t_u)
 let t_now = date_timestamp(@now)
 
 let points = (t.votes or 0) * 3 + 1 + t.nreplies * .3
-let t_offset = 3600*1000*2
+let t_offset = 3600*1000*1
 //let t_hn = max([t_now + t_offset - (t_now - t_submitted + t_offset) / sqrt(points), t.t_manual])
 let t_hn = max([t_now + t_offset - (t_now - t_updated + t_offset) / sqrt(points), t.t_manual])
 // 5hr ahead
@@ -690,7 +690,7 @@ sort t.t_hn_u asc
 
 let t_hn_iso = left(date_format(t_hn,'%z'), 19)
 
-limit 360
+limit 100
 
 update t with {{t_hn:t_hn_iso, t_hn_u:stampnow}} in threads return 1
 ''', now=time_iso_now(), silent=True, raise_error=False)

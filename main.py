@@ -30,7 +30,7 @@ from commons import *
 
 from flask_cors import CORS
 
-from flask import Flask, session, g
+from flask import Flask, session, g, abort
 from flask import render_template, request, send_from_directory, make_response
 from flask_gzip import Gzip
 
@@ -98,7 +98,8 @@ def route_static(frompath, topath, maxage=1800):
     def _(path):
         cc = topath+'/'+path
         if not os.path.exists(cc):
-            return make_response('File not found', 404)
+            abort(404, 'File not found')
+            # return make_response('File not found', 404)
 
         with open(cc,'rb') as f:
             b = f.read()
@@ -947,7 +948,7 @@ def get_category_threads(cid):
     catobj = aql('for c in categories filter c.cid==@cid return c',cid=cid, silent=True)
 
     if len(catobj)!=1:
-        return make_response('category not exist', 404)
+        abort(404, 'category not exist')
 
     visitor_error_if_hidden(cid)
 
@@ -987,7 +988,8 @@ def userthreads(uid):
     ''', uid=uid, silent=True)
 
     if len(uobj)!=1:
-        return make_response('user not exist', 404)
+        abort(404, 'user not exist')
+        # return make_response('user not exist', 404)
 
     uobj = uobj[0]
     utld = user_thread_list_defaults
@@ -1063,7 +1065,8 @@ def get_thread(tid):
 
     thobj = get_thread_full(tid, selfuid)
     if not thobj:
-        return make_response('thread not exist', 404)
+        abort(404, 'thread not exist')
+        # return 'thread not exist', 404
 
     catobj = aql('''
     for c in categories filter c.cid==@cid return c
@@ -1119,6 +1122,7 @@ def uposts(uid):
     ''', uid=uid, silent=True)
 
     if len(uobj)!=1:
+        abort(404, 'user not exist')
         return make_response('user not exist', 404)
 
     uobj = uobj[0]
@@ -1274,7 +1278,8 @@ def _userpage(uid):
     uobj = get_user_by_id_admin(int(uid))
 
     if not uobj:
-        return make_response('user not exist', 404)
+        abort(404, 'user not exist')
+        # return make_response('user not exist', 404)
 
     u = uobj
 
