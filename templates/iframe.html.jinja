@@ -1,0 +1,12 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+
+<div style='text-align:center;'>
+<a href="{{url}}" rel='noreferrer'>{{url}}</a>
+</div>
+<hr>
+
+<iframe src="{{url}}" onload='javascript:(function(o){o.style.height=o.contentWindow.document.body.scrollHeight+"px";}(this));' width="100%" height="{{height}}px" style="border:none;" referrerpolicy="no-referrer">
+</iframe>
+
+{%endblock%}

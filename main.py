@@ -1757,6 +1757,16 @@ def list_q_preview():
         **(globals()),
     )
 
+@app.route('/hero')
+def heropage():
+    return render_template(
+    'iframe.html.jinja',
+    page_title='人民英雄纪念碑',
+    url = 'https://nodebe4.github.io/hero/',
+    height=2500,
+    **(globals()),
+    )
+
 @app.route('/invitation/<string:iid>')
 def get_invitation(iid):
     i = aql('for i in invitations filter i._key==@k return i', k=iid, silent=True)[0]
