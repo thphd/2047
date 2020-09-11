@@ -1409,6 +1409,11 @@ def _():
 
     return {'error':False}
 
+@register('list_admins')
+def _():
+    must_be_admin()
+    l = aql('for i in admins return i.name')
+    return {'list_admins':l}
 
 # feedback regulated ping service
 # average 1 ping every 3 sec

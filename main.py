@@ -724,7 +724,7 @@ def before_request():
     )
 
     # log the user in
-    g.selfuid = -1
+    g.selfuid = 0
     g.logged_in = False
     g.current_user = False
     g.is_admin = False
@@ -734,7 +734,7 @@ def before_request():
         g.current_user = g.logged_in
         g.selfuid = g.logged_in['uid']
         # print(g.selfuid,'selfuid')
-        g.is_admin = 'admin' in g.current_user
+        g.is_admin = True if g.current_user['admin'] else False
 
         if not is_avatar:
             # print_info(g.logged_in['name'], 'browser' if g.using_browser else '')
