@@ -1424,3 +1424,7 @@ span.quoting {
 .editor_checkbox_row #editor_checkbox {
     margin-right: 4px;
 }
+
+::placeholder {
+    opacity: .4;
+}
