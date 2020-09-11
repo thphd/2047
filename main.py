@@ -929,6 +929,9 @@ def getpost(pid):
 
 @app.route('/p/<int:pid>/code')
 def getpostcode(pid):
+    if not can_do_to(g.current_user,'view_code', -1):
+        abort(404, 'forbidden')
+
     p = aql('for p in posts filter p._key==@k return p',k=str(pid), silent=True)[0]
     resp = make_response(p['content'], 200)
     resp.headers['Cache-Control']='max-age=1800'
@@ -937,6 +940,9 @@ def getpostcode(pid):
 
 @app.route('/t/<int:tid>/code')
 def getthreadcode(tid):
+    if not can_do_to(g.current_user,'view_code', -1):
+        abort(404, 'forbidden')
+
     p = aql('for p in threads filter p.tid==@k return p',k=tid, silent=True)[0]
     resp = make_response(p['content'], 200)
     resp.headers['Cache-Control']='max-age=1800'
@@ -1805,6 +1811,7 @@ def robots():
 def e404(e):
     return render_template('404.html.jinja',
         page_title='404',
+        err=e,
         **(globals())
     ), 404
 

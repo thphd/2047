@@ -37,9 +37,13 @@
     <a href="javascript:history.go(-1)">这里</a>
     返回上一页
   </div>
-  <div class="secondline post_content">
-    <pre><code>{{err.original_exception}}</code></pre>
+  {%endif%}
+
+  {%if err and (err.original_exception or err)%}
+  <div class="secondline post_content" style='opacity:0.5;'>
+    <pre><code>{{err.original_exception or err}}</code></pre>
   </div>
   {%endif%}
+
 </div>
 {%endblock%}

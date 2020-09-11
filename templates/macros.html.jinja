@@ -180,10 +180,10 @@
           {%elif m=='notification'%}
             <span>{{format_time_datetime(p.t_c)}}</span>
 
-          {%elif m=='view_post_code'%}
+          {%elif m=='view_post_code' and can_do_to(g.current_user,'view_code',-1)%}
             <a class='adminstuff viewcode' href="/p/{{p._key}}/code">源码</a>
 
-          {%elif m=='view_thread_code'%}
+          {%elif m=='view_thread_code' and can_do_to(g.current_user,'view_code',-1)%}
             <a class='adminstuff viewcode' href="/t/{{p.tid}}/code">源码</a>
 
           {%elif m=='at_reply' and t and g.logged_in%}

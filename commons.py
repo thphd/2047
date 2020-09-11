@@ -430,6 +430,9 @@ def can_do_to(u1, operation, u2id):
         if is_admin:
             return True
 
+    elif operation == 'view_code':
+        return True
+
     return False
 
 # parse string of form "target_type/target_id"
