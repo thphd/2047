@@ -1470,7 +1470,8 @@ def conversation_page():
     # mark unread
     for i in conversations:
         if i['t_u']>g.current_user['t_inbox']:
-            i['unread'] = True
+            if i['last']['user']['uid'] != g.current_user['uid']:
+                i['unread'] = True
 
     # update t_inbox
     timenow = time_iso_now()
