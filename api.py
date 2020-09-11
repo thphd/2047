@@ -198,7 +198,7 @@ def _():
     # find password object
     p = aql('for p in passwords filter p.uid==@uid return p', uid=u['uid'])
     if len(p)==0:
-        raise Exception('password record not found')
+        raise Exception('password record not found.')
 
     p = p[0]
     hashstr = p['hashstr']
@@ -326,13 +326,13 @@ def _():
     return {'logout':True}
 
 def content_length_check(content, allow_short=False):
-    if len(content)>100000:
+    if len(content)>20000:
         raise Exception('content too long')
     if len(content)<4 and allow_short==False:
         raise Exception('content too short')
 
 def title_length_check(title):
-    if len(title)>65:
+    if len(title)>75:
         raise Exception('title too long')
     if len(title)<3:
         raise Exception('title too short')
@@ -669,8 +669,8 @@ let t_submitted = date_timestamp(t.t_c)
 let t_updated = date_timestamp(t.t_u)
 let t_now = date_timestamp(@now)
 
-let points = (t.votes or 0) * 20 + 1 + t.nreplies * .3
-let t_offset = 3600*1000*7
+let points = (t.votes or 0) * 3 + 1 + t.nreplies * .3
+let t_offset = 3600*1000*2
 //let t_hn = max([t_now + t_offset - (t_now - t_submitted + t_offset) / sqrt(points), t.t_manual])
 let t_hn = max([t_now + t_offset - (t_now - t_updated + t_offset) / sqrt(points), t.t_manual])
 // 5hr ahead
@@ -785,7 +785,21 @@ updateable_personal_info = [
     ('personal_party', '个性党徽（原创功能）（数字UID，所对应用户头像的缩小版会显示在用户头像左上角）（会屏蔽个性抬头）'),
     ('showcase', '个人主页展示帖子或评论（例如“t7113”或者“p247105”，中间逗号或空格隔开），限4项'),
     ('ignored_categories', '主页不显示的分类（数字ID，中间用逗号隔开，例如不想看水区和江湖，就写“4,21”）'),
+    ('background_color', '背景色（R,G,B 用半角逗号隔开，0-255）（你浏览的时候，以及别人浏览你的个人主页的时候，背景颜色都会变成这个）'),
 ]
+
+def eat_rgb(s):
+    s = s.split(',')
+    if len(s)!=3:
+        return False
+
+    try:
+        s = [int(i) for i in s]
+    except Exception as e:
+        return False
+
+    s = [max(0,min(255, i)) for i in  s]
+    return f'rgb({s[0]}, {s[1]}, {s[2]})'
 
 @register('update_personal_info')
 def _():

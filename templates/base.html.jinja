@@ -15,7 +15,10 @@
   <title>{{page_title}} - {{site_name}}</title>
   {%block meta%}{%endblock%}
 </head>
-<body>
+{%set bc = (u and u.background_color) or (t and t.user and t.user.background_color) or (g.logged_in and g.logged_in.background_color) or False%}
+{%set ebc = (bc and eat_rgb(bc)) or False%}
+
+<body {%if ebc%}style="background-color:{{ebc}}"{%endif%}>
   <div class="outerbox">
     <div id="header" class="">
       <div class="leftalign">
