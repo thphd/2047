@@ -669,10 +669,12 @@ let t_submitted = date_timestamp(t.t_c)
 let t_updated = date_timestamp(t.t_u)
 let t_now = date_timestamp(@now)
 
+let t_man = date_timestamp(t.t_manual)
+
 let points = (t.votes or 0) * 3 + 1 + t.nreplies * .3
 let t_offset = 3600*1000*1
-//let t_hn = max([t_now + t_offset - (t_now - t_submitted + t_offset) / sqrt(points), t.t_manual])
-let t_hn = max([t_now + t_offset - (t_now - t_updated + t_offset) / sqrt(points), t.t_manual])
+//let t_hn = max([t_now + t_offset - (t_now - t_submitted + t_offset) / sqrt(points), t_man])
+let t_hn = max([t_now + t_offset - (t_now - t_updated + t_offset) / sqrt(points), t_man])
 // 5hr ahead
 '''
 
@@ -1416,6 +1418,9 @@ def _():
     tid = g.j['tid']
     ts = g.j['t_manual']
     ttttt = dfs(ts) # sanity check
+
+    if ttttt < dfs('1989-06-04'):
+        ts = '1989-06-04'
 
     aql('for i in threads filter i.tid==@tid update i with {t_manual:@t} in threads', tid=tid, t=ts)
 
