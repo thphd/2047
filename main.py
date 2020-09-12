@@ -1768,7 +1768,9 @@ def heropage():
     return render_template(
     'iframe.html.jinja',
     page_title='人民英雄纪念碑',
-    url = 'https://nodebe4.github.io/hero/',
+    # url = 'https://nodebe4.github.io/hero/',
+    url = 'https://hero-form.vercel.app',
+
     height=2500,
     **(globals()),
     )
