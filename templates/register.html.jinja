@@ -21,20 +21,14 @@
     <button type="button" id="register">注册</button>
   </form>
   <br>
-  <div class="post_content">
-    <blockquote>
-      用户名需符合 {{username_regex_string}}
-      <br>
-      密码不应过分简单
-      <br>
-      密码提交前将在浏览器端作hash，服务器不接收、不记录明文密码
-      <br>
-      服务器端收到用户提交hash后，会再用pbkdf2-hmac-sha256+salt作hash
-    </blockquote>
-  </div>
+
   <div class="post_content warning">
     {{register_warning|safe}}
   </div>
+  <div class="post_content info warning">
+    {{register_warning2|safe}}
+  </div>
+
   <div class="post_content warning">
     {{password_warning|safe}}
   </div>

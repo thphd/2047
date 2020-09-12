@@ -817,7 +817,10 @@ def remove_hidden_from_visitor(threadlist):
         cats = [tryint(c.strip()) for c in cats]
         cats = [c for c in cats if c]
 
-        hidden_list = cats
+        if len(cats)>0:
+            hidden_list = cats
+        else:
+            hidden_list = hidden_from_visitor    
     else:
         hidden_list = hidden_from_visitor
 

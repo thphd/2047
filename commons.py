@@ -296,7 +296,7 @@ aql = aqlc.aql
 
 thread_list_defaults = dict(
     pagenumber=1,
-    pagesize=25,
+    pagesize=30,
     order='desc',
     sortby='t_hn',
     # sortby='t_u',
@@ -304,7 +304,7 @@ thread_list_defaults = dict(
 
 user_thread_list_defaults = dict(
     pagenumber=1,
-    pagesize=25,
+    pagesize=30,
     order='desc',
     sortby='t_c',
 )
@@ -349,7 +349,7 @@ if __name__ == '__main__':
 
 user_list_defaults = dict(
     pagenumber=1,
-    pagesize=25,
+    pagesize=30,
     order='desc',
     sortby='uid',
     get_default_order=lambda sortby:('asc' if sortby=='name' else 'desc'),
@@ -509,9 +509,23 @@ messaging_warning = convert_markdown('''
 ''')
 
 register_warning = convert_markdown('''
-# 注册提醒
+# 请注意
 
 使用2047的所有用户都必须遵守[《服务条款》](/t/7110)。违反《服务条款》的用户，其账号将会被封禁。
+
+''')
+
+register_warning2 = convert_markdown(f'''
+
+# 注册提示
+
+- 用户名需符合 {username_regex_string}
+
+- 密码不应过分简单
+
+- 密码提交前将在浏览器端作hash，服务器不接收、不记录明文密码
+
+- 服务器端收到用户提交hash后，会再用pbkdf2-hmac-sha256+salt作hash
 
 ''')
 
