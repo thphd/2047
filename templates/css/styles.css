@@ -12,7 +12,7 @@
     background-color: #989898;
     padding: 0.1em 0.6em;
     border-radius: 0.9em;
-    opacity: .25;
+    opacity: .3;
     color: white;
     text-decoration: none;
     margin-right: .3em;
@@ -222,7 +222,7 @@ span.last_commented_date {
     justify-content: flex-start;
     /* padding-bottom: 2px; */
     margin-right: 8px;
-    margin-bottom: 3px;
+    /* margin-bottom: 3px; */
 }
 
 .details>.post_content {
@@ -751,11 +751,12 @@ code .nf {
 }
 
 .edited_by {
-    font-size: 70%;
+    font-size: 10px;
     font-style: italic;
     margin: 0 0 .5em 0;
     opacity: .3;
     text-decoration: none;
+    /* text-align: right; */
 }
 
 .edited_by * {

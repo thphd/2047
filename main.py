@@ -820,7 +820,7 @@ def remove_hidden_from_visitor(threadlist):
         if len(cats)>0:
             hidden_list = cats
         else:
-            hidden_list = hidden_from_visitor    
+            hidden_list = hidden_from_visitor
     else:
         hidden_list = hidden_from_visitor
 
@@ -861,13 +861,13 @@ def get_all_threads():
     else:
         threadlist = remove_hidden_from_visitor(threadlist)
 
-    return render_template('threadlist.html.jinja',
+    return render_template_g('threadlist.html.jinja',
         page_title='所有分类',
         threadlist=threadlist,
         pagination=pagination,
         categories=categories,
         # threadcount=count,
-        **(globals())
+
     )
 
 @app.route('/c/deleted')
@@ -884,13 +884,13 @@ def delall():
         pagenumber=pagenumber, pagesize=pagesize,
         path = rpath)
 
-    return render_template('threadlist.html.jinja',
+    return render_template_g('threadlist.html.jinja',
         page_title='所有分类',
         threadlist=threadlist,
         pagination=pagination,
         categories=get_categories_info(),
         # threadcount=count,
-        **(globals())
+
     )
 
 @app.route('/u/all')
@@ -908,13 +908,13 @@ def alluser():
         pagenumber=pagenumber, pagesize=pagesize,
         path = rpath)
 
-    return render_template('userlist.html.jinja',
+    return render_template_g('userlist.html.jinja',
         page_title='所有用户',
         # threadlist=threadlist,
         userlist = userlist,
         pagination=pagination,
         # threadcount=count,
-        **(globals())
+
     )
 
 @app.route('/p/<int:pid>')
@@ -978,7 +978,7 @@ def get_category_threads(cid):
         pagenumber=pagenumber, pagesize=pagesize,
         path = rpath)
 
-    return render_template('threadlist.html.jinja',
+    return render_template_g('threadlist.html.jinja',
         page_title=catobj['name'],
         page_subheader=(catobj['brief'] or '').replace('\\',''),
         threadlist=threadlist,
@@ -986,7 +986,7 @@ def get_category_threads(cid):
         categories=get_categories_info(),
         category=catobj,
         # threadcount=count,
-        **(globals())
+
     )
 
 @app.route('/u/<int:uid>/t')
@@ -1017,13 +1017,13 @@ def userthreads(uid):
         pagenumber=pagenumber, pagesize=pagesize,
         path = rpath)
 
-    return render_template('threadlist.html.jinja',
+    return render_template_g('threadlist.html.jinja',
         # page_title=catobj['name'],
         page_title='帖子 - '+uobj['name'],
         threadlist=threadlist,
         pagination=pagination,
         # threadcount=count,
-        **(globals())
+
     )
 
 def get_thread_full(tid, selfuid=-1):
@@ -1111,7 +1111,7 @@ def get_thread(tid):
 
     user_is_self = selfuid==thobj['uid']
 
-    return render_template('postlist.html.jinja',
+    return render_template_g('postlist.html.jinja',
         page_title=thobj['title'],
         # threadlist=threadlist,
         postlist=postlist,
@@ -1119,7 +1119,7 @@ def get_thread(tid):
         t=thobj,
         # threadcount=count,
         viewed_target='thread/'+str(tid) if not user_is_self else '',
-        **(globals())
+
     )
 
 # list of user posts.
@@ -1156,7 +1156,7 @@ def uposts(uid):
 
     # remove_duplicate_brief(postlist)
 
-    return render_template('postlist_userposts.html.jinja',
+    return render_template_g('postlist_userposts.html.jinja',
         page_title='回复 - '+uobj['name'],
         # threadlist=threadlist,
         postlist=postlist,
@@ -1164,7 +1164,7 @@ def uposts(uid):
         # t=thobj,
         u=uobj,
         # threadcount=count,
-        **(globals())
+
     )
 
 @app.route('/p/all')
@@ -1189,7 +1189,7 @@ def get_all_posts():
 
     # remove_duplicate_brief(postlist)
 
-    return render_template('postlist_userposts.html.jinja',
+    return render_template_g('postlist_userposts.html.jinja',
         page_title='所有评论',
         # threadlist=threadlist,
         postlist=postlist,
@@ -1197,7 +1197,7 @@ def get_all_posts():
         # t=thobj,
         # u=uobj,
         # threadcount=count,
-        **(globals())
+
     )
 
 @app.route('/editor')
@@ -1237,11 +1237,11 @@ def editor_handler():
         '发表' if 'edit' not in target_type else '编辑',
         target)
 
-    return render_template('editor.html.jinja',
+    return render_template_g('editor.html.jinja',
         page_title = page_title,
         target=target,
         details=details,
-        **(globals())
+
     )
 
 def userfill(u):
@@ -1369,7 +1369,7 @@ def _userpage(uid):
     else:
         viewed_target=''
 
-    return render_template('userpage.html.jinja',
+    return render_template_g('userpage.html.jinja',
         page_title=uobj['name'],
         u=uobj,
         invitations=invitations,
@@ -1378,26 +1378,25 @@ def _userpage(uid):
         sc_ts = sc_ts, # showcase_threads
         viewed_target=viewed_target,
         pagination = pagination,
-        **(globals()),
     )
 @app.route('/register')
 def regpage():
     invitation = ras('code') or ''
 
-    return render_template('register.html.jinja',
+    return render_template_g('register.html.jinja',
         invitation=invitation,
         page_title='注册',
-        **(globals())
+
     )
 
 @app.route('/login')
 def loginpage():
     username = ras('username') or ''
 
-    return render_template('login.html.jinja',
+    return render_template_g('login.html.jinja',
         username=username,
         page_title='登录',
-        **(globals())
+
     )
 # print(ptf('2020-07-19T16:00:00'))
 
@@ -1492,11 +1491,11 @@ def conversation_page():
 
     g.current_user['num_unread']=0
 
-    return render_template('conversations.html.jinja',
+    return render_template_g('conversations.html.jinja',
         page_title='私信（测试中）',
         conversations=conversations,
         can_send_message=True,
-        **(globals())
+
     )
 
 @app.route('/m/<string:convid>')
@@ -1535,7 +1534,7 @@ def messages_by_convid(convid):
         myname = u2n
         hisname = u1n
 
-    return render_template('messages.html.jinja',
+    return render_template_g('messages.html.jinja',
         page_title='和 {} 之间的私信对话'.format(hisname),
         conversation=c,
         hisname=hisname,
@@ -1544,7 +1543,7 @@ def messages_by_convid(convid):
             uid=uid,
         ),
         messages=res,
-        **(globals())
+
     )
 
 @app.route('/n')
@@ -1574,10 +1573,10 @@ def notification_page():
 
     g.current_user['num_notif']=0
 
-    return render_template('notifications.html.jinja',
+    return render_template_g('notifications.html.jinja',
         page_title='系统提醒',
         notifications=notifications,
-        **(globals()),
+
     )
 
 def e(s): return make_response({'error':s}, 500)
@@ -1723,11 +1722,11 @@ def get_exam():
     exam['t_c'] = time_iso_now()
     inserted = aql('insert @k into exams return NEW',k=exam,silent=True)[0]
 
-    return render_template(
+    return render_template_g(
         'exam.html.jinja',
         page_title='考试',
         exam=inserted,
-        **(globals()),
+
     )
 
 @app.route('/questions')
@@ -1740,11 +1739,11 @@ def list_questions():
     return merge(i,{user})
     ''', silent=True)
 
-    return render_template(
+    return render_template_g(
         'qs.html.jinja',
         page_title='题库',
         questions = qs,
-        **(globals()),
+
     )
 @app.route('/questions/preview')
 def list_q_preview():
@@ -1759,23 +1758,33 @@ def list_q_preview():
     exam = {}
     exam['questions'] = qs
 
-    return render_template(
+    return render_template_g(
         'exam.html.jinja',
         page_title='题目预览',
         exam=exam,
-        **(globals()),
     )
+
+def render_template_g(*a, **k):
+    k.update(globals())
+    return render_template(*a, **k)
 
 @app.route('/hero')
 def heropage():
-    return render_template(
+    return render_template_g(
     'iframe.html.jinja',
     page_title='人民英雄纪念碑',
     # url = 'https://nodebe4.github.io/hero/',
     url = 'https://hero-form.vercel.app',
-
     height=2500,
-    **(globals()),
+    )
+
+aqlc.create_collection('entities')
+@app.route('/entities')
+def entpage():
+    ents = aql('for i in entities sort i.type, i.t_c desc return i')
+    return render_template('entities.html.jinja',
+        page_title='entities',
+        entities = ents,
     )
 
 @app.route('/invitation/<string:iid>')
@@ -1801,7 +1810,6 @@ def f404(to_show):
         page_title='404',
         to_show=to_show,
         reason = reason,
-        **(globals())
     )
 
 @app.route('/robots.txt')
@@ -1814,19 +1822,17 @@ def robots():
 
 @app.errorhandler(404)
 def e404(e):
-    return render_template('404.html.jinja',
+    return render_template_g('404.html.jinja',
         page_title='404',
         err=e,
-        **(globals())
     ), 404
 
 @app.errorhandler(500)
 def e5001(e):
-    return render_template('404.html.jinja',
+    return render_template_g('404.html.jinja',
         page_title='500',
         e500=True,
         err=e,
-        **(globals()),
     ), 500
 
 if __name__ == '__main__':
