@@ -512,7 +512,7 @@ a.threadlist_title {
 .post_content pre {
     background-color: #f1f1f1;
     padding: 1em;
-    display: inline-block;
+    /* display: inline-block; */
     margin: 0 0 .4em 0;
     /* display: block; */
     white-space: pre-wrap;       /* Since CSS 2.1 */
@@ -521,6 +521,7 @@ a.threadlist_title {
     white-space: -o-pre-wrap;    /* Opera 7 */
     word-wrap: break-word;       /* Internet Explorer 5.5+ */
     font-size: 90%;
+    overflow: auto;
 }
 
 

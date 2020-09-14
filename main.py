@@ -1047,7 +1047,7 @@ def remove_duplicate_brief(postlist):
     bd = dict()
     for p in postlist:
         if 'user' in p:
-            pu = p['user']
+            pu = p['user'] or {}
             if 'brief' in pu:
                 b = pu['brief']+pu['name']
                 if b in bd:
@@ -1058,7 +1058,7 @@ def remove_duplicate_brief(postlist):
     bd = dict()
     for p in postlist:
         if 'user' in p:
-            pu = p['user']
+            pu = p['user'] or {}
             if 'personal_title' in pu:
                 b = pu['personal_title']+pu['name']
                 if b in bd:
