@@ -140,7 +140,7 @@ def extract_ats(s): # extract @usernames out of text
     groups = re.findall(at_extractor_regex, s, flags=re.MULTILINE)
     return groups
 
-@lru_cache(maxsize=4096)
+# @lru_cache(maxsize=4096)
 def replace_ats(s): # replace occurence
     def f(match):
         uname = match.group(1)
@@ -151,7 +151,7 @@ def replace_ats(s): # replace occurence
 post_autolink_regex = r'<[#p]/?([0-9]{1,16})>'
 thread_autolink_regex = r'<t/?([0-9]{1,16})>'
 
-@lru_cache(maxsize=4096)
+# @lru_cache(maxsize=4096)
 def replace_pal(s):
     def f(match):
         pid = match.group(1)
@@ -159,7 +159,7 @@ def replace_pal(s):
 
     return re.sub(post_autolink_regex, f, s, flags=re.MULTILINE)
 
-@lru_cache(maxsize=4096)
+# @lru_cache(maxsize=4096)
 def replace_tal(s):
     def f(match):
         pid = match.group(1)
@@ -177,12 +177,12 @@ old_youtube_extractor_regex = r'<div class="videowrapper"><iframe src="https://w
 combined_youtube_extractor_regex = \
 '(?:'+youtube_extractor_regex+'|'+old_youtube_extractor_regex+')'
 
-@lru_cache(maxsize=4096)
+# @lru_cache(maxsize=4096)
 def replace_ytb_f(match):
     vid = match.group(1) or match.group(2)
     return '<div class="youtube-player-unprocessed" data-id="{}"></div>'.format(vid)
 
-@lru_cache(maxsize=4096)
+# @lru_cache(maxsize=4096)
 def replace_ytb(s):
     s = re.sub(combined_youtube_extractor_regex,
         replace_ytb_f, s, flags=re.MULTILINE)
