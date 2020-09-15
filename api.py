@@ -671,8 +671,8 @@ let t_now = date_timestamp(@now)
 
 let t_man = date_timestamp(t.t_manual)
 
-let points = (t.votes or 0) * 1 + 1 + t.nreplies * .14
-let t_offset = 3600*1000*2
+let points = (t.votes or 0) * 2 + 1 + t.nreplies * .2
+let t_offset = 3600*1000*4
 let t_hn = max([t_now + t_offset - (t_now - t_submitted + t_offset) / sqrt(points), t_man])
 //let t_hn = max([t_now + t_offset - (t_now - t_updated + t_offset) / sqrt(points), t_man])
 // 5hr ahead
