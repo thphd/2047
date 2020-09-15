@@ -30,7 +30,7 @@ from commons import *
 
 from flask_cors import CORS
 
-from flask import Flask, session, g, abort
+from flask import Flask, g, abort # session
 from flask import render_template, request, send_from_directory, make_response
 # from flask_gzip import Gzip
 
@@ -41,24 +41,17 @@ from api import *
 
 from quotes import get_quote
 
+from session import save_session,load_session
+
 # init_directory('./static/')
 # init_directory('./static/upload/')
-
-def get_secret():
-    fn = 'secret.bin'
-    if os.path.exists(fn):
-        f = open(fn, 'rb');r = f.read();f.close()
-    else:
-        r = os.urandom(32)
-        f = open(fn, 'wb');f.write(r);f.close()
-    return r
 
 app = Flask(__name__, static_url_path='')
 
 app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
 
-app.secret_key = get_secret()
+# app.secret_key = get_secret()
 CORS(app)
 from flask_response_gzip import gzipify
 gzipify(app)
@@ -662,7 +655,6 @@ class UAFilter:
         return k, self.d[k]
 
 uaf = UAFilter()
-sessiondict = dict()
 
 def log_info(*a):
     text = ' '.join(map(lambda i:str(i), a))
@@ -699,32 +691,36 @@ def before_request():
     g.request_start_time = time.time()
     g.get_elapsed = lambda: int((time.time() - g.request_start_time)*1000)
 
-    if 'browser' not in session:
-        g.using_browser = False
-    else:
-        g.using_browser = True
-
-    # session.permanent = True
-
-    # ----
-
     if 'action' in request.args and request.args['action']=='ping':
         is_ping = True
     else:
         is_ping = False
 
-    # avatar requests can go.
-    is_avatar = request.path.startswith('/avatar/')
-    path_critical = (
-        (not is_ping)
-        and (not is_avatar)
-        and (not request.path.startswith('/login'))
-        and (not request.path=='/')
-        and (not request.path.startswith('/js/'))
-        and (not request.path.startswith('/css/'))
-        and (not request.path.startswith('/images/'))
-        and (not request.path.startswith('/api'))
+    rp = request.path
+    def rpsw(s): return rp.startswith(s)
+
+    is_avatar = rpsw('/avatar/')
+
+    is_static = is_avatar or rpsw('/js/') or rpsw('/css/') or rpsw('/images/') or rpsw('/qr/')
+
+    # rate limiting does not need to be applied to those paths
+    non_critical_paths = (
+        is_static
+        or is_ping
+        or (rpsw('/login'))
+        or (rpsw('/logout'))
+        or (rpsw('/register'))
     )
+
+    session = load_session() # a dict
+    g.session = session
+
+    if 'browser' not in session:
+        g.using_browser = False
+    else:
+        g.using_browser = True
+
+    # ----
 
     # log the user in
     g.selfuid = 0
@@ -732,35 +728,33 @@ def before_request():
     g.current_user = False
     g.is_admin = False
 
-    if 'uid' in session:
+    if not(is_static or is_ping) and 'uid' in session:
+
         g.logged_in = get_user_by_id_admin(int(session['uid']))
         g.current_user = g.logged_in
         g.selfuid = g.logged_in['uid']
         # print(g.selfuid,'selfuid')
         g.is_admin = True if g.current_user['admin'] else False
 
-        if not is_avatar:
+        if not is_static:
             # print_info(g.logged_in['name'], 'browser' if g.using_browser else '')
-            log_info(g.logged_in['name'], 'browser' if g.using_browser else '')
+            log_info(g.logged_in['name'], 'browser' if g.using_browser else 'browserless')
 
-        # print_err(request.headers)
-        if path_critical or 1:
+        # when is the last time you check your inbox?
+        if 't_inbox' not in g.current_user:
+            g.current_user['t_inbox'] = '1989-06-04T00:00:00'
 
-            # when is the last time you check your inbox?
-            if 't_inbox' not in g.current_user:
-                g.current_user['t_inbox'] = '1989-06-04T00:00:00'
+        # when is the last time you check your notifications?
+        if 't_notif' not in g.current_user:
+            g.current_user['t_notif'] = '1989-06-04T00:00:00'
 
-            # when is the last time you check your notifications?
-            if 't_notif' not in g.current_user:
-                g.current_user['t_notif'] = '1989-06-04T00:00:00'
+        if 'nnotif' not in g.current_user:
+            g.current_user['nnotif'] = 0
+        if 'ninbox' not in g.current_user:
+            g.current_user['ninbox'] = 0
 
-            if 'nnotif' not in g.current_user:
-                g.current_user['nnotif'] = 0
-            if 'ninbox' not in g.current_user:
-                g.current_user['ninbox'] = 0
-
-            g.current_user['num_unread']=g.current_user['ninbox']
-            g.current_user['num_notif']=g.current_user['nnotif']
+        g.current_user['num_unread']=g.current_user['ninbox']
+        g.current_user['num_notif']=g.current_user['nnotif']
 
         uaf.cooldown(uas)
         uaf.cooldown(acceptstr)
@@ -768,23 +762,19 @@ def before_request():
         # if you're logged in then end of story
         return
 
-    if g.using_browser and path_critical:
-        log_info(ipstr, 'using browser')
-
     # now seems you're not logged in. we have to be more strict to you
+    if not is_static:
+        log_info(ipstr, 'using browser' if g.using_browser else 'browserless')
 
-    if not path_critical or g.using_browser:
+
+    if non_critical_paths or g.using_browser:
         # uaf.cooldown(uas)
         uaf.cooldown(acceptstr)
         return
 
     weight = 1.
     if is_local:
-        weight = 5.
-
-    # if is_local:
-    #     # no tor crawler allowed
-    #     return ('rate limit exceeded. if you think this is a mistake, please notify our engineers.', 429)
+        weight = 5. # be more strict on the tor side
 
     # filter bot/dos requests
     allowed = \
@@ -1635,18 +1625,26 @@ def apir():
         else:
             if answer is None:
                 raise Exception('return value is None, what the fuck?')
+
+            response = make_response(answer)
+
             if action not in ('ping','viewed_target','browser_check'):
                 print_down('API <<', answer)
-            if 'setuid' in answer:
-                session['uid'] = answer['setuid']
-                session.permanent = True
-            if 'setbrowser' in answer:
-                session['browser'] = 1
-            if 'logout' in answer:
-                if 'uid' in session:
-                    del session['uid']
 
-            return answer
+            if 'setuid' in answer:
+                g.session['uid'] = answer['setuid']
+                save_session(response)
+
+            if 'setbrowser' in answer:
+                g.session['browser'] = 1
+                save_session(response)
+
+            if 'logout' in answer:
+                if 'uid' in g.session:
+                    del g.session['uid']
+                    save_session(response)
+
+            return response
     else:
         return e('action function not registered')
 
