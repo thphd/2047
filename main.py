@@ -1417,7 +1417,7 @@ def route_get_avatar(uid):
 
             resp = make_response(rawdata, 200)
             resp = etag304(resp)
-            resp.headers['Content-Type'] = 'image/png'
+
         elif 'data' in res:
             # old 2049bbs jpeg pipeline
 
@@ -1429,7 +1429,6 @@ def route_get_avatar(uid):
 
             resp = make_response(rawdata, 200)
             resp = etag304(resp)
-            resp.headers['Content-Type'] = 'image/jpeg'
 
         else:
             raise Exception('no data in avatar object found')
@@ -1439,14 +1438,15 @@ def route_get_avatar(uid):
         identicon = Identicon.render(str(uid*uid))
         resp = make_response(identicon, 200)
         resp = etag304(resp)
-        resp.headers['Content-Type'] = 'image/png'
+
+    resp.headers['Content-Type'] = 'text/plain' # to fool cloudflare
 
     # resp = etag304(resp)
 
     if 'no-cache' in request.args:
         resp.headers['Cache-Control']= 'no-cache'
     else:
-        resp.headers['Cache-Control']= 'max-age=14400'
+        resp.headers['Cache-Control']= 'max-age=40000'
     return resp
 
     # # default: 307 to logo.png
