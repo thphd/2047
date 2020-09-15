@@ -115,14 +115,15 @@ def route_static(frompath, topath, maxage=1800):
             resp.headers['Content-Type'] = type
 
         if maxage!=0:
-            resp.headers['Cache-Control']= 'max-age='+str(maxage)
+            resp.headers['Cache-Control']= \
+                f'max-age={str(maxage)}, stale-while-revalidate=60'
 
         return resp
 
 route_static('static', 'static')
-route_static('images', 'templates/images', 3600*24*5)
-route_static('css', 'templates/css', 3600*24*5)
-route_static('js', 'templates/js', 3600*24*5)
+route_static('images', 'templates/images', 3600*2)
+route_static('css', 'templates/css', 3600*.1)
+route_static('js', 'templates/js', 3600*.1)
 route_static('jgawb', 'jgawb', 1800)
 route_static('jicpb', 'jicpb', 1800)
 
@@ -703,7 +704,7 @@ def before_request():
     else:
         g.using_browser = True
 
-    session.permanent = True
+    # session.permanent = True
 
     # ----
 
@@ -1402,6 +1403,8 @@ def loginpage():
 # print(ptf('2020-07-19T16:00:00'))
 
 @app.route('/avatar/<int:uid>')
+@app.route('/avatar/<int:uid>.png')
+@app.route('/avatar/<int:uid>.jpg')
 def route_get_avatar(uid):
 
     # first check db
@@ -1446,7 +1449,7 @@ def route_get_avatar(uid):
     if 'no-cache' in request.args:
         resp.headers['Cache-Control']= 'no-cache'
     else:
-        resp.headers['Cache-Control']= 'max-age=40000'
+        resp.headers['Cache-Control']= 'max-age=7200, stale-while-revalidate=60'
     return resp
 
     # # default: 307 to logo.png
