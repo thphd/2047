@@ -36,7 +36,7 @@ python3.7 -m pip install mistletoe
 python3.7 -m pip install pillow
 python3.7 -m pip install Flask
 python3.7 -m pip install flask_cors
-python3.7 -m pip install Flask_gzip
+# python3.7 -m pip install Flask_gzip
 python3.7 -m pip install githubrelease
 python3.7 -m pip install qrcode
 python3.7 -m pip install forbiddenfruit

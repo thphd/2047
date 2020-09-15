@@ -32,7 +32,7 @@ from flask_cors import CORS
 
 from flask import Flask, session, g, abort
 from flask import render_template, request, send_from_directory, make_response
-from flask_gzip import Gzip
+# from flask_gzip import Gzip
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -60,7 +60,8 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
 
 app.secret_key = get_secret()
 CORS(app)
-gzip = Gzip(app, minimum_size=500)
+from flask_response_gzip import gzipify
+gzipify(app)
 
 def route(r):
     def rr(f):
@@ -1415,6 +1416,7 @@ def route_get_avatar(uid):
             rawdata = base64.b64decode(d)
 
             resp = make_response(rawdata, 200)
+            resp = etag304(resp)
             resp.headers['Content-Type'] = 'image/png'
         elif 'data' in res:
             # old 2049bbs jpeg pipeline
@@ -1426,6 +1428,7 @@ def route_get_avatar(uid):
             rawdata = base64.b64decode(b64data)
 
             resp = make_response(rawdata, 200)
+            resp = etag304(resp)
             resp.headers['Content-Type'] = 'image/jpeg'
 
         else:
@@ -1435,9 +1438,10 @@ def route_get_avatar(uid):
         # render an identicon
         identicon = Identicon.render(str(uid*uid))
         resp = make_response(identicon, 200)
+        resp = etag304(resp)
         resp.headers['Content-Type'] = 'image/png'
 
-    resp = etag304(resp)
+    # resp = etag304(resp)
 
     if 'no-cache' in request.args:
         resp.headers['Cache-Control']= 'no-cache'
@@ -1445,12 +1449,12 @@ def route_get_avatar(uid):
         resp.headers['Cache-Control']= 'max-age=14400'
     return resp
 
-    # default: 307 to logo.png
-    resp = make_response(
-        'no avatar obj found for uid {}'.format(uid), 307)
-    resp.headers['Location'] = '/images/logo.png'
-    resp.headers['Cache-Control']= 'max-age=1800'
-    return resp
+    # # default: 307 to logo.png
+    # resp = make_response(
+    #     'no avatar obj found for uid {}'.format(uid), 307)
+    # resp.headers['Location'] = '/images/logo.png'
+    # resp.headers['Cache-Control']= 'max-age=1800'
+    # return resp
 
 @app.route('/m')
 def conversation_page():
@@ -1667,11 +1671,12 @@ def upload_file():
 
 def etag304(resp):
     etag = calculate_etag(resp.data)
-    if etag in request.if_none_match:
-        return make_response('', 304)
-    else:
-        resp.set_etag(etag)
-        return resp
+    # print(etag, request.if_none_match, request.if_none_match.contains_weak(etag))
+    if request.if_none_match.contains_weak(etag):
+        resp = make_response('', 304)
+
+    resp.set_etag(etag)
+    return resp
 
 @app.route('/qr/<path:to_encode>')
 def qr(to_encode):
