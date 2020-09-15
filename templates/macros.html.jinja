@@ -92,9 +92,15 @@
 
           {# content is name of an user #}
           {%elif 'userlist' in metas %}
+            {%if p.delete%}
+            <a href='/u/{{p.uid}}' class='userlist_name'>
+              <s>{{text}}</s>
+            </a>
+            {%else%}
             <a href='/u/{{p.uid}}' class='userlist_name'>
               {{text}}
             </a>
+            {%endif%}
 
               {%if p.invited_by and g.is_admin %}
               (由<a href="/u/{{p.invited_by}}">{{p.invited_by}}</a>邀请)
@@ -316,10 +322,12 @@
 
   {%if 'last_commenter' in metas and p.count %}
   {# small circle indicating num replies #}
+  {#
   <div class="rightmost">
     {%set url_to_last = get_url_to_post_given_details(p.tid,p.last._key,p.count)%}
     <a class="reply_count c{{p.cid}}" href="{{url_to_last}}">{{p.count}}</a>
   </div>
+  #}
   {%endif%}
 
   {%if 'conversation' in metas and p.count %}
