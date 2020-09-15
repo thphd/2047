@@ -114,7 +114,7 @@ def route_static(frompath, topath, maxage=1800):
         return resp
 
 route_static('static', 'static')
-route_static('images', 'templates/images', 3600*2)
+route_static('images', 'templates/images', 3600*12)
 route_static('css', 'templates/css', 3600*.1)
 route_static('js', 'templates/js', 3600*.1)
 route_static('jgawb', 'jgawb', 1800)
@@ -640,7 +640,7 @@ class UAFilter:
         # print(self.d[ua])
 
         # print_err(self.d[ua])
-        if self.d[ua]>45:
+        if self.d[ua]>25:
             self.d[ua]+=3*weight
 
             if self.d[ua]>75 and (ua not in self.blacklist):
@@ -651,8 +651,13 @@ class UAFilter:
             return True
 
     def get_max(self):
-        k = max(self.d)
-        return k, self.d[k]
+        m = -998
+        kk = 'None'
+        for k in self.d:
+            if self.d[k]>m:
+                m = self.d[k]
+                kk = k
+        return kk, m
 
 uaf = UAFilter()
 
@@ -756,8 +761,8 @@ def before_request():
         g.current_user['num_unread']=g.current_user['ninbox']
         g.current_user['num_notif']=g.current_user['nnotif']
 
-        uaf.cooldown(uas)
-        uaf.cooldown(acceptstr)
+        # uaf.cooldown(uas)
+        # uaf.cooldown(acceptstr)
 
         # if you're logged in then end of story
         return
@@ -769,19 +774,20 @@ def before_request():
 
     if non_critical_paths or g.using_browser:
         # uaf.cooldown(uas)
-        uaf.cooldown(acceptstr)
+        # uaf.cooldown(acceptstr)
         return
 
     weight = 1.
     if is_local:
+        log_up(f'local [{uas}][{acceptstr}]')
         weight = 5. # be more strict on the tor side
 
     # filter bot/dos requests
-    allowed = \
-        uaf.judge(uas, weight) and\
-        uaf.judge(acceptstr, weight) and\
+    allowed = (
+        uaf.judge(uas, weight) and
+        uaf.judge(acceptstr, weight) and
         (uaf.judge(ipstr, weight) if not is_local else True)
-
+    )
     if not allowed:
         log_err('[{}][{}][{}][{:.2f}][{:.2f}][{:.2f}]'.format(uas, acceptstr[-50:], ipstr, uaf.d[uas], uaf.d[acceptstr], uaf.d[ipstr] if ipstr in uaf.d else -1))
 
@@ -793,7 +799,7 @@ def before_request():
             pass
     else:
         m = uaf.get_max()
-        log_up('max: [{}][{:.2f}][{}]'.format(m[0][-50:],m[1], uaf.blacklist))
+        log_up('max: [{}][{:.2f}]black[{}]'.format(m[0][-50:],m[1], uaf.blacklist))
 
 def tryint(str):
     try:
