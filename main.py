@@ -780,7 +780,13 @@ def before_request():
     weight = 1.
     if is_local:
         log_up(f'local [{uas}][{acceptstr}]')
-        weight = 5. # be more strict on the tor side
+        weight *= 5. # be more strict on the tor side
+    if acceptstr=='NoAccept':
+        weight *= 5.
+
+    '''
+    你们这样不行的啊！！
+    '''
 
     # filter bot/dos requests
     allowed = (
