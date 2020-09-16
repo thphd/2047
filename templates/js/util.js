@@ -1054,3 +1054,53 @@ function change_time(tid, timestamp){
   })
   .catch(alert)
 }
+
+function add_entity(){
+  var ent_type = geid('ent_type').value
+  var ent_json = geid('ent_json').value
+  Promise.resolve()
+  .then(()=>{
+    return RJSON.parse(ent_json)
+  })
+  .then(parsed=>{
+    return api({
+      action:'add_entity',
+      type:ent_type,
+      doc:parsed,
+    })
+  })
+  .then(res=>{
+    window.location.reload()
+  })
+  .catch(alert)
+}
+
+function modify_entity(key){
+  var ent_json = geid(key).value
+  Promise.resolve()
+  .then(()=>{
+    return RJSON.parse(ent_json)
+  })
+  .then(parsed=>{
+    return api({
+      action:'modify_entity',
+      doc:parsed,
+      _key:key,
+    })
+  })
+  .then(res=>{
+    window.location.reload()
+  })
+  .catch(alert)
+}
+
+function delete_entity(key){
+  if (!confirm('are you sure?')){
+    return
+  }
+  api({action:'delete_entity', _key:key})
+  .then(res=>{
+    window.location.reload()
+  })
+  .catch(alert)
+}

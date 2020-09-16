@@ -1,0 +1,54 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+
+<div class="threadlist">
+  <div class="post_content">
+    {{entity_info|safe}}
+  </div>
+
+  <div class="ent_add">
+      <input type="text" id="ent_type" value="" placeholder="type (类型)">
+      <textarea name="name" rows="8" cols="30" id="ent_json" style="max-width:100%;" placeholder="在这里输入JSON，支持RJSON语法"></textarea>
+    <a href="javascript:add_entity()">添加 entity</a>
+  </div>
+  <hr>
+
+  <div class="qboxes">
+
+    {%for q in entities%}
+    <div class="qbox">
+      <div class="qtitle">
+        类型：<span class='ent_type'>{{q.type}}</span>
+        <br>
+        ID（点击预览）：<a href="/e/{{q._key}}">{{q._key}}</a>
+
+        {%if q.uid%}
+        <br>
+          创建者：<a href="/u/{{q.uid}}">{{q.user.name}}</a>
+        {%endif%}
+      </div>
+
+      <textarea name="name" rows="8" cols="30" id="{{q._key}}">{{obj2json(q.doc)}}</textarea>
+
+      <div class="qtitle">
+        {%if q.uid==g.logged_in.uid or g.logged_in.uid==5108%}
+        <a href="javascript:modify_entity('{{q._key}}')">应用修改</a>
+          <a href="javascript:delete_entity('{{q._key}}')">删除</a>
+        {%endif%}
+
+        <span class='qmeta'>{{format_time_dateifnottoday(q.t_c)}}</span>
+
+      </div>
+
+    </div>
+
+
+    {%endfor%}
+
+
+  </div>
+
+</div>
+
+<script src="/js/relaxed-json.js" charset="utf-8"></script>
+{%endblock%}

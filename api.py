@@ -1434,6 +1434,80 @@ def _():
     l = aql('for i in admins return i.name')
     return {'list_admins':l}
 
+import json,re
+
+@register('add_entity')
+def _():
+    must_be_logged_in()
+    j = g.j
+    _type = j['type'].strip()
+    assert isinstance(_type, str)
+    exp = r"^[a-zA-Z0-9_\-.]{1,20}$"
+    if not re.match(exp, _type):
+        raise Exception(f'"type" does not conform to the regex "{exp}"')
+
+    doc = j['doc']
+    s = json.dumps(doc, ensure_ascii=False)
+
+    if len(s)>1024*10:
+        raise Exception('json too large')
+
+    numcreated = aql('return length(for i in entities filter i.uid==@uid return 1)', silent=True, uid=g.current_user['uid'])[0]
+    if numcreated>32:
+        raise Exception('you can only create so much entities')
+
+    now = time_iso_now()
+    aql('insert @k into entities', k=dict(
+        t_c = now,
+        uid = g.current_user['uid'],
+        type = _type,
+        doc = doc,
+    ))
+    return {'error':False}
+
+@register('modify_entity')
+def _():
+    must_be_logged_in()
+
+    j = g.j
+    _key = j['_key']
+
+    ent = aql('for i in entities filter i._key==@k return i',k=_key)[0]
+
+    if ent['uid']!=g.current_user['uid']:
+        must_be_admin()
+
+    doc = j['doc']
+    s = obj2json(doc)
+
+    if len(s)>1024*10:
+        raise Exception('json too large')
+
+    now = time_iso_now()
+    aql('update @k with @k in entities', k=dict(
+        _key=_key,
+        t_e = now,
+        editor = g.current_user['uid'],
+        doc = doc,
+    ))
+    return {'error':False}
+
+@register('delete_entity')
+def _():
+    must_be_logged_in()
+    j = g.j
+    _key = j['_key']
+    ent = aql('for i in entities filter i._key==@k return i',k=_key)[0]
+    if ent['uid']!=g.current_user['uid']:
+        must_be_admin()
+
+    aql('for i in entities filter i._key==@k remove i in entities', k=_key)
+
+    return {'error':False}
+
+def obj2json(obj):
+    return json.dumps(obj, ensure_ascii=False, sort_keys=True, indent=4)
+
 # feedback regulated ping service
 # average 1 ping every 3 sec
 lastping = time.time()

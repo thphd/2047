@@ -44,5 +44,10 @@ def get_quote():
     return random.choice(quotes)
 
 if __name__ == '__main__':
-    for i in quotes:
-        print(get_quote())
+    # for i in quotes:
+    #     print(get_quote())
+
+    import json
+    a = (json.dumps(quotes, ensure_ascii=False))
+    print(a)
+    open('quotes.txt','w',encoding='utf-8').write(a)

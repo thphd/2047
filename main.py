@@ -1803,11 +1803,41 @@ def heropage():
 aqlc.create_collection('entities')
 @app.route('/entities')
 def entpage():
-    ents = aql('for i in entities sort i.type, i.t_c desc return i')
-    return render_template('entities.html.jinja',
+    ents = aql('''
+        for i in entities sort i.t_c desc
+        let user = (for u in users filter u.uid==i.uid return u)[0]
+        return merge(i, {user})
+    ''', silent=True)
+    return render_template_g('entities.html.jinja',
         page_title='entities',
         entities = ents,
     )
+
+@app.route('/e/<string:key>')
+def entjson(key):
+    ent = aql('for i in entities filter i._key==@k return i', k=key, silent=True)
+    if len(ent):
+        ent = ent[0]['doc']
+        resp = make_response(obj2json(ent), 200)
+        resp.headers['Content-Type'] = 'application/json'
+        return resp
+    else:
+        resp = make_response({'error':'no such entity'}, 400)
+        return resp
+
+@app.route('/e/<string:key>/<string:field>')
+def entjsonwfield(key,field):
+    ent = aql('for i in entities filter i._key==@k return i', k=key, silent=True)
+    if len(ent):
+        ent = ent[0]['doc']
+        if field in ent:
+            ent = ent[field]
+            resp = make_response(obj2json(ent), 200)
+            resp.headers['Content-Type'] = 'application/json'
+            return resp
+
+    resp = make_response({'error':'no such entity'}, 400)
+    return resp
 
 @app.route('/invitation/<string:iid>')
 def get_invitation(iid):
@@ -1828,7 +1858,7 @@ def f404(to_show):
     else:
         reason = ''
 
-    return render_template('404.html.jinja',
+    return render_template_g('404.html.jinja',
         page_title='404',
         to_show=to_show,
         reason = reason,

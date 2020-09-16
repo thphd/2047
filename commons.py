@@ -460,6 +460,20 @@ if __name__ == '__main__':
 如“t7113”或者“p247105”）,t112,p1
     '''),parse_showcases(''))
 
+entity_info = convert_markdown('''
+在这个界面，你可以添加、修改或删除 entity（JSON对象），尺寸限制5k
+
+可以使用[RJSON](https://oleg.fi/relaxed-json/)语法
+
+entity可以从下列URL访问：
+
+- `/e/<entity_id>` (document as JSON)
+- `/e/<entity_id>/<field_name>` (document.field_name as JSON)
+
+其他特殊的使用方式会单独开帖介绍
+
+''')
+
 password_warning = convert_markdown('''
 # 密码安全警告
 
