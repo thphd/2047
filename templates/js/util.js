@@ -1075,6 +1075,27 @@ function add_entity(){
   .catch(alert)
 }
 
+function add_entity_as_text(){
+  var ent_type = geid('ent_type').value
+  var ent_json = geid('ent_json').value
+  Promise.resolve()
+  .then(()=>{
+    // return RJSON.parse(ent_json)
+    return ent_json.trim()
+  })
+  .then(parsed=>{
+    return api({
+      action:'add_entity',
+      type:ent_type,
+      doc:parsed,
+    })
+  })
+  .then(res=>{
+    window.location.reload()
+  })
+  .catch(alert)
+}
+
 function modify_entity(key){
   var ent_json = geid(key).value
   Promise.resolve()

@@ -1506,7 +1506,7 @@ def _():
     return {'error':False}
 
 def obj2json(obj):
-    return json.dumps(obj, ensure_ascii=False, sort_keys=True, indent=4)
+    return json.dumps(obj, ensure_ascii=False, sort_keys=True, indent=2)
 
 # feedback regulated ping service
 # average 1 ping every 3 sec

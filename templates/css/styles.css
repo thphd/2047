@@ -1435,6 +1435,7 @@ span.quoting {
 .ent_add {
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
 }
 
 .ent_add * {
@@ -1443,4 +1444,8 @@ span.quoting {
 
 .ent_type {
     color: red;
+}
+
+textarea {
+    font-family: monospace;
 }

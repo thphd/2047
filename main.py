@@ -1839,6 +1839,29 @@ def entjsonwfield(key,field):
     resp = make_response({'error':'no such entity'}, 400)
     return resp
 
+@app.route('/member/<string:uname>/e/<string:ty>')
+def pkey_uname(uname, ty):
+    u = get_user_by_name(uname)
+    return pkey(u['uid'], ty)
+
+@app.route('/u/<int:uid>/e/<string:ty>')
+def pkey_uid(uid, ty):
+    return pkey(uid, ty)
+
+def pkey(uid, ty):
+    pk = aql('for i in entities filter i.type==@ty and i.uid==@uid sort i.t_c desc limit 1 return i', silent=True, uid=uid, ty=ty)[0]['doc']
+
+    if isinstance(pk, str):
+        r = make_response(pk, 200)
+        r.headers['Content-Type'] = 'text/plain'
+        r.headers['Content-Language']= 'en-US'
+
+    else:
+        r = make_response(obj2json(pk), 200)
+        r.headers['Content-Type'] = 'application/json'
+
+    return r
+
 @app.route('/invitation/<string:iid>')
 def get_invitation(iid):
     i = aql('for i in invitations filter i._key==@k return i', k=iid, silent=True)[0]

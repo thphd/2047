@@ -463,14 +463,14 @@ if __name__ == '__main__':
 entity_info = convert_markdown('''
 在这个界面，你可以添加、修改或删除 entity（JSON对象），尺寸限制5k
 
-可以使用[RJSON](https://oleg.fi/relaxed-json/)语法
+可以使用[RJSON](https://oleg.fi/relaxed-json/)语法。所有entities都会纳入论坛数据备份，请不要存放敏感信息。
 
 entity可以从下列URL访问：
 
 - `/e/<entity_id>` (document as JSON)
 - `/e/<entity_id>/<field_name>` (document.field_name as JSON)
 
-其他特殊的使用方式会单独开帖介绍
+其他特殊的使用方式会单独开帖介绍。添加公钥请填写`type`为`public_key`，并点击“作为文字内容新增”按钮。
 
 ''')
 
