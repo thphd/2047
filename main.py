@@ -733,7 +733,7 @@ def before_request():
     g.current_user = False
     g.is_admin = False
 
-    if not(is_static or is_ping) and 'uid' in session:
+    if not(is_static) and 'uid' in session:
 
         g.logged_in = get_user_by_id_admin(int(session['uid']))
         g.current_user = g.logged_in
@@ -743,7 +743,7 @@ def before_request():
 
         if not is_static:
             # print_info(g.logged_in['name'], 'browser' if g.using_browser else '')
-            log_info(g.logged_in['name'], 'browser' if g.using_browser else '==naked==')
+            log_info(f'({g.selfuid})', g.logged_in['name'], 'browser' if g.using_browser else '==naked==')
 
         # when is the last time you check your inbox?
         if 't_inbox' not in g.current_user:
@@ -769,7 +769,10 @@ def before_request():
 
     # now seems you're not logged in. we have to be more strict to you
     if not is_static:
-        log_info(ipstr, 'browser' if g.using_browser else '==naked==')
+        if g.using_browser:
+            log_info(ipstr, 'browser')
+        else:
+            log_err(ipstr, '==naked==')
 
 
     if non_critical_paths or g.using_browser:
@@ -779,7 +782,7 @@ def before_request():
 
     weight = 1.
     if is_local:
-        log_up(f'local [{uas}][{acceptstr}]')
+        # log_up(f'local [{uas}][{acceptstr}]')
         weight *= 5. # be more strict on the tor side
     if acceptstr=='NoAccept':
         weight *= 5.
@@ -795,7 +798,7 @@ def before_request():
         (uaf.judge(ipstr, weight) if not is_local else True)
     )
     if not allowed:
-        log_err('[{}][{}][{}][{:.2f}][{:.2f}][{:.2f}]'.format(uas, acceptstr[-50:], ipstr, uaf.d[uas], uaf.d[acceptstr], uaf.d[ipstr] if ipstr in uaf.d else -1))
+        log_err('blocked [{}][{}][{}][{:.2f}][{:.2f}][{:.2f}]'.format(uas, acceptstr[-50:], ipstr, uaf.d[uas], uaf.d[acceptstr], uaf.d[ipstr] if ipstr in uaf.d else -1))
 
         if random.random()>0:
             return ('rate limit exceeded', 429)
@@ -804,8 +807,9 @@ def before_request():
         else:
             pass
     else:
-        m = uaf.get_max()
-        log_up('max: [{}][{:.2f}]black[{}]'.format(m[0][-50:],m[1], uaf.blacklist))
+        # m = uaf.get_max()
+        # log_up('max: [{}][{:.2f}]black[{}]'.format(m[0][-50:],m[1], uaf.blacklist))
+        log_up(f'now:[{uas[:50]}][{acceptstr[-50:]}][{ipstr}][{uaf.d[uas]:.2f}, {uaf.d[acceptstr]:.2f}, {(uaf.d[ipstr] if ipstr in uaf.d else -1):.2f}]')
 
 def tryint(str):
     try:

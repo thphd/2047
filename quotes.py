@@ -14,7 +14,7 @@ Most men die at twenty or thirty; thereafter they are only reflections of themse
 Government is not the solution to our problem, government is the problem.##Ronald Reagan
 If the facts scare you, the problem isn't with the facts.
 我想在一切终结的时候，能够像一个真正的诗人那样说：我们不是懦夫，我们做完了所有能做的。##阿莱杭德娜·皮扎尼克
-人生还不如波德莱尔的一行诗。芥川龙之介
+人生还不如波德莱尔的一行诗。##芥川龙之介
 The highest activity a human being can attain is learning for understanding, because to understand is to be free. 人类可以达到的最高行为是学会理解，因为理解使人自由。##斯宾诺莎
 A fronte praecipitium a tergo lupi. 悬崖在面前，狼群在背后。
 

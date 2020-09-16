@@ -585,9 +585,9 @@ a.threadlist_title {
 .categories {
     display: flex;
     /* flex-flow: wrap; */
-    align-items: center;
+    align-items: flex-start;
     flex-direction: row;
-    justify-content: center;
+    justify-content: flex-start;
     flex-wrap: wrap;
     /* width: 80px; */
 }
@@ -595,21 +595,21 @@ a.threadlist_title {
 .box {
     /* padding: 10px; */
     /* margin: 10px; */
-    margin-left: 15px;
+    /* margin-left: 15px; */
     margin-top: 10px;
     display: flex;
     flex-flow: column;
-    align-items: center;
+    /* align-items: center; */
     align-content: center;
     opacity: .5;
     /* padding-left: 5px; */
 }
 .boxtitle {
-    padding: 10px 0;
+    padding: 10px 0 10px 4px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     flex-flow: column;
-    justify-content: center;
+    justify-content: flex-start;
 }
 
 

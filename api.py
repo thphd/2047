@@ -328,7 +328,7 @@ def _():
 def content_length_check(content, allow_short=False):
     if len(content)>20000:
         raise Exception('content too long')
-    if len(content)<4 and allow_short==False:
+    if len(content)<2 and allow_short==False:
         raise Exception('content too short')
 
 def title_length_check(title):
