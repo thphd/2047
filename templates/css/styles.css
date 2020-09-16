@@ -503,7 +503,7 @@ a.threadlist_title {
     /* display: block; */
     /* margin-bottom: 3px; */
     vertical-align: middle;
-    font-size: 100%;
+    font-size: 15px;
     font-weight: bold;
     letter-spacing: 0.01em;
     line-break: anywhere;
@@ -661,6 +661,7 @@ a.threadlist_title {
 
 code {
     font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,ubuntu, source code pro, monospace;
+    line-height: 1.4;
 }
 
 code .k, code .kd {

@@ -743,7 +743,7 @@ def before_request():
 
         if not is_static:
             # print_info(g.logged_in['name'], 'browser' if g.using_browser else '')
-            log_info(g.logged_in['name'], 'browser' if g.using_browser else 'browserless')
+            log_info(g.logged_in['name'], 'browser' if g.using_browser else '==naked==')
 
         # when is the last time you check your inbox?
         if 't_inbox' not in g.current_user:
@@ -769,7 +769,7 @@ def before_request():
 
     # now seems you're not logged in. we have to be more strict to you
     if not is_static:
-        log_info(ipstr, 'using browser' if g.using_browser else 'browserless')
+        log_info(ipstr, 'browser' if g.using_browser else '==naked==')
 
 
     if non_critical_paths or g.using_browser:
@@ -1451,7 +1451,7 @@ def route_get_avatar(uid):
     if 'no-cache' in request.args:
         resp.headers['Cache-Control']= 'no-cache'
     else:
-        resp.headers['Cache-Control']= 'max-age=7200, stale-while-revalidate=60'
+        resp.headers['Cache-Control']= 'max-age=7200, stale-while-revalidate=3600'
     return resp
 
     # # default: 307 to logo.png
@@ -1647,7 +1647,7 @@ def apir():
                 g.session['uid'] = answer['setuid']
                 save_session(response)
 
-            if 'setbrowser' in answer:
+            if 'setbrowser' in answer or 'ping'==action:
                 g.session['browser'] = 1
                 save_session(response)
 
