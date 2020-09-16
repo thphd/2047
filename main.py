@@ -1647,7 +1647,7 @@ def apir():
                 g.session['uid'] = answer['setuid']
                 save_session(response)
 
-            if 'setbrowser' in answer or 'ping'==action:
+            if 'setbrowser' in answer or ('browser' not in g.session and 'ping'==action):
                 g.session['browser'] = 1
                 save_session(response)
 
