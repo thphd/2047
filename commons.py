@@ -469,6 +469,7 @@ entity可以从下列URL访问：
 
 - `/e/<entity_id>` (document as JSON)
 - `/e/<entity_id>/<field_name>` (document.field_name as JSON)
+- `/member/<username>/e/<type>` (first document of type of user)，例如[/member/thphd/e/public_key](/member/thphd/e/public_key)
 
 其他特殊的使用方式会单独开帖介绍。添加公钥请填写`type`为`public_key`，并点击“作为文字内容新增”按钮。
 

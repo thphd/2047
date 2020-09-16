@@ -50,6 +50,12 @@
         {%endif%}</span>
       </div>
 
+      {%if u.public_key%}
+      <div class="userpage_name">
+        <span>公钥</span><a href="/member/{{u.name}}/e/public_key">/member/{{u.name}}/e/public_key</a>
+      </div>
+      {%endif%}
+
       {%if u.url %}
 
       <div class="userpage_name">
