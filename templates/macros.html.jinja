@@ -79,16 +79,16 @@
 
           {# content is title to a thread #}
           {%if 'threadlist' in metas %}
-            <a href="/t/{{p.tid}}" class="threadlist_title">
-              {{'[已标记为删除] ' if p.delete else ''}}{{text}}
-            </a>
+            <div class='threadlist_titlecombo'>
+
+            <a href="/t/{{p.tid}}" class="threadlist_title">{{'[已标记为删除] ' if p.delete else ''}}{{text}}</a>
             {%if 'link_after_title'%}
               {%if p.youtube%}
-                <a class='threadlist_title_youtube' rel='noreferrer' href="https://www.youtube.com/watch?v={{p.youtube}}">
-                  <img src="/images/youtube_small.png" alt="">
-                </a>
+                <a class='tltyw' rel='noreferrer' href="https://www.youtube.com/watch?v={{p.youtube}}"><img class='threadlist_title_youtube' src="/images/youtube_small.png" alt=""></a>
               {%endif%}
             {%endif%}
+
+          </div>
 
           {# content is name of an user #}
           {%elif 'userlist' in metas %}
@@ -154,6 +154,19 @@
             {# publisher #}
             <a class="user_name" href="/u/{{p.uid}}">{{p.user.name}}</a>
 
+          {%elif m=='publisher_conditional'%}
+              {# publisher #}
+              {%if not p.count%}
+              <a class="user_name" href="/u/{{p.uid}}">{{p.user.name}}</a>
+
+              {%if p.mode!='question' %}
+              <span>发布了文章</span>
+              {%else%}
+              <span>发布了问题</span>
+              {%endif%}
+              
+              {%endif%}
+
           {%elif m=='publish_date_thread'%}
             {# publish date #}
             <a class="last_commented_date" href="/t/{{p.tid}}">
@@ -171,6 +184,13 @@
             {# view count #}
             <span>{{p.vc}} 次浏览</span>
             {%endif%}
+
+          {%elif m=='reply_count'%}
+              {%if p.count%}
+              {%set url_to_last = get_url_to_post_given_details(p.tid,p.last._key,p.count)%}
+              <a class="response" href="{{url_to_last}}">{{p.count}} 个回复</a>
+              {%endif%}
+
           {%elif m=='conversation_with'%}
             {%set sent = 1 if p.last.uid==g.logged_in.uid else 0 %}
             <span>{{"发给" if sent else "来自"}}</span>
@@ -209,12 +229,17 @@
             {% if p.lastuser %}
               {# number of comments #}
               {%set url_to_last = get_url_to_post_given_details(p.tid,p.last._key,p.count)%}
-              <a class="response" href="{{url_to_last}}">{{p.count}} 个回复</span>
 
               {# last commenter #}
               <a class="user_name" href="{{url_to_last}}">
                 {{p.lastuser.name}}
               </a>
+
+              {%if p.mode!='question' %}
+              <span>回复了文章</span>
+              {%else%}
+              <span>回答了问题</span>
+              {%endif%}
 
               {# last commented date #}
               <a class="last_commented_date" href="{{url_to_last}}">
@@ -359,7 +384,10 @@
 
 {# one line of thread, used in threadlist #}
 {%macro post_threadlist(p)%}
-  {{post(p, ['category','publisher','publish_date_thread','last_commenter','vc',
+  {{post(p, ['category','last_commenter',
+  'publisher_conditional',
+  'reply_count', 'vc',
+  'n-publisher','publish_date_thread',
   'threadlist','delete_thread','thread_votes','link_after_title'])}}
 {%endmacro%}
 

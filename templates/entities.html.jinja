@@ -7,10 +7,10 @@
   </div>
 
   <div class="ent_add">
-      <input type="text" id="ent_type" value="" placeholder="type (类型)">
+      <input type="text" id="ent_type" value="" placeholder="type (类型，必填)">
       <textarea name="name" rows="8" cols="30" id="ent_json" style="max-width:100%;" placeholder="在这里输入JSON，支持RJSON语法"></textarea>
     <!-- <a href="javascript:add_entity()">添加 entity</a> -->
-    <button onclick='add_entity()'>新增 entity</button>
+    <button onclick='add_entity()'>作为JSON 新增 entity </button>
     <button onclick='add_entity_as_text()'>作为文字内容新增 entity</button>
   </div>
   <hr>
@@ -20,14 +20,9 @@
     {%for q in entities%}
     <div class="qbox">
       <div class="qtitle">
-        类型：<span class='ent_type'>{{q.type}}</span>
+        类型：<span class='ent_type'>{{q.type}}</span> 创建者：<a href="/u/{{q.uid}}">{{q.user.name}}</a>
         <br>
         ID（点击预览）：<a href="/e/{{q._key}}">{{q._key}}</a>
-
-        {%if q.uid%}
-        <br>
-          创建者：<a href="/u/{{q.uid}}">{{q.user.name}}</a>
-        {%endif%}
       </div>
 
       <textarea name="name" rows="8" cols="30" id="{{q._key}}">{{obj2json(q.doc)}}</textarea>

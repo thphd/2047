@@ -461,7 +461,7 @@ if __name__ == '__main__':
     '''),parse_showcases(''))
 
 entity_info = convert_markdown('''
-在这个界面，你可以添加、修改或删除 entity（JSON对象），尺寸限制5k
+在这个界面，你可以添加、修改或删除 entity（[JSON](https://en.wikipedia.org/wiki/JSON)对象），尺寸限制5k
 
 可以使用[RJSON](https://oleg.fi/relaxed-json/)语法。所有entities都会纳入论坛数据备份，请不要存放敏感信息。
 

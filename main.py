@@ -1827,12 +1827,10 @@ def entjson(key):
     ent = aql('for i in entities filter i._key==@k return i', k=key, silent=True)
     if len(ent):
         ent = ent[0]['doc']
-        resp = make_response(obj2json(ent), 200)
-        resp.headers['Content-Type'] = 'application/json'
-        return resp
-    else:
-        resp = make_response({'error':'no such entity'}, 400)
-        return resp
+        return doc2resp(ent)
+
+    resp = make_response({'error':'no such entity'}, 400)
+    return resp
 
 @app.route('/e/<string:key>/<string:field>')
 def entjsonwfield(key,field):
@@ -1841,9 +1839,7 @@ def entjsonwfield(key,field):
         ent = ent[0]['doc']
         if field in ent:
             ent = ent[field]
-            resp = make_response(obj2json(ent), 200)
-            resp.headers['Content-Type'] = 'application/json'
-            return resp
+            return doc2resp(doc)
 
     resp = make_response({'error':'no such entity'}, 400)
     return resp
@@ -1857,9 +1853,8 @@ def pkey_uname(uname, ty):
 def pkey_uid(uid, ty):
     return pkey(uid, ty)
 
-def pkey(uid, ty):
-    pk = aql('for i in entities filter i.type==@ty and i.uid==@uid sort i.t_c desc limit 1 return i', silent=True, uid=uid, ty=ty)[0]['doc']
-
+def doc2resp(doc):
+    pk = doc
     if isinstance(pk, str):
         r = make_response(pk, 200)
         r.headers['Content-Type'] = 'text/plain'
@@ -1870,6 +1865,10 @@ def pkey(uid, ty):
         r.headers['Content-Type'] = 'application/json'
 
     return r
+
+def pkey(uid, ty):
+    doc = aql('for i in entities filter i.type==@ty and i.uid==@uid sort i.t_c desc limit 1 return i', silent=True, uid=uid, ty=ty)[0]['doc']
+    return doc2resp(doc)
 
 @app.route('/invitation/<string:iid>')
 def get_invitation(iid):
