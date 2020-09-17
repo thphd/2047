@@ -502,7 +502,7 @@ img.headerbtn {
 a.title {}
 
 a.threadlist_title {
-    color: #2c537c;
+    color: #2a5b8e;
     margin-left: 0;
     margin-right: 0;
     /* display: block; */
@@ -1068,7 +1068,7 @@ button {
 
 .userpage_name {
     /* margin-bottom: 1em; */
-    line-height: 250%;
+    line-height: 210%;
     display: flex;
     flex-flow: wrap;
 }
@@ -1464,7 +1464,8 @@ span.quoting {
 }
 
 textarea {
-    font-family: monospace;
+    /* font-family: monospace; */
+    padding: 5px;
 }
 
 .threadlist_title_youtube {
@@ -1490,4 +1491,16 @@ textarea {
 .avatar_line .avatar {
     width: 48px;
     height: 48px;
+}
+
+input[type="text"],input[type="password"] {
+    padding: 4px;
+    border-radius: 2px;
+}
+
+#gpg_commands {
+    border: none;
+    background: #e6e6c3;
+    padding: 10px;
+    font-family: monospace;
 }

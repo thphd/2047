@@ -184,6 +184,49 @@ def _():
     # raise Exception('ouch')
     return {'double':int(g.j['a'])*2}
 
+def get_public_key_by_uid(uid):
+    pk = aql('''
+    for i in entities filter i.uid==@uid and i.type=='public_key' sort i.t_c desc limit 1 return i
+    ''', uid=uid, silent=True)
+
+    if pk and 'doc' in pk[0]:
+        s = pk[0]['doc']
+        if isinstance(s, str):
+            return s
+
+    return None
+
+@register('login_pgp')
+def _():
+    msg = es('message')
+
+    # find username in message
+    groups = re.findall(username_regex_pgp, msg)
+    if len(groups)<1:
+        raise Exception('No username found in message')
+
+    uname = groups[0][0]
+    timestamp = groups[0][1] # GMT +0
+    print_down('attempt pgp login:', uname, timestamp)
+    user = get_user_by_name(uname)
+    if not user:
+        raise Exception('no user named '+uname)
+
+    if not login_time_validation(timestamp):
+        raise Exception('timestamp too old, try with a more current one')
+
+    # find public_key
+    pk = get_public_key_by_uid(user['uid'])
+    if not pk:
+        raise Exception('user does not have a public key')
+
+    from pgp_stuff import verify
+    result = verify(pk, msg)
+    if not result:
+        raise Exception('verification failed')
+
+    return {'error':False, 'message':'login success', 'setuid':user['uid']}
+
 @register('login')
 def _():
     uname = es('username')

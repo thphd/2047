@@ -307,9 +307,24 @@ if (cpwbtn){
 
 var loginbtn = geid('login')
 if (loginbtn){
-  geid('username').focus()
-  if(geid('username').value.length>0){
-    geid('password').focus()
+  var pw = geid('password')
+  var un = geid('username')
+
+  var pgp_login = geid('pgp_login')
+
+  un.focus()
+
+  if(un.value.length>0){
+    pw.focus()
+  }
+
+  function go_back_if_possible(){
+    if (document.referrer.match('/register')||document.referrer==""){
+      window.location.href = '/'
+    }else{
+      // window.history.back()
+      window.location.href = document.referrer
+    }
   }
 
   loginbtn.onclick=function(){
@@ -322,18 +337,69 @@ if (loginbtn){
       password_hash:hash_user_pass(username, password),
     })
     .then(res=>{
-      if (document.referrer.match('/register')||document.referrer==""){
-        window.location.href = '/'
-      }else{
-        // window.history.back()
-        window.location.href = document.referrer
-      }
+      go_back_if_possible()
     })
     .catch(err=>{
       alert(err)
       loginbtn.disabled=false
     })
   }
+
+  pw.onkeypress=function(e){
+    if (e.keyCode==13){
+      loginbtn.click()
+    }
+  }
+
+  un.onkeypress = function(e){
+    if (e.keyCode==13){
+      pw.focus()
+    }
+    if(pgp_login){
+      un.onchange()
+    }
+  }
+
+  if(pgp_login){
+    var pgpm = geid('login_pgp_message')
+
+    function update_pgp_commands(){
+      if (un.value){
+        var ts = (new Date()).toISOString()
+        geid('gpg_commands').value = `echo "2047login#${un.value.trim()}#${ts}" | gpg -u "${un.value.trim()}" --armor --clearsign`
+      }else{
+        geid('gpg_commands').value = '(请先在上方输入用户名)'
+      }
+    }
+    update_pgp_commands()
+
+    un.onchange = function(){
+      Promise.resolve().then(()=>{setTimeout(update_pgp_commands, 200)})
+    }
+
+    // pgpm.onkeypress = pw.onkeypress
+    pgpm.onkeypress = function(e){
+      if (e.keyCode==13){pgp_login.click()}
+    }
+
+    pgp_login.onclick=function(){
+      pgp_login.disabled=true
+      api({
+        action:'login_pgp',
+        message:pgpm.value,
+      })
+      .then(res=>{
+        go_back_if_possible()
+      })
+      .catch(err=>{
+        alert(err)
+        pgp_login.disabled=false
+      })
+    }
+
+  }
+
+
 }
 
 function logout(){

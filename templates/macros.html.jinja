@@ -164,7 +164,7 @@
               {%else%}
               <span>发布了问题</span>
               {%endif%}
-              
+
               {%endif%}
 
           {%elif m=='publish_date_thread'%}
@@ -318,7 +318,7 @@
                 ▲ <span class="votenumber">{{ num_votes or '' }}</span>
               </div>
 
-              {%if can_do_to(g.logged_in, 'update_votecount',p.uid)%}
+              {%if g.logged_in.uid==5108 and can_do_to(g.logged_in, 'update_votecount', p.uid)%}
                 <a href="javascript:update_votecount('{{targ_type}}/{{targ_id}}')">更新数据</a>
               {%endif%}
 

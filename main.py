@@ -1339,17 +1339,9 @@ def _userpage(uid):
         }
         ''',uid=uid, silent=True)[0]
 
-    pk = aql('''
-    for i in entities filter i.uid==@uid and i.type=='public_key' sort i.t_c desc limit 1 return i
-    ''', uid=uid, silent=True)
-
-    if pk and 'doc' in pk[0]:
-        s = pk[0]['doc']
-        if isinstance(s, str):
-            uobj['public_key']=s
-
     uobj['stats']=stats
 
+    uobj['public_key']=get_public_key_by_uid(uid)
     uobj['alias'] = get_alias_user_by_name(uobj['name'])
 
     invitations = None
@@ -1396,6 +1388,7 @@ def _userpage(uid):
         viewed_target=viewed_target,
         pagination = pagination,
     )
+
 @app.route('/register')
 def regpage():
     invitation = ras('code') or ''
@@ -1811,6 +1804,7 @@ def heropage():
 
 aqlc.create_collection('entities')
 @app.route('/entities')
+@app.route('/e')
 def entpage():
     ents = aql('''
         for i in entities sort i.t_c desc

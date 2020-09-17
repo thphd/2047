@@ -63,11 +63,13 @@ def format_time_dateifnottoday(s):
     return format_time_absolute_fallback(s)
 
 def format_time_relative_fallback(s):
-    dt = dfs(s).astimezone(working_timezone)
+    dt = dfs(s).replace(tzinfo=working_timezone)
     now = dtn(working_timezone)
 
     past = now-dt # larger=>longer in the past
 
+    if past < dttd(seconds=60):
+        return '几秒前'
     if past < dttd(seconds=3600):
         return str(past.seconds // 60) + '分钟前'
     if past < dttd(seconds=3600*24):
@@ -76,7 +78,7 @@ def format_time_relative_fallback(s):
         return format_time_dateonly(s)
 
 def format_time_absolute_fallback(s):
-    dt = dfs(s).astimezone(working_timezone)
+    dt = dfs(s).replace(tzinfo=working_timezone)
     now = dtn(working_timezone)
 
     past = now-dt # larger=>longer in the past
@@ -86,7 +88,20 @@ def format_time_absolute_fallback(s):
     else:
         return format_time_dateonly(s)
 
+def login_time_validation(s):
+    dt = dfs(s).replace(tzinfo=gmt_timezone)
+    now = dtn(working_timezone)
+    # print('ltv',dt, now)
+
+    past = now - dt
+    print_info('message signed:', past, 'ago')
+    if past < dttd(seconds=60*30): # within 30 minutes
+        return True
+    else:
+        return False
+
 working_timezone = dttz(dttd(hours=+8)) # Hong Kong
+gmt_timezone = dttz(dttd(hours=0)) # GMT
 
 def time_iso_now():
     return format_time_iso(dtn(working_timezone))
@@ -130,7 +145,9 @@ url_regex = r'((((http|https|ftp):(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-
 # dont use for now
 
 # username rule
-username_regex=r'^[0-9a-zA-Z\u4e00-\u9fff\-\_\.]{2,16}$'
+username_regex_proto = r'[0-9a-zA-Z\u4e00-\u9fff\-\_\.]{2,16}'
+username_regex=r'^' + username_regex_proto + r'$'
+username_regex_pgp = r'2047login#(' + username_regex_proto + r')#(.{19})'
 username_regex_string = str(username_regex).replace('\\\\','\\')
 
 at_extractor_regex = r'@([0-9a-zA-Z\u4e00-\u9fff\-\_\.]{2,16}?)(?=[^0-9a-zA-Z\u4e00-\u9fff\-\_\.]|$)'
@@ -375,6 +392,8 @@ common_links = linkify('''
 删帖 /c/deleted 本站被删帖子
 数据备份 /t/7135 论坛数据库备份
 服务条款 /t/7110 违者封号
+题库 /questions 考试题目编撰
+实体编辑 /entities 公钥上传/其他杂项数据
 ''')
 
 friendly_links = linkify('''
@@ -501,7 +520,7 @@ invitation_info = convert_markdown('''
 public_key_info = convert_markdown('''
 # Public Key Cryptography
 
-2047将在未来某个时间允许用户将上传的公钥用于验证身份并登录。届时，将个人公钥上传至2047的用户，可用他的私钥加密/签名凭据登录2047，免除密码泄露之虞。
+2047允许用户将上传的公钥用于验证身份并登录。将个人公钥上传至2047的用户，可用他的私钥加密/签名凭据登录2047，免除密码泄露之虞。
 
 ''')
 
