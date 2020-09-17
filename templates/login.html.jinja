@@ -19,13 +19,13 @@
   <br>
 
   <div class="post_content">
-    <h3>用PGP签名登陆</h3>
+    <h3>用PGP签名登陆（说明书在<a href="/t/7506">这里</a>）</h3>
     <textarea id='gpg_commands' rows='1' cols='60'></textarea>
     <!-- <pre><code id='gpg_commands'></code></pre> -->
     <br>
     <a href="#" onclick="copy_clipboard()">将命令拷贝到剪贴板 (copy to clipboard)</a>
     <br>
-    <textarea id="login_pgp_message" rows="10" cols="40" placeholder="请先在上面输入用户名，然后用你的私钥对[2047login+用户名+ISO8601格式的当前时间]进行签名（参见上面的命令行），然后把签名后的消息黏贴到这个文本框中，再点“登录”"></textarea>
+    <textarea id="login_pgp_message" rows="10" cols="40" placeholder="请先在上面输入用户名，然后运行黄色框中的命令，把运行结果黏贴到这个文本框中，再点“用PGP签名登录”，失败了可以多试几次"></textarea>
     <br>
     <button type="button" id="pgp_login">用PGP签名登录</button>
     <br>

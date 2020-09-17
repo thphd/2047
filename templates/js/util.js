@@ -825,7 +825,7 @@ function at_reply(k){
       }
     })
   })
-})//()
+})()
 
 function highlight_hash(){
   var hash = location.hash

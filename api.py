@@ -222,9 +222,22 @@ def _():
     if not pk:
         raise Exception('user does not have a public key')
 
-    result = verify_publickey_message(pk, msg)
-    if not result:
-        raise Exception('verification failed')
+    n = 3
+    while n:
+        try:
+            result = verify_publickey_message(pk, msg)
+            if not result:
+                raise Exception('verification failed')
+        except Exception as e:
+            n-=1
+            if n:
+                print_err('Error:',n,e)
+                time.sleep(0.3)
+                continue
+            else:
+                raise e
+        else:
+            break
 
     return {'error':False, 'message':'login success', 'setuid':user['uid']}
 
