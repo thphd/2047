@@ -196,6 +196,8 @@ def get_public_key_by_uid(uid):
 
     return None
 
+from pgp_stuff import verify_publickey_message
+
 @register('login_pgp')
 def _():
     msg = es('message')
@@ -220,8 +222,7 @@ def _():
     if not pk:
         raise Exception('user does not have a public key')
 
-    from pgp_stuff import verify
-    result = verify(pk, msg)
+    result = verify_publickey_message(pk, msg)
     if not result:
         raise Exception('verification failed')
 
