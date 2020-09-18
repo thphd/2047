@@ -629,7 +629,8 @@ def _():
                 names=ats,
                 why='at_thread',
                 url=url,
-                from_uid=uid,
+                # from_uid=uid,
+                from_uid=thread['uid'],
             )
 
         update_thread_votecount(_id)
@@ -656,6 +657,7 @@ def _():
         aql('for p in posts filter p._key==@_id update p with @k in posts',
             _id=str(_id), k=newpost)
 
+        post['pid']=post['_key']
         del post['_key']
         post['type']='post'
         post['t_h']=timenow
@@ -674,7 +676,8 @@ def _():
                 names=ats,
                 why='at_post',
                 url=url,
-                from_uid=uid,
+                from_uid=post['uid'],
+                # from_uid=uid,
             )
 
         return inserted

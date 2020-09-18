@@ -946,7 +946,7 @@ def getpostcode(pid):
     p = aql('for p in posts filter p._key==@k return p',k=str(pid), silent=True)[0]
     resp = make_response(p['content'], 200)
     resp.headers['Cache-Control']='max-age=1800'
-    resp.headers['Content-Type']='text/plain; charset=UTF-8'
+    resp.headers['Content-Type']='text/plain; charset=utf-8'
     return resp
 
 @app.route('/t/<int:tid>/code')
@@ -957,7 +957,7 @@ def getthreadcode(tid):
     p = aql('for p in threads filter p.tid==@k return p',k=tid, silent=True)[0]
     resp = make_response(p['content'], 200)
     resp.headers['Cache-Control']='max-age=1800'
-    resp.headers['Content-Type']='text/plain; charset=UTF-8'
+    resp.headers['Content-Type']='text/plain; charset=utf-8'
     return resp
 
 @app.route('/c/<int:cid>')
@@ -1916,7 +1916,7 @@ def doc2resp(doc):
     pk = doc
     if isinstance(pk, str):
         r = make_response(pk, 200)
-        r.headers['Content-Type'] = 'text/plain'
+        r.headers['Content-Type'] = 'text/plain; charset=utf-8'
         r.headers['Content-Language']= 'en-US'
 
     else:
@@ -1938,7 +1938,7 @@ def get_invitation(iid):
         resp.headers['Location'] = '/u/'+str(i['uid'])
     else:
         resp=make_response(str(i),200)
-        resp.headers['content-type']='text/plain'
+        resp.headers['content-type']='text/plain; charset=utf-8'
     return resp
 
 @app.route('/404/<string:to_show>')
@@ -1959,7 +1959,7 @@ def robots():
     with open('templates/robots.txt', 'r') as f:
         s = f.read()
     resp = make_response(s, 200)
-    resp.headers['content-type'] = 'text/plain'
+    resp.headers['content-type'] = 'text/plain; charset=utf-8'
     return resp
 
 @app.errorhandler(404)

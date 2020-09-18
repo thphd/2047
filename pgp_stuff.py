@@ -19,10 +19,10 @@ def verify_publickey_message(pk, msg):
     pkbinfn = pkfn+'.gpg'
     msgfn = f'./temp/{fn}.msg'
 
-    with open(pkfn, 'w', encoding='ascii') as f:
+    with open(pkfn, 'w', encoding='utf-8') as f:
         f.write(pk)
 
-    with open(msgfn, 'w', encoding='ascii') as f:
+    with open(msgfn, 'w', encoding='utf-8') as f:
         f.write(msg)
 
     # remove armor
