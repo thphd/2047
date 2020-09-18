@@ -1566,12 +1566,72 @@ def notification_page():
     if not g.logged_in: raise Exception('not logged in')
     uid = g.current_user['uid']
 
-    notifications = aql('for i in notifications \
-    filter i.to_uid==@uid sort i.t_c desc limit 50 \
-    let from_user=(for u in users filter u.uid==i.from_uid return u)[0]\
-    return merge(i,{from_user})',
+    notifications = aql('''
+    for i in notifications
+    filter i.to_uid==@uid sort i.t_c desc limit 50
+
+    let from_user=(for u in users filter u.uid==i.from_uid return u)[0]
+    return merge(i,{from_user})
+    ''',
         uid=uid,
         silent=True)
+
+    def prehash(url):
+        return url.split('#')[0]
+    ph = prehash
+
+    # obtain titles for every mention
+    titles = []
+    for i in notifications:
+        u = i['url']
+        u = prehash(u)
+        grps = re.findall(r'/t/([0-9]{1,10})', u)
+        titles.append(int(grps[0]) if grps else None)
+    # print(titles)
+    titles = aql('for tid in @tids return (for t in threads filter t.tid==tid return [t.title, t.mode])[0]', tids=titles, silent=True)
+
+    # print(titles)
+    assert len(titles)==len(notifications)
+
+    for idx, i in enumerate(titles):
+        if notifications[idx] and i:
+            notifications[idx]['title']=i[0]
+            notifications[idx]['mode']=i[1]
+
+    # concat mentions of same problem
+    ns = []
+    flag = 0
+    for i in notifications:
+        if len(ns):
+            # if two mentions are about a same problem
+            if ns[-1]['why']==i['why'] and ph(ns[-1]['url'])==ph(i['url']):
+                if flag==0 or flag==1:
+                    if 'from_users' not in ns[-1]:
+                        ns[-1]['from_users'] = [ns[-1]['from_user']]
+
+                    ns[-1]['from_users'].insert(0,i['from_user'])
+                    # ns[-1]['url'] = i['url'] # use older url
+                    flag = 1
+                    continue
+
+            # if two mentions are from the same guy
+            if ns[-1]['from_uid']==i['from_uid'] and ns[-1]['why']==i['why']:
+                if flag==0 or flag==2:
+                    if 'urls' not in ns[-1]:
+                        ns[-1]['urls'] = [ns[-1]['url']]
+                        ns[-1]['titles'] = [ns[-1]['title']]
+
+                    ns[-1]['urls'].insert(0,i['url'])
+                    ns[-1]['titles'].insert(0,i['title'])
+
+                    flag = 2
+                    continue
+
+        flag=0
+        ns.append(i)
+
+    notifications = ns
+
 
     # mark unread
     for i in notifications:

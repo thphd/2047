@@ -416,15 +416,43 @@
   {%call post(p,['notification'])%}
 
     {%if p.why == 'reply_thread'%}
-      <a href="/u/{{p.from_uid}}">{{(p.from_user and p.from_user.name) or p.from_uid}}</a>
+      {%if not p.from_users%}
+        <a href="/u/{{p.from_uid}}">{{(p.from_user and p.from_user.name) or p.from_uid}}</a>
+
+      {%else%}
+        {%for u in p.from_users%}{%if loop.index0%}、{%endif%}<a href="/u/{{u.uid}}">{{u.name or u.uid}}</a>{%endfor%}
+
+      {%endif%}
+
       <span>在你的</span>
-      <a href="{{p.url}}">帖子 - {{p.url}}</a>
+      {%set ts = '问题'if p.mode=='question' else'文章'%}
+      {%if not p.urls%}
+        <a href="{{p.url}}">{{ts}}：{{p.title}}</a>
+
+      {%else%}
+        {%for l in p.urls%}
+          {%if loop.index0%}和{%endif%}
+          <a href="{{l}}">{{ts}}：{{p.titles[loop.index0]}}</a>
+        {%endfor%}
+
+      {%endif%}
+
       <span>下发表了回复</span>
 
     {%elif 'at' in (p.why or '')%}
-      <a href="/u/{{p.from_uid}}">{{(p.from_user and p.from_user.name) or p.from_uid}}</a>
+      {%if not p.from_users%}
+        <a href="/u/{{p.from_uid}}">{{(p.from_user and p.from_user.name) or p.from_uid}}</a>
+
+      {%else%}
+        {%for u in p.from_users%}
+          {%if loop.index0%}和{%endif%}<a href="/u/{{u.uid}}">{{u.name or u.uid}}</a>
+
+        {%endfor%}
+
+      {%endif%}
+
       <span>在</span>
-      <a href="{{p.url}}">{{'评论' if 'post'in p.why else '帖子'}} - {{p.url}}</a>
+      <a href="{{p.url}}">{{'评论：' if 'post'in p.why else '帖子：'}}{{p.title or p.url}}</a>
       <span>中 @ 了你</span>
 
     {%endif%}
