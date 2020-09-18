@@ -150,7 +150,7 @@ username_regex=r'^' + username_regex_proto + r'$'
 username_regex_pgp = r'2047login#(' + username_regex_proto + r')#(.{19})'
 username_regex_string = str(username_regex).replace('\\\\','\\')
 
-at_extractor_regex = r'@([0-9a-zA-Z\u4e00-\u9fff\-\_\.]{2,16}?)(?=[^0-9a-zA-Z\u4e00-\u9fff\-\_\.]|$)'
+at_extractor_regex = r'(?:[^0-9a-zA-Z\u4e00-\u9fff\-\_\.]|^)@([0-9a-zA-Z\u4e00-\u9fff\-\_\.]{2,16}?)(?=[^0-9a-zA-Z\u4e00-\u9fff\-\_\.]|$)'
 
 @lru_cache(maxsize=4096)
 def extract_ats(s): # extract @usernames out of text
@@ -266,7 +266,7 @@ if 0:
 elif 1:
     import mistletoe
 
-    @lru_cache(maxsize=4096)
+    @lru_cache(maxsize=8192)
     def convert_markdown(s):
         s = replace_pal(s)
         s = replace_tal(s)
