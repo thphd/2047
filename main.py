@@ -1907,6 +1907,11 @@ def pkey_uname(uname, ty):
 def pkey_uid(uid, ty):
     return pkey(uid, ty)
 
+@app.route('/public_key/<string:uname>')
+def pkey_un(uname):
+    u = get_user_by_name(uname)
+    return pkey(u['uid'],'public_key')
+
 def doc2resp(doc):
     pk = doc
     if isinstance(pk, str):

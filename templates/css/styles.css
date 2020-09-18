@@ -290,7 +290,7 @@ body>#content {
 }
 
 .post_content li {
-    margin: 4px 0;
+    margin: .5em 0;
     line-height: 170%;
 }
 
@@ -485,10 +485,13 @@ img.headerbtn {
 }
 
 .post_content :not(pre)> code {
-    margin: 0 3px;
+    margin: 0 4px;
     background-color: #e9f3f7;
     padding: 2px 5px;
     border-radius: 3px;
+    border-style: solid;
+    /* color: black; */
+    border-color: #bedaee;
 }
 
 .invitations {
