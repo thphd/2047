@@ -92,7 +92,10 @@
             <a href="/t/7110">服务条款</a>
             <a rel='noreferrer' href="https://github.com/thphd/2047">GitHub</a>
             <a rel='noreferrer' href="http://line-count.herokuapp.com/thphd/2047">line_count</a>
-            <a href="{{request.scheme}}://{{request.host}}/qr/https://2047.name{{request.full_path[:-1] if request.full_path[-1]=='?' else request.full_path}}">二维码分享此页</a>
+            {%if 0%}
+              {#remove this temporarily. find a better way maybe#}
+              <a href="{{request.scheme}}://{{request.host}}/qr/https://2047.name{{request.full_path[:-1] if request.full_path[-1]=='?' else request.full_path}}">二维码分享此页</a>
+            {%endif%}
           </div>
 
           <div class="copyright">

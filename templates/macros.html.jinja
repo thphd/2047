@@ -20,7 +20,7 @@
 {%endmacro%}
 
 {# one line of post #}
-{%macro post(p, metas)%}
+{%macro post(p, metas, avatar_user=False)%}
 
 {% set _idt = 'id="' ~ p.tid ~ '"' if 'threadlist' in metas %}
 {% set _ide = 'id="editor"' if 'editor' in metas %}
@@ -48,8 +48,8 @@
     {# editor avatar should be current logged in user's #}
 
     {{avatar(
-      ('editor' in metas and g.logged_in)
-      or u
+      avatar_user
+      or ('editor' in metas and g.logged_in)
       or p.user
       or p.from_user
       or p.last_user
@@ -57,6 +57,7 @@
         (p.last.user if p.last.to_uid==g.logged_in.uid else p.last.to_user))
 
       or p.last
+      or u
       or (p.name and p)
       or g.logged_in
       or {"uid":5132})
@@ -174,7 +175,7 @@
           {%elif m=='publish_date_thread'%}
             {# publish date #}
             <a class="last_commented_date" href="/t/{{p.tid}}">
-              {{format_time_dateifnottoday(p.t_c)}}
+              {{format_time_relative_fallback(p.t_c)}}
             </a>
 
           {%elif m=='publish_date_linkto'%}
@@ -249,7 +250,7 @@
 
               {# last commented date #}
               <a class="last_commented_date" href="{{url_to_last}}">
-                {{format_time_dateifnottoday(p.last.t_c)}}
+                {{format_time_relative_fallback(p.last.t_c)}}
               </a>
 
             {%endif%}
@@ -442,7 +443,7 @@
 
 {# one line of post, used in postlist without a thread #}
 {%macro post_postlist_threadless(p)%}
-  {%call post(p,metas=[])%}
+  {%call post(p, metas=[], avatar_user=p.user)%}
 
   <div class="meta upper">
     {# publisher #}
@@ -472,11 +473,11 @@
     {{undervote(p, target_type='post')}}
 
     {#link to post within original article#}
-    <a href="/p/{{p._key}}">/t/{{p.tid}}</a>
+    {# <a href="/p/{{p._key}}">/t/{{p.tid}}</a> #}
 
     {# publish date with a link to original post#}
     <a class="date" href="/p/{{p._key}}">
-      {{format_time_dateifnottoday(p.t_c)}}
+      {{format_time_relative_fallback(p.t_c)}}
     </a>
 
     {{edit_post(p)}}
@@ -658,7 +659,7 @@
 {%macro header()%}
   {%if page_title%}
     <div class="header">
-      <span onclick="window.location.href='{{request.full_path if ('editor' in request.full_path) else request.path}}'">{{page_title}}</span>
+      <a class="header_title" href="javascript:window.location.reload()">{{page_title}}</a>
 
       {{category_bubble(t.category) if (t and t.category) else ''}}
 

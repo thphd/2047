@@ -95,10 +95,10 @@
 
   {%for t in sc_ts%}
     {%if t.type=='thread'%}
-    {{macros.post_postlist_header_kept(t)}}
+      {{macros.post_postlist_header_kept(t)}}
 
     {%else%}
-    {{macros.post_postlist(t)}}
+      {{macros.post_postlist_threadless(t)}}
 
     {%endif%}
   {%endfor%}

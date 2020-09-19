@@ -1305,22 +1305,20 @@ def get_alias_user_by_name(uname):
 def userpage_byname(name):
     # check if user exists
     res = aql('for u in users filter u.name==@n return u', n=name)
-    assert is_legal_username(name)
-    
+
     if len(res)==0:
-        return make_response(f'''
-        <p>
-        找不到用户: {name}
-        <br>
-        你可以试试: <a href='https://pincong.rocks/people/{name}'>
-        {name}(品葱)
-        </a>
-        <br>
-        或者试试: <a href='https://mohu.rocks/people/{name}'>
-        {name}(膜乎)
-        </a>
-        </p>
-        ''', 404)
+        assert is_legal_username(name)
+        return make_response(convert_markdown(
+        f'''
+找不到用户: {name}
+
+- 你可以试试: [{name} (XsDen)](https://xsden.info/user/{name})
+
+- 或者试试: [{name} (品葱)](https://pincong.rocks/people/{name})
+
+- 或者试试: [{name} (膜乎)](https://mohu.rocks/people/{name})
+        '''
+        ), 404)
 
     u = res[0]
     return _userpage(u['uid'])

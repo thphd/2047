@@ -150,18 +150,19 @@ username_regex=r'^' + username_regex_proto + r'$'
 username_regex_pgp = r'2047login#(' + username_regex_proto + r')#(.{19})'
 username_regex_string = str(username_regex).replace('\\\\','\\')
 
-at_extractor_regex = r'(?:[^0-9a-zA-Z\u4e00-\u9fff\-\_\.]|^)@([0-9a-zA-Z\u4e00-\u9fff\-\_\.]{2,16}?)(?=[^0-9a-zA-Z\u4e00-\u9fff\-\_\.]|$)'
+at_extractor_regex = r'(^|[^0-9a-zA-Z\u4e00-\u9fff\-\_\.])@([0-9a-zA-Z\u4e00-\u9fff\-\_\.]{2,16}?)(?=[^0-9a-zA-Z\u4e00-\u9fff\-\_\.]|$)'
 
-@lru_cache(maxsize=4096)
+# @lru_cache(maxsize=4096)
 def extract_ats(s): # extract @usernames out of text
     groups = re.findall(at_extractor_regex, s, flags=re.MULTILINE)
-    return groups
+    print(groups)
+    return [g[1] for g in groups]
 
 # @lru_cache(maxsize=4096)
 def replace_ats(s): # replace occurence
     def f(match):
-        uname = match.group(1)
-        return '[@{uname}](/member/{uname})'.format(uname=uname)
+        uname = match.group(2)
+        return match.group(1) + f'[@{uname}](/member/{uname})'
 
     return re.sub(at_extractor_regex, f, s, flags=re.MULTILINE)
 

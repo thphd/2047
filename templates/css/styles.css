@@ -694,10 +694,11 @@ code .nf {
     margin-bottom: 10px;
 }
 
-.header > * {
+.header > .header_title {
     margin-right: 10px;
     display: flex;
     text-decoration: none;
+    color: black;
 }
 
 .header > .makepost {
@@ -1512,6 +1513,6 @@ input[type="text"],input[type="password"] {
 
 .post_thread_title {
     font-size: 12px;
-    margin: 0.3em 0;
-    opacity: .4;
+    margin: 0.4em 0;
+    opacity: .5;
 }
