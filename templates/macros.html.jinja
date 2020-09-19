@@ -1,5 +1,24 @@
 <!-- all template macros of this project -->
 
+{%macro avatar(u)%}
+  {%set uid = u.uid %}
+  {%set pt = u.personal_title%}
+  {%set pp = u.personal_party%}
+
+  <a class="avatar_outer" href="/u/{{uid}}">{%if pp%}<img class='personal_title' src='/avatar/{{pp}}.png'>{%elif pt%}<span class='personal_title'>{{pt}}</span>{%endif%}<img class="avatar" src="/avatar/{{uid}}.png" alt=""></a>
+
+{%endmacro%}
+
+{%macro username(u, class='user_name')%}
+  {%set watching = '鹿' in (u.name or '')%}
+  <a href='/u/{{u.uid}}' class="{{class}}">{%if u.delete%}<s>{%endif%}{{u.name or u.uid}}{%if u.delete%}</s>{%endif%}{%if watching%}<sup>观察</sup>{%endif%}</a>
+
+{%endmacro%}
+
+{%macro brief(u, class='brief')%}
+  <span class='{{class}}'>{{u.brief and u.brief[:80]}}</span>
+{%endmacro%}
+
 {# one line of post #}
 {%macro post(p, metas)%}
 
@@ -27,53 +46,47 @@
 
   <div class="left">
     {# editor avatar should be current logged in user's #}
-    {% set uid = g.logged_in.uid if 'editor' in metas else p.uid %}
-    {% set uid = uid if not (('conversation' in metas) and p.last) else (
-      p.last.to_uid if p.last.to_uid!=g.logged_in.uid else p.last.uid
-    ) %}
-    {% set uid = uid if 'notification' not in metas else (p.from_uid or 5132) %}
 
-    {%set pt = g.logged_in.personal_title if 'editor'in metas else ((p.user and p.user.personal_title) or p.personal_title) %}
-    {%set pp = g.logged_in.personal_party if 'editor' in metas else ((p.user and p.user.personal_party) or p.personal_party)%}
+    {{avatar(
+      ('editor' in metas and g.logged_in)
+      or u
+      or p.user
+      or p.from_user
+      or p.last_user
+      or (p.last and 'conversation' in metas and
+        (p.last.user if p.last.to_uid==g.logged_in.uid else p.last.to_user))
 
-
-    <a href="/u/{{uid}}">{%if pp%}<img class='personal_title' src='/avatar/{{pp}}.png'>{%elif pt%}<span class='personal_title'>{{pt}}</span>{%endif%}<img class="avatar" src="/avatar/{{uid}}.png" alt=""></a>
-
-    {%if 'thread_header' in metas and 0%}
-    {# publisher #}
-    <div class="thread_header_info">
-      <div class="">
-        <a class="user_name" href="/u/{{p.uid}}">{{p.user.name}}</a>
-      </div>
-
-      <div class="">
-        <span class='brief'>{{p.user.brief}}</span>
-      </div>
-    </div>
-    {%endif%}
+      or p.last
+      or (p.name and p)
+      or g.logged_in
+      or {"uid":5132})
+    }}
 
   </div>
 
   <div class="right">
     <div class="details">
+      {%if caller%}
+        {{caller()}}
+      {%else%}
 
       {%if 'upper' in metas%}
         <div class="meta upper">
           {%if 'publisher_upper' in metas%}
-          {# publisher #}
-          <a class="user_name" href="/u/{{p.uid}}">{{p.user.name}}{%if '鹿' in  p.user.name%}<sup>观察</sup>{%endif%}</a>
+            {# publisher #}
+            {{username(p.user)}}
           {%endif%}
 
           {%if 'brief_upper' in metas%}
-          <span class='brief'>{{p.user.brief and p.user.brief[:80]}}</span>
+            {{brief(p.user)}}
           {%endif%}
 
         </div>
       {%endif%}
 
       <div class="{{'' if 'editor' in metas else 'post_content'}}">
-        {%if caller%}
-          {{caller()}}
+        {# what's inside dev.post_content #}
+        {%if 0%}
         {%else%}
           {% set text = p.content or p.text or p.profile_string or p.name or p.title or (p.last and p.last.content) or '' %}
 
@@ -92,21 +105,15 @@
 
           {# content is name of an user #}
           {%elif 'userlist' in metas %}
-            {%if p.delete%}
-            <a href='/u/{{p.uid}}' class='userlist_name'>
-              <s>{{text}}</s>
-            </a>
-            {%else%}
-            <a href='/u/{{p.uid}}' class='userlist_name'>
-              {{text}}
-            </a>
-            {%endif%}
+              {{username(p, class='userlist_name')}}
 
               {%if p.invited_by and g.is_admin %}
-              (由<a href="/u/{{p.invited_by}}">{{p.invited_by}}</a>邀请)
+                (由<a href="/u/{{p.invited_by}}">{{p.invited_by}}</a>邀请)
               {%endif%}
 
               {%if p.ip_addr and g.is_admin and g.current_user['uid']==5108%}(from: {{p.ip_addr}}){%endif%}
+
+              {{brief(p,'userlist_brief')}}
 
 
           {# content is an editor #}
@@ -128,9 +135,6 @@
 
           {%endif%}
 
-          {%if p.brief%}
-          <span class="userlist_brief">{{p.brief[:80]}}</span>
-          {%endif%}
         {%endif%}
 
       </div>
@@ -152,18 +156,18 @@
 
           {%if m=='publisher'%}
             {# publisher #}
-            <a class="user_name" href="/u/{{p.uid}}">{{p.user.name}}</a>
+            {{username(p.user)}}
 
           {%elif m=='publisher_conditional'%}
               {# publisher #}
               {%if not p.count%}
-              <a class="user_name" href="/u/{{p.uid}}">{{p.user.name}}</a>
+              {{username(p.user)}}
 
-              {%if p.mode!='question' %}
-              <span>发布了文章</span>
-              {%else%}
-              <span>发布了问题</span>
-              {%endif%}
+                {%if p.mode!='question' %}
+                <span>发布了文章</span>
+                {%else%}
+                <span>发布了问题</span>
+                {%endif%}
 
               {%endif%}
 
@@ -194,15 +198,17 @@
           {%elif m=='conversation_with'%}
             {%set sent = 1 if p.last.uid==g.logged_in.uid else 0 %}
             <span>{{"发给" if sent else "来自"}}</span>
-            <a class="user_name" href="/u/{{p.last.to_uid if sent else p.last.uid}}">{{p.last.to_user.name if sent else p.last.user.name}}</a>
+            {{username(p.last.to_user) if sent else username(p.last.user)}}
 
           {%elif m=='conversation_date'%}
             <span>{{format_time_dateifnottoday(p.last.t_c)}}</span>
+
             {%if not p.delete%}
               <a href="javascript:mark_delete('conversation/{{p.convid}}')" class='adminstuff'>屏蔽对话</a>
             {%else%}
               <a href="javascript:mark_delete('uconversation/{{p.convid}}')" class='adminstuff'>取消屏蔽</a>
             {%endif%}
+
           {%elif m=='notification'%}
             <span>{{format_time_datetime(p.t_c)}}</span>
 
@@ -327,11 +333,11 @@
           {%elif m=='message'%}
             <span>由</span>
             {# sender #}
-            <a class="user_name" href="/u/{{p.uid}}">{{p.user.name}}</a>
+            {{username(p.user)}}
 
             <span>发送给</span>
             {# receiver #}
-            <a class="user_name" href="/u/{{p.to_uid}}">{{p.to_user.name}}</a>
+            {{username(p.to_user)}}
 
             {# date #}
             <span>
@@ -342,6 +348,7 @@
 
         {%endfor%}
       </div>
+    {%endif%}
     </div>
   </div>
 
@@ -367,9 +374,117 @@
 
 {%endmacro%}
 
+{# vote button under thread/post #}
+{%macro undervote(p, target_type='post')%}
+  {%set targ_type = target_type %}
+  {%set is_thread = target_type=='thread' %}
+  {%set targ_id = p.tid if is_thread else p._key%}
+  {%set num_votes = p.votes or 0 %}
+
+  {%set can = can_do_to(g.logged_in,'vote',p.uid)%}
+  {%set self_voted = p.self_voted or False %}
+
+  <div class="vote_section {{'enabled' if can}}">
+
+    <div class="upvote {{'enabled' if can}} {{'has_vote' if num_votes}} {{'self_voted' if self_voted}}" target="{{targ_type~'/'~targ_id}}">
+      ▲ <span class="votenumber">{{ num_votes or '' }}</span>
+    </div>
+
+  {%if g.logged_in.uid==5108 and can_do_to(g.logged_in, 'update_votecount', p.uid)%}
+      <a href="javascript:update_votecount('{{targ_type}}/{{targ_id}}')">更新数据</a>
+  {%endif%}
+
+  </div>
+
+{%endmacro%}
+
+{%macro edit_status(p)%}
+  {# if object has been edited #}
+  {%if p.editor and p.t_e %}
+    <div class='edited_by'>
+      <span>[ 由</span>
+      <a href="/u/{{p.editor}}">{{'作者' if p.editor==p.uid else '其他人'}}</a>
+      <span>于</span>
+      <span>{{format_time_dateonly(p.t_e)}}</span>
+      <span>编辑 ]</span>
+    </div>
+  {%endif%}
+{%endmacro%}
+
 {# one line of post, used in postlist #}
 {%macro post_postlist(p)%}
   {{post(p, ['upper','publisher_upper','brief_upper','under_vote','publish_date_linkto','link_to','postlist','at_reply','edit_post','display_edit_status','post','view_post_code','delete_post'])}}
+{%endmacro%}
+
+{%macro delete_post(p)%}
+{%if can_do_to(g.logged_in, 'delete', p.uid)%}
+  {%if not p.delete%}
+    <a class='adminstuff delete' href="javascript:mark_delete('{{'post/'~p._key}}')">删除</a>
+
+  {%else%}
+    <a class='adminstuff undelete' href="javascript:mark_delete('{{'upost/'~p._key}}')">取消删除</a>
+
+  {%endif%}
+{%endif%}
+{%endmacro%}
+
+{%macro edit_post(p)%}
+  {%if can_do_to(g.logged_in, 'edit', p.uid)%}
+    <a class='adminstuff edit' href="/editor?target=edit_post/{{p._key}}">编辑</a>
+  {%endif%}
+{%endmacro%}
+
+{%macro source_post(p)%}
+  {%if can_do_to(g.current_user,'view_code',-1)%}
+    <a class='adminstuff viewcode' href="/p/{{p._key}}/code">源码</a>
+  {%endif%}
+{%endmacro%}
+
+{# one line of post, used in postlist without a thread #}
+{%macro post_postlist_threadless(p)%}
+  {%call post(p,metas=[])%}
+
+  <div class="meta upper">
+    {# publisher #}
+    {{username(p.user)}}
+    {{brief(p.user)}}
+  </div>
+
+  {%if p.t and p.t.title %}
+  <div class="post_thread_title">
+    <a href="/p/{{p._key}}">
+      {{'回答'if p.t.mode=='question'else'回复'}}
+      {{p.t.title}}</a>
+  </div>
+  {%endif%}
+
+  <div class="post_content">
+    {%if not p.delete%}
+      {{(convert_markdown(p.content or '')|safe)}}
+    {%else%}
+      <s>内容被删除</s>
+    {%endif%}
+  </div>
+
+  {{edit_status(p)}}
+
+  <div class="meta">
+    {{undervote(p, target_type='post')}}
+
+    {#link to post within original article#}
+    <a href="/p/{{p._key}}">/t/{{p.tid}}</a>
+
+    {# publish date with a link to original post#}
+    <a class="date" href="/p/{{p._key}}">
+      {{format_time_dateifnottoday(p.t_c)}}
+    </a>
+
+    {{edit_post(p)}}
+    {{source_post(p)}}
+    {{delete_post(p)}}
+  </div>
+
+  {%endcall%}
 {%endmacro%}
 
 {# one line of post, used in postlist's thread header #}
@@ -414,7 +529,7 @@
 {# one line of notification, used in notification_list #}
 {%macro post_notification(p)%}
   {%call post(p,['notification'])%}
-
+  <div class="post_content">
     {%if p.why == 'reply_thread'%}
       {%if not p.from_users%}
         <a href="/u/{{p.from_uid}}">{{(p.from_user and p.from_user.name) or p.from_uid}}</a>
@@ -455,7 +570,17 @@
       <a href="{{p.url}}">{{'评论：' if 'post'in p.why else '帖子：'}}{{p.title or p.url}}</a>
       <span>中 @ 了你</span>
 
+    {%else%}
+      <span>unknown reason</span>
     {%endif%}
+  </div>
+
+  <div class="meta">
+    <span class=date>
+      {{format_time_datetime(p.t_c)}}
+    </span>
+  </div>
+
   {%endcall%}
 {%endmacro%}
 

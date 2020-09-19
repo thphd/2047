@@ -261,7 +261,7 @@ span.last_commented_date {
 
 
 .response {
-    color: #a3c8a0;
+    color: #7ebb79;
     /* width: 70px; */
     justify-content: flex-end;
 }
@@ -389,6 +389,7 @@ img.headerbtn {
     /* display: flex; */
     /* flex-wrap: nowrap; */
     /* flex-direction: column; */
+    line-height: 1.5;
 }
 
 .leftalign > * {
@@ -551,7 +552,7 @@ a.threadlist_title {
     color: #b1b1b1;
 }
 
-.left > a {
+.avatar_outer {
     display: flex;
     position: relative;
 }
@@ -1507,4 +1508,10 @@ input[type="text"],input[type="password"] {
     background: #e6e6c3;
     padding: 10px;
     font-family: monospace;
+}
+
+.post_thread_title {
+    font-size: 12px;
+    margin: 0.3em 0;
+    opacity: .4;
 }

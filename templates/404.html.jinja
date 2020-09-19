@@ -39,9 +39,9 @@
   </div>
   {%endif%}
 
-  {%if err and (err.original_exception or err)%}
+  {%if err %}
   <div class="secondline post_content" style='opacity:0.5;'>
-    <pre><code>{{err.original_exception or err}}</code></pre>
+    <pre><code>{{err}}</code></pre>
   </div>
   {%endif%}
 

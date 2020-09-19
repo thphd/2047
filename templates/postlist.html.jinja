@@ -12,7 +12,13 @@
 <div class="threadlist">
 
   {%for p in postlist%}
-  {{macros.post_postlist(p)}}
+    {%if t%}
+      {{macros.post_postlist(p)}}
+
+    {%else%}
+      {{macros.post_postlist_threadless(p)}}
+
+    {%endif%}
   {%endfor%}
 
 </div>
@@ -27,23 +33,24 @@
 
 {%block navigator%}
 <div id="navigator" class="">
+
   {%if t%}
-  <div class="navigator_userpanel">
-    {# publisher #}
-    <div class="thread_header_info">
-      <div class="avatar_line">
-        <a href="/u/{{t.uid}}"><img class="avatar" src="/avatar/{{t.uid}}.png" alt=""></a>
-        <a class="user_name" href="/u/{{t.uid}}">{{t.user.name}}</a>
+    <div class="navigator_userpanel">
+      {# publisher #}
+      <div class="thread_header_info">
+        <div class="avatar_line">
+          {{macros.avatar(t.user)}}
+          {{macros.username(t.user)}}
 
+        </div>
+
+        <div class="">
+          <span class='brief'>{{t.user.brief}}</span>
+        </div>
       </div>
 
-      <div class="">
-        <span class='brief'>{{t.user.brief}}</span>
-      </div>
     </div>
-
-  </div>
-
   {%endif%}
+
 </div>
 {%endblock%}

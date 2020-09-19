@@ -264,7 +264,8 @@ class Paginator:
         pagenumber=1,
 
         path='',
-        mode=''):
+        mode='',
+        apply_origin=False):
 
         assert by in ['thread', 'user','all']
         assert is_integer(tid)
@@ -296,20 +297,38 @@ class Paginator:
 
         selfuid = g.selfuid
 
-        querystring_complex = '''
-        for i in posts
-        {filter}
+        if apply_origin:
+            querystring_complex = '''
+            for i in posts
+            {filter}
 
-        let u = (for u in users filter u.uid==i.uid return u)[0]
-        let self_voted = length(for v in votes filter v.uid=={selfuid} and v.id==to_number(i._key) and v.type=='post' and v.vote==1 return v)
+            let u = (for u in users filter u.uid==i.uid return u)[0]
+            let t = unset((for t in threads filter t.tid==i.tid return t)[0],'content')
 
-        sort i.{sortby} {order}
-        limit {start},{count}
-        return merge(i, {{user:u}},{{self_voted}})
-        '''.format(
-            selfuid = selfuid,
-            sortby = sortby,order=order,start=start,count=count,filter=filter,
-        )
+            let self_voted = length(for v in votes filter v.uid=={selfuid} and v.id==to_number(i._key) and v.type=='post' and v.vote==1 return v)
+
+            sort i.{sortby} {order}
+            limit {start},{count}
+            return merge(i, {{user:u}},{{self_voted}},{{t}})
+            '''.format(
+                selfuid = selfuid,
+                sortby = sortby,order=order,start=start,count=count,filter=filter,
+            )
+        else:
+            querystring_complex = '''
+            for i in posts
+            {filter}
+
+            let u = (for u in users filter u.uid==i.uid return u)[0]
+            let self_voted = length(for v in votes filter v.uid=={selfuid} and v.id==to_number(i._key) and v.type=='post' and v.vote==1 return v)
+
+            sort i.{sortby} {order}
+            limit {start},{count}
+            return merge(i, {{user:u}},{{self_voted}})
+            '''.format(
+                selfuid = selfuid,
+                sortby = sortby,order=order,start=start,count=count,filter=filter,
+            )
 
         querystring_simple = '''
         return length(for i in posts {filter} return i)
@@ -1160,7 +1179,9 @@ def uposts(uid):
         sortby=sortby,
         order=order,
         pagenumber=pagenumber, pagesize=pagesize,
-        path = rpath)
+        path = rpath,
+        apply_origin=True,
+        )
 
     # remove_duplicate_brief(postlist)
 
@@ -1193,7 +1214,19 @@ def get_all_posts():
         sortby=sortby,
         order=order,
         pagenumber=pagenumber, pagesize=pagesize,
-        path = rpath)
+        path = rpath,
+        apply_origin=True,
+    )
+
+    # remove duplicate thread titles for posts
+    lt = ''
+    for i in postlist:
+        if i and i['t'] and i['t']['title']:
+            title = i['t']['title']
+            if title==lt:
+                i['t']['title']=''
+            else:
+                lt = title
 
     # remove_duplicate_brief(postlist)
 
@@ -1205,7 +1238,6 @@ def get_all_posts():
         # t=thobj,
         # u=uobj,
         # threadcount=count,
-
     )
 
 @app.route('/editor')
@@ -1273,6 +1305,8 @@ def get_alias_user_by_name(uname):
 def userpage_byname(name):
     # check if user exists
     res = aql('for u in users filter u.name==@n return u', n=name)
+    assert is_legal_username(name)
+    
     if len(res)==0:
         return make_response(f'''
         <p>
@@ -1351,6 +1385,7 @@ def _userpage(uid):
             pagenumber=rai('page') or inv_list_defaults['pagenumber']
             pagesize=inv_list_defaults['pagesize']
             order = ras('order') or inv_list_defaults['order']
+            assert order in ['asc', 'desc']
             sortby = 't_c'
 
             ninvs = aql('return length(for i in invitations filter i.uid==@k\
@@ -1392,6 +1427,7 @@ def _userpage(uid):
 @app.route('/register')
 def regpage():
     invitation = ras('code') or ''
+    assert is_alphanumeric(invitation)
 
     return render_template_g('register.html.jinja',
         invitation=invitation,
@@ -1402,6 +1438,7 @@ def regpage():
 @app.route('/login')
 def loginpage():
     username = ras('username') or ''
+    assert is_legal_username(username) or username==''
 
     return render_template_g('login.html.jinja',
         username=username,
@@ -1730,7 +1767,7 @@ def apir():
 def upload_file():
     if request.method != 'POST':
         return e('please use POST')
-    if not g.logged_in: raise Exception('log in please')
+    must_be_logged_in()
 
     data = request.data # binary
     # print(len(data))
@@ -1964,17 +2001,20 @@ def robots():
 
 @app.errorhandler(404)
 def e404(e):
+    err = str(e) or str(e.original_exception) or str(e.original_exception.__class__.__name__)
     return render_template_g('404.html.jinja',
         page_title='404',
-        err=e,
+        err=err,
     ), 404
 
 @app.errorhandler(500)
 def e5001(e):
+    err = str(e.original_exception) or str(e.original_exception.__class__.__name__)
+    print(f"{err}",len(err))
     return render_template_g('404.html.jinja',
         page_title='500',
         e500=True,
-        err=e,
+        err=err,
     ), 500
 
 if __name__ == '__main__':

@@ -543,9 +543,15 @@ messaging_warning = convert_markdown('''
 ''')
 
 register_warning = convert_markdown('''
-# 请注意
+# 不想被封号？
 
-使用2047的所有用户都必须遵守[《服务条款》](/t/7110)。违反《服务条款》的用户，其账号将会被封禁。
+使用2047的所有用户都必须遵守[《服务条款》](/t/7110)，违反《服务条款》的用户，其违规内容会被删除，违规账号会被封禁。
+
+概括来讲：
+
+- 在他人楼下不得作出任何无礼行为，包括脏话、歧视、骚扰、控诉、调戏讽刺挖苦、重复灌水、强迫他人接受观点。如果确实有需要，可以另开一楼。
+- 对管理、对内容有任何意见，请私信联系管理员。
+- 对服务条款不满意的话，我们推荐你去[品葱](https://pincong.rocks)，那里没有服务条款，对用户更加包容
 
 ''')
 
@@ -569,6 +575,12 @@ def indexgen(condss, sorts):
         for sort in sorts:
             r1.append(conds+[sort])
     return r1
+
+def is_legal_username(n):
+    return re.fullmatch(username_regex, n)
+
+def is_alphanumeric(n):
+    return re.fullmatch(r'^[0-9a-zA-Z]*$', n)
 
 if __name__ == '__main__':
     print('filtgen')
