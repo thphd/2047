@@ -30,6 +30,7 @@ from commons import *
 
 from flask_cors import CORS
 
+import flask
 from flask import Flask, g, abort # session
 
 # FUCK YOU, FLASK
@@ -1321,7 +1322,9 @@ def userpage_byname(name):
     res = aql('for u in users filter u.name==@n return u', n=name)
 
     if len(res)==0:
-        assert is_legal_username(name)
+        # assert is_legal_username(name)
+        name=flask.escape(name)
+
         return make_response(convert_markdown(
         f'''
 找不到用户: {name}
@@ -1439,7 +1442,6 @@ def _userpage(uid):
 @app.route('/register')
 def regpage():
     invitation = ras('code') or ''
-    assert is_alphanumeric(invitation)
 
     return render_template_g('register.html.jinja',
         invitation=invitation,
@@ -1450,7 +1452,6 @@ def regpage():
 @app.route('/login')
 def loginpage():
     username = ras('username') or ''
-    assert is_legal_username(username) or username==''
 
     return render_template_g('login.html.jinja',
         username=username,
