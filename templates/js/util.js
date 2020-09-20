@@ -827,15 +827,22 @@ function at_reply(k){
   })
 })()
 
+var last_hightlight = false
 function highlight_hash(){
   var hash = location.hash
   if(hash[0]=='#'){
+    if(last_hightlight){
+      last_hightlight.classList.remove('chosen')
+    }
+
     var _id = hash.substr(1)
     var elem = geid(_id)
     if(elem){
       print('highlighted:',elem)
-      elem.className+=' chosen'
-      elem.style=''
+      elem.classList.add('chosen')
+      elem.style='' // remove color artifacts
+
+      last_hightlight=elem
     }
   }
 }
@@ -1191,3 +1198,29 @@ function delete_entity(key){
   })
   .catch(alert)
 }
+
+// function goto(s){
+//   var p = geid(s)
+//   if (p){
+//     window.location.href = '#'+s
+//     highlight_hash()
+//   }else{
+//     window.location.href = '/p/'+s
+//   }
+// }
+
+// #1234 links now jumps to ids within page if possible
+foreach(gebtn(document)('a'))(e=>{
+  if(e && e.href){
+    var href = e.getAttribute('href')
+    // print(href)
+    var match = href.match(/^\/p\/([0-9a-z]{1,})$/)
+    if(match){
+      var pid = match[1]
+      if(geid(pid)){
+        e.href = '#'+pid
+        e.onclick = function(){setTimeout(highlight_hash, 50)}
+      }
+    }
+  }
+})

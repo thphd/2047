@@ -92,9 +92,13 @@
             <a href="/t/7110">服务条款</a>
             <a rel='noreferrer' href="https://github.com/thphd/2047">GitHub</a>
             <a rel='noreferrer' href="http://line-count.herokuapp.com/thphd/2047">line_count</a>
-            {%if 0%}
+            {%if 1%}
               {#remove this temporarily. find a better way maybe#}
-              <a href="{{request.scheme}}://{{request.host}}/qr/https://2047.name{{request.full_path[:-1] if request.full_path[-1]=='?' else request.full_path}}">二维码分享此页</a>
+              <a href="{{request.scheme}}://{{
+                request.host}}/qr/https://2047.name{{
+
+                request.full_path[:-1] if request.full_path[-1]=='?' else request.full_path
+              }}">二维码分享此页</a>
             {%endif%}
           </div>
 
@@ -120,9 +124,6 @@
           <div class="copyright">
             <img src="/images/ga.png">
             京公网安备 11010502000728号 京ICP备11027288号
-            {#
-            <a href="/jgawb/全国互联网安全管理服务平台.html">京公网安备 11040102700068号</a>
-            <a href="/jicpb/ICP_IP地址_域名信息备案管理系统.html">京ICP备 04000001号</a>#}
           </div>
 
           {%endif%}

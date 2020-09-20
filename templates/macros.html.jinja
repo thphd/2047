@@ -20,13 +20,15 @@
 {%endmacro%}
 
 {# one line of post #}
-{%macro post(p, metas, avatar_user=False)%}
+{%macro post(p, metas, avatar_user=False, item_id=False)%}
 
-{% set _idt = 'id="' ~ p.tid ~ '"' if 'threadlist' in metas %}
-{% set _ide = 'id="editor"' if 'editor' in metas %}
-{% set _idp = 'id="' ~ p._key ~ '"' if 'postlist' in metas %}
+{% set _idt = p.tid if 'threadlist' in metas %}
+{% set _ide = 'editor' if 'editor' in metas %}
+{% set _idp = p._key if 'postlist' in metas %}
 
-<div class="threadlistitem{{ ' deleted' if (p.delete and t) else ''}} {{'conv_delete' if p.delete and 'conversation' in metas else ''}} {{'thread_header' if 'thread_header' in metas else ''}} {{'unread' if p.unread else ''}}" {{_ide or _idt or _idp}}>
+{% set _ids = 'id="' ~ (item_id or _ide or _idt or _idp) ~'"' %}
+
+<div class="threadlistitem{{ ' deleted' if (p.delete and t) else ''}} {{'conv_delete' if p.delete and 'conversation' in metas else ''}} {{'thread_header' if 'thread_header' in metas else ''}} {{'unread' if p.unread else ''}}" {{_ids}}>
 
     {%if 'thread_votes' in metas%}
     <div class="leftmost">
@@ -443,7 +445,7 @@
 
 {# one line of post, used in postlist without a thread #}
 {%macro post_postlist_threadless(p)%}
-  {%call post(p, metas=[], avatar_user=p.user)%}
+  {%call post(p, metas=[], avatar_user=p.user, item_id=p._key)%}
 
   <div class="meta upper">
     {# publisher #}
@@ -659,7 +661,9 @@
 {%macro header()%}
   {%if page_title%}
     <div class="header">
-      <a class="header_title" href="javascript:window.location.reload()">{{page_title}}</a>
+      <a class="header_title" href="{{
+        (request.full_path[:-1] if request.full_path[-1]=='?' else request.full_path)
+      }}">{{page_title}}</a>
 
       {{category_bubble(t.category) if (t and t.category) else ''}}
 
