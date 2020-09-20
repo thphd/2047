@@ -1744,12 +1744,12 @@ def apir():
     # CSRF
     if action!='ping':
         # check if referrer == self
-        if request.referrer.startswith(request.host_url):
+        if request.referrer and request.referrer.startswith(request.host_url):
             pass
         else:
             log_err(request.referrer)
             log_err(request.host_url)
-            e('use a referrer field or the request will be considered an CSRF attack')
+            return e('use a referrer field or the request will be considered an CSRF attack')
 
     j['logged_in'] = g.logged_in
     if action in api_registry:
