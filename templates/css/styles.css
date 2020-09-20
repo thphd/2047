@@ -23,6 +23,8 @@ img#site_logo {
   /* vertical-align: middle; */
   height: 36px;
   margin-right: 15px;
+  background: white;
+  border-radius: 50%;
 }
 
 
@@ -33,14 +35,16 @@ body {
 #header {
   /* width: 100%; */
   /* height: 30px; */
-  padding: 6px 20px;
-  background: #f3f3f3;
+  padding: 3px 20px;
+  /* background: linear-gradient(to bottom, #424652, #2f364a); */
+  background: #f2f2f2;
   margin-left: 0;
   display: flex;
   justify-content: space-between;
+  /* box-shadow: 0 0 6px #00000075; */
 }
 
-div#site_name {color: #005bac;font-family: arial;/* display: inline-block; *//* font-weight: bold; */font-style: italic;/* vertical-align: middle; */font-size: 24px;letter-spacing: 5px;}
+div#site_name {/* color: #ffffff; */font-family: arial;/* display: inline-block; *//* font-weight: bold; */font-style: italic;/* vertical-align: middle; */font-size: 24px;letter-spacing: 5px;}
 
 .leftalign {
   /* justify-content: stretch; */
@@ -248,6 +252,7 @@ span.last_commented_date {
     display: flex;
     flex-direction: column;
     justify-content: start;
+    /* display: none; */
 }
 
 .right {
@@ -371,7 +376,7 @@ img.headerbtn {
     align-items: center;
 }
 
-.rightalign >* {align-items: center;display: flex;margin-left: 15px;}
+.rightalign >* {/* align-items: center; *//* display: flex; *//* margin-left: 15px; */}
 
 #header>*>* {
     /* display: inline-block; */
@@ -380,7 +385,7 @@ img.headerbtn {
 }
 
 #header * {
-    text-decoration: none;
+    /* text-decoration: none; */
 }
 
 .post_content {
@@ -392,7 +397,7 @@ img.headerbtn {
     line-height: 1.5;
 }
 
-.leftalign > * {
+.leftalign > *, .rightalign > * {
     display: inline-flex;
     align-items: center;
 }
@@ -816,7 +821,6 @@ body {
 }
 
 .rightalign a {
-    /* color: #005bac; */
 }
 
 
@@ -940,12 +944,14 @@ span.votenumber {}
     color: gray;
 }
 
-.gotmail {
-    color: red;
+a.gotmail {
 }
 
-.gotmail {
-    color: red;
+a.gotmail {
+    /* color: red; */
+    background: #c40000;
+    padding: 3px;
+    border-radius: 3px;
 }
 
 #footer .lr>*:first-child {
@@ -1020,6 +1026,7 @@ a.adminstuff {}
     font-size: 80%;
     display: inline-flex;
     word-break: break-all;
+    line-height: 1.6;
 }
 
 .thread_header_info .user_name {
@@ -1241,7 +1248,7 @@ span.personal_title {
     max-width: 100%;
 }
 
-a.headerlink{margin-left: .2em;}
+a.headerlink{margin-left: .4em;}
 
 #site_logo{display: none;}
 span.personal_title{
@@ -1279,7 +1286,9 @@ span.userpage_username {
 }
 
 .headerlink {
-    margin-left: 1em;
+    margin-left: 1.6em;
+    /* color: white; */
+    font-size: 13px;
 }
 
 .box .category_name {}
@@ -1514,5 +1523,5 @@ input[type="text"],input[type="password"] {
 .post_thread_title {
     font-size: 12px;
     margin: 0.4em 0;
-    opacity: .5;
+    opacity: .65;
 }

@@ -49,6 +49,7 @@
   <div class="left">
     {# editor avatar should be current logged in user's #}
 
+    {%if 'threadlist' not in metas or 1%}
     {{avatar(
       avatar_user
       or ('editor' in metas and g.logged_in)
@@ -64,6 +65,7 @@
       or g.logged_in
       or {"uid":5132})
     }}
+    {%endif%}
 
   </div>
 
