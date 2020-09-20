@@ -3,7 +3,10 @@
 import os, hashlib, binascii as ba
 import base64, re
 from colors import *
-from functools import lru_cache
+# from functools import lru_cache
+
+from cachetools.func import *
+from cachy import stale_cache
 
 def dispatch(f):
     import threading

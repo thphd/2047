@@ -133,6 +133,7 @@ def get_url_to_post_given_details(tid, pid, rank): # assume you know rank
 
     return url
 
+@stale_cache(maxsize=128, ttr=5, ttl=120)
 def get_categories_info():
     return aql('''
         for i in threads collect cid = i.cid with count into cnt
@@ -300,6 +301,11 @@ def _():
     pwh = es('password_hash')
     ik = es('invitation_code')
 
+    if 'salt' not in g.session:
+        raise Exception('to register you must enable cookies / use a browser.')
+
+    salt = g.session['salt']
+
     # check if user name is legal
     m = re.fullmatch(username_regex, uname)
     if m is None:
@@ -347,7 +353,7 @@ def _():
     aql('''insert @i into users''', i=newuser)
 
     aql('''for i in invitations filter i._key==@ik
-        update i with {active:false, ip_addr:@ip} in invitations''', ik=ik, ip=g.display_ip_address)
+        update i with {active:false, ip_addr:@ip, salt:@salt} in invitations''', ik=ik, ip=g.display_ip_address, salt=salt)
 
     return newuser
 

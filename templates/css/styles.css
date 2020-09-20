@@ -284,8 +284,8 @@ body>#content {
 }
 
 .post_content p {
-    margin-block-start: .5em;
-    margin-block-end: .5em;
+    margin-block-start: .7em;
+    margin-block-end: .7em;
     word-break: break-all;
     line-height: 1.6;
 }
@@ -390,7 +390,7 @@ img.headerbtn {
 
 .post_content {
     margin-bottom: 4px;
-    font-size: 15px;
+    font-size: 14px;
     /* display: flex; */
     /* flex-wrap: nowrap; */
     /* flex-direction: column; */
@@ -518,7 +518,7 @@ a.threadlist_title {
     /* display: block; */
     /* margin-bottom: 3px; */
     vertical-align: baseline;
-    font-size: 15px;
+    font-size: 13px;
     font-weight: bold;
     letter-spacing: 0.01em;
     line-break: anywhere;
@@ -949,7 +949,7 @@ a.gotmail {
 
 a.gotmail {
     /* color: red; */
-    background: #c40000;
+    background: #ff00003d;
     padding: 3px;
     border-radius: 3px;
 }
@@ -1119,6 +1119,7 @@ button {
     display: flex;
     align-content: space-between;
     flex-wrap: wrap;
+    font-size: 14px;
 }
 
 .userpage_let:not(:first-child) {

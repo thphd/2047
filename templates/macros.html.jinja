@@ -112,11 +112,15 @@
           {%elif 'userlist' in metas %}
               {{username(p, class='userlist_name')}}
 
-              {%if p.invited_by and g.is_admin %}
+              {%if g.is_admin%}
+              {%if p.invited_by%}
                 (由<a href="/u/{{p.invited_by}}">{{p.invited_by}}</a>邀请)
               {%endif%}
 
-              {%if p.ip_addr and g.is_admin and g.current_user['uid']==5108%}(from: {{p.ip_addr}}){%endif%}
+              {%if p.ip_addr and g.current_user['uid']==5108%}(from: {{p.ip_addr}}){%endif%}
+              {%if p.salt%}(salt:{{p.salt}}){%endif%}
+
+              {%endif%}
 
               {{brief(p,'userlist_brief')}}
 

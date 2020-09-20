@@ -234,8 +234,9 @@ class Paginator:
         let invite = (for i in invitations filter i._key==u.invitation return i)[0]
         let invited_by = invite.uid
         let ip_addr = invite.ip_addr
+        let salt = invite.salt
 
-        return merge(u, {{invited_by, ip_addr}}) //merge(u, stat)
+        return merge(u, {{invited_by, ip_addr, salt}}) //merge(u, stat)
         '''.format(sortby=sortby, order=order,
         start=start, count=count,)
 
@@ -365,6 +366,7 @@ class Paginator:
 
         return postlist, pagination_obj
 
+    @stale_cache(maxsize=128, ttr=3, ttl=10)
     def get_thread_list(self,
         by='category',
         category='all',
@@ -448,6 +450,7 @@ class Paginator:
 
         return threadlist, pagination_obj
 
+    @ttl_cache(maxsize=4096, ttl=120)
     def get_pagination_obj(self, count, pagenumber, pagesize, order, path, sortby, mode='thread', postfix=''):
         # total number of pages
         total_pages = max(1, (count-1) // pagesize +1)
@@ -1781,6 +1784,10 @@ def apir():
                 g.session['browser'] = 1
                 save_session(response)
 
+            if 'salt' not in g.session:
+                g.session['salt'] = get_random_hex_string(3)
+                save_session(response)
+
             if 'logout' in answer:
                 if 'uid' in g.session:
                     del g.session['uid']
@@ -1996,6 +2003,9 @@ def pkey(uid, ty):
 @app.route('/invitation/<string:iid>')
 def get_invitation(iid):
     i = aql('for i in invitations filter i._key==@k return i', k=iid, silent=True)[0]
+
+    if g.current_user['uid']!=5108:
+        del i['ip_addr']
 
     if i['uid']:
         resp = make_response('',307)
