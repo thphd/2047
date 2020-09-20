@@ -1211,7 +1211,7 @@ function delete_entity(key){
 
 // #1234 links now jumps to ids within page if possible
 foreach(gebtn(document)('a'))(e=>{
-  if(e && e.href){
+  if(e && e.href && e.innerHTML.startsWith('#')){
     var href = e.getAttribute('href')
     // print(href)
     var match = href.match(/^\/p\/([0-9a-z]{1,})$/)

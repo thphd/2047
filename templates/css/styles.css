@@ -702,7 +702,7 @@ code .nf {
 }
 
 .header > .makepost {
-    font-size: 80%;
+    font-size: 75%;
     border-style: solid;
     border-width: 1px;
     border-radius: .3em;

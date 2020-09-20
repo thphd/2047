@@ -1734,6 +1734,20 @@ def apir():
 
     # print(j)
     action = j['action']
+
+    if action!='ping' and request.method != 'POST':
+        return e('you must use POST for actions other than "ping"')
+
+    # CSRF
+    if action!='ping':
+        # check if referrer == self
+        if request.referrer.startswith(request.host_url):
+            pass
+        else:
+            log_err(request.referrer)
+            log_err(request.host_url)
+            e('use a referrer field or the request will be considered an CSRF attack')
+
     j['logged_in'] = g.logged_in
     if action in api_registry:
         g.j = j
