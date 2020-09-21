@@ -142,7 +142,7 @@ span.last_commented_date {
   margin: 0px 0;
   border-style: solid;
   border-width: 1px 0 0 0;
-  padding: 14px 0;
+  padding: 14px 14px;
   border-color: #efefef;
   /* border-radius: 0; */
   /* background: rgb(245 245 245); */
@@ -193,6 +193,7 @@ span.last_commented_date {
 
 .pagination {
     /* margin: 6px 0; */
+    padding: 0 12px;
     /* font-size: 1px; */
 }
 
@@ -208,6 +209,7 @@ span.last_commented_date {
     align-content: center;
     flex-direction: row;
     justify-content: space-between;
+    padding: 0 14px;
     /* letter-spacing: 0.03em; */
 }
 
@@ -346,6 +348,7 @@ span.floor_num {color: #652929;}
 .subheader {
     font-size: 16px;
     color: #8db4d6;
+    padding: 0 12px;
 }
 
 .post_content a {
@@ -391,6 +394,7 @@ img.headerbtn {
 
 .post_content {
     margin-bottom: 4px;
+    /* padding: 0 12px; */
     font-size: 15px;
     /* display: flex; */
     /* flex-wrap: nowrap; */
@@ -565,7 +569,7 @@ a.threadlist_title {
 
 
 .lr {
-    padding: 0 20px;
+    /* padding: 0 20px; */
     display: flex;
     flex-flow: row;
     flex-wrap: wrap;
@@ -578,13 +582,14 @@ a.threadlist_title {
     flex-flow: column;
     /* flex-direction: column; */
     /* align-items: center; */
-    max-width: 188px;
+    max-width: 203px;
     flex-grow: 1;
     align-content: center;
     border-style: none none none solid;
     border-color: #e8e8e8;
-    margin-left: 15px;
+    /* margin-left: 15px; */
     padding-left: 15px;
+    padding-right: 12px;
     /* width: 200px; */
     /* width: 1900px; */
 }
@@ -873,7 +878,8 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    margin-right: 5px;
+    margin-right: 7px;
+    margin-left: -4px;
     /* width: 2em; */
 }
 
@@ -1609,7 +1615,7 @@ input[type="text"],input[type="password"] {
 }
 
 .post_content mark:focus::before, .post_content mark:hover::before {
-    content: "用词代表用户不满";
+    content: "用词不代表站方立场";
     position: absolute;
     left: 0;
     top: 24px;
@@ -1622,4 +1628,16 @@ input[type="text"],input[type="password"] {
     text-align: center;
     z-index: 1;
     font-size: 12px;
+}
+
+#footer>.lr {
+    padding: 0 20px;
+}
+
+.c42 {
+    background-color: #ad791b;
+}
+
+.padded {
+    padding: 14px;
 }

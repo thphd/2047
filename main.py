@@ -1513,16 +1513,16 @@ def route_get_avatar(uid):
 
             resp = make_response('', 307)
             resp.headers['Location'] = '/images/avatar-max-img.png'
-            # return resp
+            return resp
 
-    resp.headers['Content-Type'] = 'text/plain' # to fool cloudflare
+    resp.headers['Content-Type'] = 'image/png'
 
     # resp = etag304(resp)
 
     if 'no-cache' in request.args:
         resp.headers['Cache-Control']= 'no-cache'
     else:
-        resp.headers['Cache-Control']= 'max-age=7200, stale-while-revalidate=3600'
+        resp.headers['Cache-Control']= 'max-age=864000, stale-while-revalidate=43200'
     return resp
 
     # # default: 307 to logo.png
@@ -1821,6 +1821,7 @@ def upload_file():
     from imgproc import avatar_pipeline
 
     png = avatar_pipeline(data)
+    etag = calculate_etag(png)
     png = base64.b64encode(png).decode('ascii')
 
     avatar_object = dict(
@@ -1829,7 +1830,7 @@ def upload_file():
     )
     aql('upsert {uid:@uid} insert @k update @k into avatars',
         uid=g.selfuid, k=avatar_object)
-    aql('for i in users filter i.uid==@uid update i with {has_avatar:true} in users', uid=g.selfuid)
+    aql('for i in users filter i.uid==@uid update i with {has_avatar:true, avatar_etag:@etag} in users', uid=g.selfuid, etag=etag)
 
     return {'error':False}
 

@@ -115,7 +115,7 @@
 <div class='post_content'><hr></div>
 {%endif%}
 
-<div class="threadlist">
+<div class="threadlist padded">
   {%if user_is_self and updateable_personal_info%}
     <div class="invitations">
       <div class="invitation_list_title">
@@ -146,7 +146,7 @@
       </blockquote>
     </div>
 
-    <img src="/avatar/{{u.uid}}?no-cache=1" alt="">
+    {{macros.avatar(u, plain=True)}}
 
     <div class="register" id="update_personal_info">
       <form>

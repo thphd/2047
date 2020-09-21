@@ -1,14 +1,25 @@
 <!-- all template macros of this project -->
 
-{%macro avatar(u)%}
+{%macro avatar(u, class="", plain=False)%}
   {%set uid = u.uid %}
   {%set pt = u.personal_title%}
   {%set pp = u.personal_party%}
 
-  {%set aurl = '/avatar/'~u.uid~'.png' if u.has_avatar else '/images/avatar-max-img.png'%}
+  {%set aurl =
+    ('/avatar/'~u.uid~'.png'~
+      (('?etag='~u.avatar_etag) if u.avatar_etag else ''))
 
-  <a class="avatar_outer" href="/u/{{uid}}">{%if pp%}<img class='personal_title' src='/avatar/{{pp}}.png'>{%elif pt%}<span class='personal_title'>{{pt}}</span>{%endif%}<img class="avatar" src="{{aurl}}" alt=""></a>
+    if u.has_avatar
 
+    else '/images/avatar-max-img.png'%}
+
+  {%if plain%}
+    <img class="{{class}}" src="{{aurl}}">
+
+  {%else%}
+    <a class="avatar_outer" href="/u/{{uid}}">{%if pp%}<img class='personal_title' src='/avatar/{{pp}}.png'>{%elif pt%}<span class='personal_title'>{{pt}}</span>{%endif%}<img class="avatar" src="{{aurl}}" alt=""></a>
+
+  {%endif%}
 {%endmacro%}
 
 {%macro username(u, class='user_name', href=None, as_link=True)%}

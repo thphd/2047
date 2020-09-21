@@ -51,7 +51,7 @@
           </div>
         </a>
         <a class='headerlink' href="/u/{{g.logged_in.uid}}">
-          <img class="headerbtn" src="/avatar/{{g.logged_in.uid}}.png" alt="">
+          {{macros.avatar(g.logged_in, plain=True, class='headerbtn')}}
         </a>
 
         {%else%}
@@ -154,7 +154,7 @@
 
       </div>
       {{quote_section(get_quote())}}
-    
+
     </div>
   </div>
 
