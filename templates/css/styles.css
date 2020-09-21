@@ -1578,3 +1578,48 @@ input[type="text"],input[type="password"] {
     border-style: solid;
     border-color: #c8c8c8;
 }
+
+
+.post_content mark {
+    position: relative;
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-decoration-color: #666;
+    cursor: help;
+    background-color: rgba(255, 255, 255, 0);
+    color: #666;
+    padding: .2em;
+}
+
+.post_content mark::after {
+    white-space: pre;
+    content: " ? ";
+    top: -.5em;
+    position: relative;
+    font-size: 75%;
+    text-align: center;
+    background-color: #bbb;
+    border-radius: 50%;
+    width: 14px;
+    height: 14px;
+    color: #666;
+    line-height: 14px;
+    cursor: help;
+    display: inline-block;
+}
+
+.post_content mark:focus::before, .post_content mark:hover::before {
+    content: "用词代表用户不满";
+    position: absolute;
+    left: 0;
+    top: 24px;
+    width: 120px;
+    border-bottom: 1px dotted black;
+    border-radius: 6px;
+    background-color: black;
+    padding: 5px 0;
+    color: #fff;
+    text-align: center;
+    z-index: 1;
+    font-size: 12px;
+}

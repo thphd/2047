@@ -216,6 +216,12 @@ def replace_ytb_f(match):
     vid = match.group(1) or match.group(2)
     return '<div class="youtube-player-unprocessed" data-id="{}"></div>'.format(vid)
 
+def replace_pincong(s):
+    def f(match):
+        return f'<mark>{match.group(1)}</mark>'
+    s = re.sub(r'(品韭|韭葱|葱韭|韭蔥|蔥韭|姨蔥|姨葱)', f, s)
+    return s
+
 # @lru_cache(maxsize=4096)
 def replace_ytb(s):
     s = re.sub(combined_youtube_extractor_regex,
@@ -287,7 +293,9 @@ elif 1:
     def convert_markdown(s):
         s = replace_pal(s)
         s = replace_tal(s)
+
         s = replace_ats(s)
+        s = replace_pincong(s)
         s = replace_ytb(s)
         return mistletoe.markdown(s)
 
