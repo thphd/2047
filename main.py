@@ -152,7 +152,7 @@ def create_all_necessary_indices():
     ciut('threads', ['tid'])
     ci('threads', indexgen(
             [['delete'],['uid'],['delete','cid']],
-            ['t_u','t_c','nreplies','vc','votes','t_hn'],
+            ['t_u','t_c','nreplies','vc','votes','t_hn','amv'],
     ))
     ci('threads', indexgen([[]], ['t_hn_u']))
 
@@ -382,7 +382,7 @@ class Paginator:
         assert by in ['category', 'user']
         assert category=='all' or category=='deleted' or is_integer(category)
         assert is_integer(uid)
-        assert sortby in ['t_u', 't_c', 'nreplies', 'vc', 'votes','t_hn']
+        assert sortby in ['t_u', 't_c', 'nreplies', 'vc', 'votes','t_hn','amv']
         assert order in ['desc', 'asc']
 
         pagenumber = max(1, pagenumber)
@@ -548,7 +548,7 @@ class Paginator:
         ('发表', querystring(pagenumber, pagesize, order, 't_c'), 't_c'==sortby,'按发表时间排序'),
 
         ('热度', querystring(pagenumber, pagesize, order, 'nreplies'), 'nreplies'==sortby,'按照回复数量排序'),
-        ('点赞', querystring(pagenumber, pagesize, order, 'votes'), 'votes'==sortby,'按照得票（赞）数排序'),
+        ('点赞', querystring(pagenumber, pagesize, order, 'amv'), 'amv'==sortby,'按照得票（赞）数排序'),
         ('浏览', querystring(pagenumber, pagesize, order, 'vc'), 'vc'==sortby,'按照被浏览次数排序'),
         ]
 

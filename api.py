@@ -737,9 +737,9 @@ let t_now = date_timestamp(@now)
 
 let t_man = date_timestamp(t.t_manual)
 
-let votes = max([t.votes or 0, t.mv or 0])
-let points = votes * 2 + 1 + t.nreplies * .2
-let t_offset = 3600*1000*4
+let votes = t.amv or 0
+let points = votes * 3 + 1 + t.nreplies * .2
+let t_offset = 3600*1000*2
 let t_hn = max([t_now + t_offset - (t_now - t_submitted + t_offset) / sqrt(points), t_man])
 //let t_hn = max([t_now + t_offset - (t_now - t_updated + t_offset) / sqrt(points), t_man])
 // 5hr ahead
@@ -805,8 +805,8 @@ let t_u = ((for p in posts filter p.tid==t.tid and p.delete==null sort p.t_c des
 
 let mvp = (for p in posts filter p.tid==t.tid sort p.votes desc limit 1 return p)[0]
 // mvp = max vote post, mv = max vote (of that post)
-// mvu = uid of mvp
-update t with {votes:upv, nreplies, t_u, mvp:mvp._key, mv:mvp.votes, mvu:mvp.uid} in threads
+// mvu = uid of mvp, amv = absolute max vote (of both the mvp and the thread)
+update t with {votes:upv, nreplies, t_u, mvp:mvp._key, mv:mvp.votes or 0, mvu:mvp.uid, amv: max([mvp.votes or 0, upv or 0])} in threads
 return NEW
     ''', _id=int(tid), silent=True)
 

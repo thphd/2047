@@ -391,7 +391,7 @@ img.headerbtn {
 
 .post_content {
     margin-bottom: 4px;
-    font-size: 14px;
+    font-size: 15px;
     /* display: flex; */
     /* flex-wrap: nowrap; */
     /* flex-direction: column; */
@@ -519,7 +519,7 @@ a.threadlist_title {
     /* display: block; */
     /* margin-bottom: 1em; */
     /* vertical-align: bottom; */
-    font-size: 14px;
+    font-size: 15px;
     font-weight: bold;
     letter-spacing: 0.01em;
     line-break: anywhere;
