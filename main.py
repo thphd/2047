@@ -2019,7 +2019,8 @@ def get_invitation(iid):
     i = aql('for i in invitations filter i._key==@k return i', k=iid, silent=True)[0]
 
     if g.current_user['uid']!=5108:
-        del i['ip_addr']
+        if 'ip_addr' in i:
+            del i['ip_addr']
 
     if i['uid']:
         resp = make_response('',307)

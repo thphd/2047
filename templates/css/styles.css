@@ -54,7 +54,7 @@ div#site_name {/* color: #ffffff; */font-family: arial;/* display: inline-block;
 }
 
 .details .meta {
-  font-size: 77%;
+  font-size: 12px;
   color: #cacaca;
   justify-content: flex-start;
   align-items: baseline;
@@ -84,6 +84,7 @@ div#site_name {/* color: #ffffff; */font-family: arial;/* display: inline-block;
   flex-direction: column;
   /* align-items: end; */
   /* flex-grow: 1; */
+  line-height: 1.3;
 }
 
 div.copyright {
@@ -162,8 +163,8 @@ span.last_commented_date {
   max-width: 60px;
   /* width: 55px; */
   text-align: center;
-  padding: 2px 4px;
-  font-size: 12px;
+  padding: 1px 4px;
+  /* font-size: 12px; */
   border-radius: 3.5px;
   margin-right: 4px;
   flex-flow: column;
@@ -1227,6 +1228,23 @@ span.personal_title {
 .thread_header_info {}
 
 @media only screen and (max-width: 600px) {
+a.threadlist_title{font-size: 13px;}
+img.headerbtn{
+  width: 28px;
+  height: 28px;
+}
+.headerlink{
+
+}
+.details .meta{
+    font-size: 10px;
+}
+.leftmost{
+  margin-right: -2px;
+}
+.threadlistitem{
+  padding: 9px 0;
+}
   .avatar {
     /* background-color: green; */
     width: 36px;
@@ -1244,14 +1262,14 @@ span.personal_title {
     margin: 0;
 }
   .lr{
-    padding: 0 8px;
+    padding: 0 2px;
 }
 
 .userpage_let:first-child{
     max-width: 100%;
 }
 
-a.headerlink{margin-left: .4em;}
+a.headerlink{margin-left: .5em;font-size: 12px;}
 
 #site_logo{display: none;}
 span.personal_title{
@@ -1292,7 +1310,7 @@ span.userpage_username {
 .headerlink {
     margin-left: 1.6em;
     /* color: white; */
-    font-size: 13px;
+    font-size: 14px;
 }
 
 .box .category_name {}
@@ -1384,6 +1402,7 @@ input[type="radio"] {
     /* flex-grow: 2; */
     /* flex-flow: nowrap; */
     white-space: nowrap;
+    font-size: 14px;
 }
 
 

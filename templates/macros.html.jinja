@@ -11,10 +11,14 @@
 
 {%endmacro%}
 
-{%macro username(u, class='user_name', href=None)%}
+{%macro username(u, class='user_name', href=None, as_link=True)%}
   {%set href = href or '/u/'~ u.uid %}
   {%set watching = '鹿' in (u.name or '')%}
-  <a href='{{href}}' class="{{class}}">{%if u.delete%}<s>{%endif%}{{u.name or u.uid}}{%if u.delete%}</s>{%endif%}{%if watching%}<sup>观察</sup>{%endif%}</a>
+  {%if as_link%}
+    <a href='{{href}}' class="{{class}}">{%if u.delete%}<s>{%endif%}{{u.name or u.uid}}{%if u.delete%}</s>{%endif%}{%if watching%}<sup>观察</sup>{%endif%}</a>
+  {%else%}
+    <span class="{{class}}">{%if u.delete%}<s>{%endif%}{{u.name or u.uid}}{%if u.delete%}</s>{%endif%}{%if watching%}<sup>观察</sup>{%endif%}</span>
+  {%endif%}
 
 {%endmacro%}
 
