@@ -595,12 +595,14 @@
     <span>{{t.vc}} 次浏览</span>
     {%endif%}
 
+    {%if t.count%}
     {{username(t.lastuser, href=url_to_last)}}
 
     {# last commented date #}
     <a class="last_commented_date" href="{{url_to_last}}">
       {{format_time_relative_fallback(t.t_u)}}
     </a>
+    {%endif%}
 
     {%if 0%}
       {%if t.lastuser%}

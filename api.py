@@ -737,7 +737,8 @@ let t_now = date_timestamp(@now)
 
 let t_man = date_timestamp(t.t_manual)
 
-let points = (t.votes or 0) * 2 + 1 + t.nreplies * .2
+let votes = max([t.votes or 0, t.mv or 0])
+let points = votes * 2 + 1 + t.nreplies * .2
 let t_offset = 3600*1000*4
 let t_hn = max([t_now + t_offset - (t_now - t_submitted + t_offset) / sqrt(points), t_man])
 //let t_hn = max([t_now + t_offset - (t_now - t_updated + t_offset) / sqrt(points), t_man])
@@ -802,7 +803,11 @@ let upv= length(for v in votes filter v.type=='thread' and v.id==t.tid and v.vot
 let nreplies = length(for p in posts filter p.tid==t.tid return p)
 let t_u = ((for p in posts filter p.tid==t.tid and p.delete==null sort p.t_c desc limit 1 return p)[0].t_c or t.t_c)
 
-update t with {votes:upv, nreplies, t_u} in threads return NEW
+let mvp = (for p in posts filter p.tid==t.tid sort p.votes desc limit 1 return p)[0]
+// mvp = max vote post, mv = max vote (of that post)
+// mvu = uid of mvp
+update t with {votes:upv, nreplies, t_u, mvp:mvp._key, mv:mvp.votes, mvu:mvp.uid} in threads
+return NEW
     ''', _id=int(tid), silent=True)
 
     update_thread_hackernews(int(tid))

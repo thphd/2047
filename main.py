@@ -2036,6 +2036,30 @@ def show_quotes():
         page_title="语录",
     )
 
+@stale_cache(ttr=3, ttl=120)
+def get_oplog():
+    must_be_logged_in()
+    l = aql('for i in operations sort i.t_c desc limit 100 \
+        let user = (for u in users filter u.uid==i.uid return u)[0]\
+         return merge(i,{username:user.name})', silent=True)
+
+    s = ''
+    for i in l:
+        del i['_key']
+        del i['_rev']
+        del i['_id']
+        s+= obj2json(i) + '\n'
+    return s
+
+@app.route('/oplog')
+def oplog():
+    # l = get_oplog()
+    s = get_oplog()
+
+    resp = make_response(s, 200)
+    resp.headers['Content-type'] = 'text/plain; charset=utf-8'
+    return resp
+
 @app.route('/404/<string:to_show>')
 def f404(to_show):
     if 'reason' in request.args:

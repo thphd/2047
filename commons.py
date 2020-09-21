@@ -12,7 +12,7 @@ from cachy import stale_cache
 def readfile(fn, mode='rb', **kw):
     with open(fn, mode, **kw) as f:
         return f.read()
-        
+
 def dispatch(f):
     import threading
     t = threading.Thread(target=f, daemon=True)
@@ -75,14 +75,22 @@ def format_time_relative_fallback(s):
     now = dtn(working_timezone)
 
     past = now-dt # larger=>longer in the past
+    ps = int(past.total_seconds())
 
     if past < dttd(seconds=60):
         return '几秒前'
     if past < dttd(seconds=3600):
-        return str(past.seconds // 60) + '分钟前'
+        return str(ps // 60) + '分钟前'
     if past < dttd(seconds=3600*24):
-        return str(past.seconds // 3600) + '小时前'
+        return str(ps // 3600) + '小时前'
+    if past < dttd(seconds=86400*200):
+        # days = str((ps // 86400))
+        # return days + '天前'
+        return f'{dt.month}月{dt.day}日'
+    # if past < dttd(seconds=86400*365):
+
     else:
+        return f'{dt.year}年{dt.month}月{dt.day}日'
         return format_time_dateonly(s)
 
 def format_time_absolute_fallback(s):
@@ -404,6 +412,8 @@ common_links = linkify('''
 题库 /questions 考试题目编撰
 实体编辑 /entities 公钥上传/其他杂项数据
 语录 /quotes 你不是一个人在战斗
+oplog /oplog 管理日志
+英雄 /hero BE4的实验性项目
 ''')
 
 friendly_links = linkify('''
