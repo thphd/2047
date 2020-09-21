@@ -219,7 +219,7 @@ def replace_ytb_f(match):
 def replace_pincong(s):
     def f(match):
         return f'<mark>{match.group(1)}</mark>'
-    s = re.sub(r'(品韭|韭葱|葱韭|韭蔥|蔥韭|姨蔥|姨葱)', f, s)
+    s = re.sub(r'((?:姨|桂|支|偽|伪|张献|張獻|韭|鹿)(?:葱|蔥)|(?:品|葱|蔥)韭)', f, s)
     return s
 
 # @lru_cache(maxsize=4096)
@@ -348,7 +348,7 @@ user_thread_list_defaults = dict(
     pagenumber=1,
     pagesize=30,
     order='desc',
-    sortby='t_c',
+    sortby='t_hn',
 )
 
 post_list_defaults = dict(

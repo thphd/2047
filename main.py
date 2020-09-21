@@ -2038,7 +2038,6 @@ def show_quotes():
 
 @stale_cache(ttr=3, ttl=120)
 def get_oplog():
-    must_be_logged_in()
     l = aql('for i in operations sort i.t_c desc limit 100 \
         let user = (for u in users filter u.uid==i.uid return u)[0]\
          return merge(i,{username:user.name})', silent=True)
@@ -2054,6 +2053,7 @@ def get_oplog():
 @app.route('/oplog')
 def oplog():
     # l = get_oplog()
+    must_be_logged_in()
     s = get_oplog()
 
     resp = make_response(s, 200)
