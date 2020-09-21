@@ -54,7 +54,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from api import api_registry, get_categories_info, get_url_to_post, get_url_to_post_given_details
 from api import *
 
-from quotes import get_quote
+# from quotes import get_quote
 
 from session import save_session,load_session
 
@@ -2014,6 +2014,12 @@ def get_invitation(iid):
         resp=make_response(str(i),200)
         resp.headers['content-type']='text/plain; charset=utf-8'
     return resp
+
+@app.route('/quotes')
+def show_quotes():
+    return render_template_g('quotes.html.jinja',
+        page_title="语录",
+    )
 
 @app.route('/404/<string:to_show>')
 def f404(to_show):

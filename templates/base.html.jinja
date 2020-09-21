@@ -140,16 +140,21 @@
     </div>
   </div>
 
+{%macro quote_section(quote)%}
+<div class="quote_section">
+  <span class='quote'>{{quote.quote}}</span>
+  {%if quote.quoting%}<span class='quoting'>——{{quote.quoting}}</span>{%endif%}
+</div>
+{%endmacro%}
+
+
   <div id="overlay" style='opacity:0;'>
     <div id="overlay_text">
       <div id="overlay_text_body">
 
       </div>
-      <div class="quote_section">
-        {%set quote,quoting = get_quote()%}
-        <span class='quote'>{{quote}}</span>
-        {%if quoting%}<span class='quoting'>——{{quoting}}</span>{%endif%}
-      </div>
+      {{quote_section(get_quote())}}
+    
     </div>
   </div>
 

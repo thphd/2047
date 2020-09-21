@@ -47,6 +47,18 @@
   </div>
 
   {%endif%}
+
+  <div class="box">
+    <div class="boxtitle">
+      语录
+    </div>
+    <div class="navigator_quote">
+      {%import 'base.html.jinja' as base with context%}
+
+      {{base.quote_section(get_quote())}}
+    </div>
+  </div>
+
 </div>
 
 {%endblock%}

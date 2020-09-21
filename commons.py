@@ -398,6 +398,7 @@ common_links = linkify('''
 服务条款 /t/7110 违者封号
 题库 /questions 考试题目编撰
 实体编辑 /entities 公钥上传/其他杂项数据
+语录 /quotes 你不是一个人在战斗
 ''')
 
 friendly_links = linkify('''
@@ -585,6 +586,28 @@ def is_legal_username(n):
 
 def is_alphanumeric(n):
     return re.fullmatch(r'^[0-9a-zA-Z]*$', n)
+
+
+import random
+
+@stale_cache(ttr=30, ttl=300)
+def get_quotes():
+    quotes = aql('''
+for i in entities
+filter i.type=='famous_quotes'
+sort i.t_c desc
+
+let user = (for u in users filter u.uid==i.uid return u)[0]
+for j in i.doc
+return {quote:j[0], quoting:j[1], user, t_u:(i.t_u or i.t_c)}
+
+    ''', silent=True)
+    quotes = [i for i in quotes if i['quote']]
+    return quotes
+
+def get_quote():
+    quotes = get_quotes()
+    return random.choice(quotes)
 
 if __name__ == '__main__':
     print('filtgen')
