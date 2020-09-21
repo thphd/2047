@@ -1592,7 +1592,7 @@ def _():
 
     durbuf = dur*0.1+durbuf*0.9
     lastping = now
-    target = 3
+    target = 5
     err = target - dur
 
     pingtime = max(1, pingtime + err * 0.3)
