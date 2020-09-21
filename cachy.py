@@ -47,6 +47,9 @@ class StaleBuffer:
         if self.state=='nodispatch' and now - self.ts < ttr:
             return self.a
 
+        if self.state=='dispatching':
+            return self.a
+
         self.l.acquire()
 
         try:
