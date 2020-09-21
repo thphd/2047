@@ -9,9 +9,10 @@
 
 {%endmacro%}
 
-{%macro username(u, class='user_name')%}
+{%macro username(u, class='user_name', href=None)%}
+  {%set href = href or '/u/'~ u.uid %}
   {%set watching = '鹿' in (u.name or '')%}
-  <a href='/u/{{u.uid}}' class="{{class}}">{%if u.delete%}<s>{%endif%}{{u.name or u.uid}}{%if u.delete%}</s>{%endif%}{%if watching%}<sup>观察</sup>{%endif%}</a>
+  <a href='{{href}}' class="{{class}}">{%if u.delete%}<s>{%endif%}{{u.name or u.uid}}{%if u.delete%}</s>{%endif%}{%if watching%}<sup>观察</sup>{%endif%}</a>
 
 {%endmacro%}
 
@@ -20,7 +21,7 @@
 {%endmacro%}
 
 {# one line of post #}
-{%macro post(p, metas, avatar_user=False, item_id=False)%}
+{%macro post(p, metas, avatar_user=False, item_id=False, leftmost=False)%}
 
 {% set _idt = p.tid if 'threadlist' in metas %}
 {% set _ide = 'editor' if 'editor' in metas %}
@@ -45,6 +46,7 @@
       </div>
     </div>
     {%endif%}
+    {%if leftmost%}{{leftmost}}{%endif%}
 
   <div class="left">
     {# editor avatar should be current logged in user's #}
@@ -506,8 +508,105 @@
   {{post(p, ['under_vote','publisher','publish_date_thread','delete_thread','edit_thread','display_edit_status','thread','view_thread_code'])}}
 {%endmacro%}
 
+
+{%macro leftmost_vote(t)%}
+<div class="leftmost">
+  {%set num_votes = t.votes or 0 %}
+
+  <div class="vote_section enabled">
+    <div class="upvote enabled {{'has_vote' if num_votes}}">
+      <span class='votenumber triangle'>▲</span>
+      <span class="votenumber">{{ num_votes or '' }}</span>
+    </div>
+  </div>
+</div>
+{%endmacro%}
+
 {# one line of thread, used in threadlist #}
-{%macro post_threadlist(p)%}
+{%macro post_threadlist(t)%}
+  {%call post(t, metas=[],
+    avatar_user=t.user, item_id=t.tid,
+    leftmost=leftmost_vote(t))%}
+
+  {%set tid = t.tid%}
+  <div class='threadlist_titlecombo'>
+
+    <a href="/t/{{tid}}" class="threadlist_title">{{'[已标记为删除] ' if t.delete else ''}}{{t.title}}</a>
+
+    {%if t.youtube%}
+      <a class='tltyw' rel='noreferrer' href="https://www.youtube.com/watch?v={{t.youtube}}"><img class='threadlist_title_youtube' src="/images/youtube_small.png" alt=""></a>
+    {%endif%}
+
+  </div>
+
+  <div class="meta">
+    {{category_bubble(t)}}
+
+    {% if t.lastuser %}
+      {# number of comments #}
+      {%set url_to_last = get_url_to_post_given_details(t.tid,t.last._key,t.count)%}
+
+      {# last commenter #}
+      {{username(t.lastuser, href=url_to_last)}}
+
+
+      <a class='last_commented_date' href="{{url_to_last}}">{{'回复了文章' if t.mode!='question' else '回答了问题'}}</a>
+
+      {# last commented date #}
+      <a class="last_commented_date" href="{{url_to_last}}">
+        {{format_time_relative_fallback(t.last.t_c)}}
+      </a>
+    {%else%}
+      {{username(t.user)}}
+
+      <a class="last_commented_date" href="{{url_to_last}}">
+        {{format_time_relative_fallback(t.t_c)}}
+      </a>
+
+      {%if t.mode!='question' %}
+        <span>发表了文章</span>
+      {%else%}
+        <span>发布了问题</span>
+      {%endif%}
+
+    {%endif%}
+
+    {%if t.count%}
+    <a class="response" href="{{url_to_last}}">{{t.count}} 个回复</a>
+    {%endif%}
+
+    {%if t.vc%}
+    <span>{{t.vc}} 次浏览</span>
+    {%endif%}
+
+    {%if t.lastuser%}
+      {{username(t.user)}}
+      <!-- <span>{{'发表' if t.mode!='question' else '发布'}}于</span> -->
+
+      {# publish date #}
+      <a class="last_commented_date" href="/t/{{tid}}">
+        {{format_time_relative_fallback(t.t_c)}}
+      </a>
+    {%endif%}
+
+    {%if can_do_to(g.logged_in, 'delete', t.uid)%}
+      {%if not t.delete%}
+      <a class='adminstuff delete' href="javascript:mark_delete('{{'thread/'~t.tid}}')">删除</a>
+      {%else%}
+      <a class='adminstuff undelete' href="javascript:mark_delete('{{'uthread/'~t.tid}}')">取消删除</a>
+      {%endif%}
+    {%endif%}
+
+    {%if can_do_to(g.logged_in,'move',t.uid)%}
+      <a class='adminstuff move_to_category' href="javascript:move_to_category('{{'thread/'~t.tid}}')">移动</a>
+    {%endif%}
+
+  </div>
+  {%endcall%}
+{%endmacro%}
+
+{# one line of thread, used in threadlist #}
+{%macro post_threadlist2(p)%}
   {{post(p, ['category','last_commenter',
   'publisher_conditional',
   'reply_count', 'vc',

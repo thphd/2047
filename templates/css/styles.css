@@ -57,7 +57,7 @@ div#site_name {/* color: #ffffff; */font-family: arial;/* display: inline-block;
   font-size: 77%;
   color: #cacaca;
   justify-content: flex-start;
-  align-items: center;
+  align-items: baseline;
   flex-flow: row;
   flex-wrap: wrap;
   overflow: visible;
@@ -142,7 +142,7 @@ span.last_commented_date {
   border-style: solid;
   border-width: 1px 0 0 0;
   padding: 14px 0;
-  border-color: #efefef;
+  border-color: #efefef85;
   /* border-radius: 0; */
   /* background: rgb(245 245 245); */
   /* background: linear-gradient(0deg, hsl(0 0% 96% / 1) 0%,  rgba(255,255,255,1) 100%); */
@@ -226,7 +226,7 @@ span.last_commented_date {
     text-decoration: none;
     justify-content: flex-start;
     /* padding-bottom: 2px; */
-    margin-right: 8px;
+    margin-right: .4em;
     /* margin-bottom: 3px; */
 }
 
@@ -516,9 +516,9 @@ a.threadlist_title {
     margin-left: 0;
     margin-right: 0;
     /* display: block; */
-    /* margin-bottom: 3px; */
-    vertical-align: baseline;
-    font-size: 13px;
+    /* margin-bottom: 1em; */
+    /* vertical-align: bottom; */
+    font-size: 14px;
     font-weight: bold;
     letter-spacing: 0.01em;
     line-break: anywhere;
@@ -1284,6 +1284,7 @@ span.userpage_username {
 
 .threadlist > * {
     max-width: 100%;
+    /* border-style: none; */
 }
 
 .headerlink {
@@ -1493,7 +1494,10 @@ textarea {
 }
 
 .threadlist_titlecombo {
-    display: inline;
+    display: block;
+    /* line-height: 0; */
+    line-height: 1;
+    margin-bottom: .3em;
 }
 
 .tltyw {
