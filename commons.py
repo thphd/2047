@@ -8,6 +8,11 @@ from colors import *
 from cachetools.func import *
 from cachy import stale_cache
 
+@stale_cache(ttr=1, ttl=30)
+def readfile(fn, mode='rb', **kw):
+    with open(fn, mode, **kw) as f:
+        return f.read()
+        
 def dispatch(f):
     import threading
     t = threading.Thread(target=f, daemon=True)

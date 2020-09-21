@@ -1202,6 +1202,7 @@ span.personal_title {
     border-radius: 3px;
     left: -7px;
     top: -8px;
+    opacity: .6;
 }
 
 .secondline>p {

@@ -90,8 +90,7 @@ def hash_these(path_arr, pattern='*.*'):
 
         for fn in files:
             print_info('checking file:', fn)
-            with open(fn, 'rb') as f:
-                resource_files_contents += f.read()
+            resource_files_contents += readfile(fn)
 
     resource_files_hash = calculate_etag(resource_files_contents)
     return resource_files_hash
@@ -110,8 +109,9 @@ def route_static(frompath, topath, maxage=1800):
             abort(404, 'File not found')
             # return make_response('File not found', 404)
 
-        with open(cc,'rb') as f:
-            b = f.read()
+        # with open(cc,'rb') as f:
+        #     b = f.read()
+        b = readfile(cc)
 
         resp = make_response(b, 200)
         resp = etag304(resp)
@@ -1498,10 +1498,22 @@ def route_get_avatar(uid):
             raise Exception('no data in avatar object found')
 
     else: # db no match
-        # render an identicon
-        identicon = Identicon.render(str(uid*uid))
-        resp = make_response(identicon, 200)
-        resp = etag304(resp)
+        if 0:
+            # render an identicon
+            identicon = Identicon.render(str(uid*uid))
+            resp = make_response(identicon, 200)
+            resp = etag304(resp)
+
+        else:
+            # identicon is overrated
+
+            # avdf = readfile('templates/images/avatar-max-img.png','rb')
+            # resp = make_response(avdf, 200)
+            # resp = etag304(resp)
+
+            resp = make_response('', 307)
+            resp.headers['Location'] = '/images/avatar-max-img.png'
+            # return resp
 
     resp.headers['Content-Type'] = 'text/plain' # to fool cloudflare
 
@@ -1812,11 +1824,13 @@ def upload_file():
     png = base64.b64encode(png).decode('ascii')
 
     avatar_object = dict(
-        uid=g.logged_in['uid'],
+        uid=g.selfuid,
         data_new=png,
     )
     aql('upsert {uid:@uid} insert @k update @k into avatars',
-        uid=avatar_object['uid'], k=avatar_object)
+        uid=g.selfuid, k=avatar_object)
+    aql('for i in users filter i.uid==@uid update i with {has_avatar:true} in users', uid=g.selfuid)
+
     return {'error':False}
 
 def etag304(resp):
@@ -2036,8 +2050,7 @@ def f404(to_show):
 
 @app.route('/robots.txt')
 def robots():
-    with open('templates/robots.txt', 'r') as f:
-        s = f.read()
+    s = readfile('templates/robots.txt', 'r')
     resp = make_response(s, 200)
     resp.headers['content-type'] = 'text/plain; charset=utf-8'
     return resp

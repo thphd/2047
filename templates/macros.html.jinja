@@ -5,7 +5,9 @@
   {%set pt = u.personal_title%}
   {%set pp = u.personal_party%}
 
-  <a class="avatar_outer" href="/u/{{uid}}">{%if pp%}<img class='personal_title' src='/avatar/{{pp}}.png'>{%elif pt%}<span class='personal_title'>{{pt}}</span>{%endif%}<img class="avatar" src="/avatar/{{uid}}.png" alt=""></a>
+  {%set aurl = '/avatar/'~u.uid~'.png' if u.has_avatar else '/images/avatar-max-img.png'%}
+
+  <a class="avatar_outer" href="/u/{{uid}}">{%if pp%}<img class='personal_title' src='/avatar/{{pp}}.png'>{%elif pt%}<span class='personal_title'>{{pt}}</span>{%endif%}<img class="avatar" src="{{aurl}}" alt=""></a>
 
 {%endmacro%}
 
@@ -539,37 +541,47 @@
 
   </div>
 
+  {%set url_to_last = get_url_to_post_given_details(t.tid,t.last._key,t.count)%}
+
   <div class="meta">
     {{category_bubble(t)}}
 
-    {% if t.lastuser %}
-      {# number of comments #}
-      {%set url_to_last = get_url_to_post_given_details(t.tid,t.last._key,t.count)%}
+    {%if 0%}
+      {% if t.lastuser%}
+        {# number of comments #}
 
-      {# last commenter #}
-      {{username(t.lastuser, href=url_to_last)}}
+        {# last commenter #}
+        {{username(t.lastuser, href=url_to_last)}}
 
 
-      <a class='last_commented_date' href="{{url_to_last}}">{{'回复了文章' if t.mode!='question' else '回答了问题'}}</a>
+        <a class='last_commented_date' href="{{url_to_last}}">{{'回复了文章' if t.mode!='question' else '回答了问题'}}</a>
 
-      {# last commented date #}
-      <a class="last_commented_date" href="{{url_to_last}}">
-        {{format_time_relative_fallback(t.last.t_c)}}
-      </a>
-    {%else%}
-      {{username(t.user)}}
-
-      <a class="last_commented_date" href="{{url_to_last}}">
-        {{format_time_relative_fallback(t.t_c)}}
-      </a>
-
-      {%if t.mode!='question' %}
-        <span>发表了文章</span>
+        {# last commented date #}
+        <a class="last_commented_date" href="{{url_to_last}}">
+          {{format_time_relative_fallback(t.last.t_c)}}
+        </a>
       {%else%}
-        <span>发布了问题</span>
-      {%endif%}
+        {{username(t.user)}}
 
+        <a class="last_commented_date" href="{{url_to_last}}">
+          {{format_time_relative_fallback(t.t_c)}}
+        </a>
+
+        {%if t.mode!='question'%}
+          <span>发表了文章</span>
+        {%else%}
+          <span>发布了问题</span>
+        {%endif%}
+
+      {%endif%}
     {%endif%}
+
+    {{username(t.user)}}
+
+    {# publish date #}
+    <a class="last_commented_date" href="/t/{{tid}}">
+      {{format_time_relative_fallback(t.t_c)}}
+    </a>
 
     {%if t.count%}
     <a class="response" href="{{url_to_last}}">{{t.count}} 个回复</a>
@@ -579,14 +591,23 @@
     <span>{{t.vc}} 次浏览</span>
     {%endif%}
 
-    {%if t.lastuser%}
-      {{username(t.user)}}
-      <!-- <span>{{'发表' if t.mode!='question' else '发布'}}于</span> -->
+    {{username(t.lastuser, href=url_to_last)}}
 
-      {# publish date #}
-      <a class="last_commented_date" href="/t/{{tid}}">
-        {{format_time_relative_fallback(t.t_c)}}
-      </a>
+    {# last commented date #}
+    <a class="last_commented_date" href="{{url_to_last}}">
+      {{format_time_relative_fallback(t.t_u)}}
+    </a>
+
+    {%if 0%}
+      {%if t.lastuser%}
+        {{username(t.user)}}
+        <!-- <span>{{'发表' if t.mode!='question' else '发布'}}于</span> -->
+
+        {# publish date #}
+        <a class="last_commented_date" href="/t/{{tid}}">
+          {{format_time_relative_fallback(t.t_c)}}
+        </a>
+      {%endif%}
     {%endif%}
 
     {%if can_do_to(g.logged_in, 'delete', t.uid)%}
