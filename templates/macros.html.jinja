@@ -598,12 +598,8 @@
       {{format_time_relative_fallback(t.t_c)}}
     </a>
 
-    {%if t.count%}
+    {%if t.count %}
     <a class="response" href="{{url_to_last}}">{{t.count}} 个回复</a>
-    {%endif%}
-
-    {%if t.vc%}
-    <span>{{t.vc}} 次浏览</span>
     {%endif%}
 
     {%if t.count%}
@@ -627,6 +623,10 @@
       {%endif%}
     {%endif%}
 
+    {%if t.vc%}
+    <span>{{t.vc}} 次浏览</span>
+    {%endif%}
+
     {%if can_do_to(g.logged_in, 'delete', t.uid)%}
       {%if not t.delete%}
       <a class='adminstuff delete' href="javascript:mark_delete('{{'thread/'~t.tid}}')">删除</a>
@@ -640,6 +640,15 @@
     {%endif%}
 
   </div>
+
+  {%if t.count and 0%}
+  {# small circle indicating num replies #}
+
+    <div class="rightmost">
+      <a class="reply_count c{{t.cid}}" href="{{url_to_last}}">{{t.count}}</a>
+    </div>
+  {%endif%}
+
   {%endcall%}
 {%endmacro%}
 

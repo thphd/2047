@@ -1,11 +1,15 @@
 {%extends 'base.html.jinja'%}
 {%block content%}
-{%if details%}
-{{macros.editor(target, has_title=details.has_title, title=details.title, content=details.content, mode=details.mode)}}
 
-{%else%}
-{{macros.editor(target, has_title=True)}}
+<div class="padded">
+  {%if details%}
+  {{macros.editor(target, has_title=details.has_title, title=details.title, content=details.content, mode=details.mode)}}
 
-{%endif%}
+  {%else%}
+  {{macros.editor(target, has_title=True)}}
+
+  {%endif%}
+
+</div>
 
 {%endblock%}
