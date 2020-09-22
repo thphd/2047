@@ -59,6 +59,55 @@
     </div>
   </div>
 
+
+  {%macro list_threads(wb) %}
+  <div class="weekly_best">
+    {%for i in wb%}
+    <div class="weekly_best_item">
+      <div class='weekly_best_votes'>{{i.amv}}</div>
+      <div class='weekly_best_title'>
+        {%set url = ('/p/'~i.mvp) if i.mv> i.votes else ('/t/'~i.tid)%}
+        <a href="{{url}}">{{i.title}}</a>
+      </div>
+    </div>
+    {%endfor%}
+  </div>
+  {%endmacro%}
+
+  {%set wb = get_weekly_best(7,14)%}
+  <div class="box">
+    <div class="boxtitle">
+      上周最佳
+    </div>
+    {{list_threads(wb)}}
+  </div>
+
+  {%set wb = get_weekly_best(14, 14+30, n=15)%}
+  <div class="box">
+    <div class="boxtitle">
+      上月最佳
+    </div>
+    {{list_threads(wb)}}
+  </div>
+
+  {%set wb = get_weekly_best_user(7, 14, n=20)%}
+  <div class="box">
+    <div class="boxtitle">
+      上周获赞
+    </div>
+    <div class="weekly_best">
+      {%for i in wb%}
+      <div class="weekly_best_item">
+        <div class='weekly_best_votes'>{{i.n}}</div>
+        <div class='weekly_best_title'>
+          {{macros.username(i.user)}}
+        </div>
+      </div>
+      {%endfor%}
+    </div>
+  </div>
+
+
 </div>
 
 {%endblock%}

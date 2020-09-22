@@ -659,6 +659,38 @@ def get_quote():
     quotes = get_quotes()
     return random.choice(quotes)
 
+@stale_cache(ttr=20, ttl=1800)
+def get_weekly_best(start=7, stop=14, n=10):
+    lastweek = format_time_iso(dfs(time_iso_now()) - dttd(days=start))
+    lastweek2 = format_time_iso(dfs(time_iso_now()) - dttd(days=stop))
+    wb = aql(f'''
+    for t in threads
+    filter t.t_c > '{lastweek2}' and t.t_c <'{lastweek}'
+    sort t.amv desc
+    limit {n}
+    return t
+    ''', silent=True)
+    return wb
+
+@stale_cache(ttr=20, ttl=1800)
+def get_weekly_best_user(start=7, stop=14, n=10):
+    lastweek = format_time_iso(dfs(time_iso_now()) - dttd(days=start))
+    lastweek2 = format_time_iso(dfs(time_iso_now()) - dttd(days=stop))
+
+    wbu = aql(f'''
+    for v in votes
+    filter v.t_c > '2020-09-11'
+    collect uid=v.to_uid with count into n
+    sort n desc
+    limit {n}
+
+    let user = (for u in users filter u.uid==uid return u)[0]
+
+    return {{uid, n, user}}
+''', silent=True)
+
+    return wbu
+
 if __name__ == '__main__':
     print('filtgen')
     print(indexgen([['cond1'],['cond2'],['cond1','cond2']], ['sort1','sort2']))
