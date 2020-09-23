@@ -366,7 +366,9 @@ if (loginbtn){
     function update_pgp_commands(){
       if (un.value){
         var ts = (new Date()).toISOString()
-        geid('gpg_commands').value = `echo "2047login#${un.value.trim()}#${ts}" | gpg -u "${un.value.trim()}" --armor --clearsign`
+        // geid('gpg_commands').value = `echo "2047login#${un.value.trim()}#${ts}" | gpg -u "${un.value.trim()}" --armor --clearsign`
+        geid('gpg_commands').value =
+         `echo "2047login##${b64encode(un.value.trim())}##${ts}" | gpg -u "${un.value.trim()}" --armor --clearsign`
       }else{
         geid('gpg_commands').value = '(请先在上方输入用户名)'
       }
@@ -1224,3 +1226,10 @@ foreach(gebtn(document)('a'))(e=>{
     }
   }
 })
+
+function b64encode(s){
+  s = encodeUTF8(s)
+  s = foreach(s)(i=>{return String.fromCharCode(i)})
+  s = s.reduce((a,b)=>a+b)
+  return btoa(s)
+}

@@ -206,9 +206,14 @@ def _():
     # find username in message
     groups = re.findall(username_regex_pgp, msg)
     if len(groups)<1:
-        raise Exception('No username found in message')
+        groups = re.findall(username_regex_pgp_new, msg)
+        if len(groups)<1:
+            raise Exception('No username found in message')
+        else:
+            uname = base64.b64decode(groups[0][0]).decode('utf-8')
+    else:
+        uname = groups[0][0]
 
-    uname = groups[0][0]
     timestamp = groups[0][1] # GMT +0
     print_down('attempt pgp login:', uname, timestamp)
     user = get_user_by_name(uname)
