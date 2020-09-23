@@ -46,7 +46,7 @@
 
 {% set _ids = (item_id or _ide or _idt or _idp) %}
 
-<div class="threadlistitem{{ ' deleted' if (p.delete and t) else ''}} {{'conv_delete' if p.delete and 'conversation' in metas else ''}} {{'thread_header' if 'thread_header' in metas else ''}} {{'unread' if p.unread else ''}}" id="{{_ids}}">
+<div class="threadlistitem padded{{ ' deleted' if (p.delete and t) else ''}} {{'conv_delete' if p.delete and 'conversation' in metas else ''}} {{'thread_header' if 'thread_header' in metas else ''}} {{'unread' if p.unread else ''}}" id="{{_ids}}">
 
     {%if 'thread_votes' in metas%}
     <div class="leftmost">
@@ -812,7 +812,7 @@
 {# titled header #}
 {%macro header()%}
   {%if page_title%}
-    <div class="header">
+    <div class="header padded">
       <a class="header_title" href="{{
         (request.full_path[:-1] if request.full_path[-1]=='?' else request.full_path)
       }}">{{page_title}}</a>

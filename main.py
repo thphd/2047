@@ -135,6 +135,15 @@ route_static('js', 'templates/js', 3600*.1)
 route_static('jgawb', 'jgawb', 1800)
 route_static('jicpb', 'jicpb', 1800)
 
+@app.route('/favicon.ico')
+def favicon():
+    b = readfile('templates/images/favicon_new_pressed.png')
+    resp = make_response(b, 200)
+    resp = etag304(resp)
+    resp.headers['Content-Type']='image/png'
+    resp.headers['Cache-Control'] = 'max-age=8640000'
+    return resp
+
 def create_all_necessary_indices():
     # create index
     def ci(coll,aa):
