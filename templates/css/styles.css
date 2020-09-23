@@ -301,7 +301,7 @@ body>#content {
 
 .post_content li {
     margin: .5em 0;
-    line-height: 170%;
+    /* line-height: 170%; */
 }
 
 .post_content ol, .post_content ul {
@@ -359,6 +359,7 @@ span.floor_num {color: #652929;}
     margin-left: 2px;
     margin-right: 2px;
     /* display: inline-block; */
+    /* word-wrap: break-word; */
 }
 
 .register label {
@@ -1671,4 +1672,16 @@ input[type="text"],input[type="password"] {
 .weekly_best_title {
     display: flex;
     /* flex-shrink: 1000; */
+}
+
+
+.tablinks .current {
+    background: green;
+    color: white;
+    padding: 3px 5px;
+    border-radius: 3px;
+}
+
+.post_content :not(pre) {
+    overflow-wrap: anywhere;
 }

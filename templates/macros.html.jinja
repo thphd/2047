@@ -787,7 +787,7 @@
       <div class="editor_button_row">
         <button class="major" type="button" id="editor_btnpreview">预览</button>
         <button class='major' type="button" id="editor_btnsubmit">提交</button>
-        <a href="/t/7140" rel='noreferrer'>Markdown语法参考</a>
+        <a href="/t/7140" rel='noreferrer'>语法参考</a>
 
         <button type="button" id="editor_quote" title='引用文字'>“</button>
         <button type="button" id="editor_code" title='插入程序代码'>code</button>
@@ -807,6 +807,18 @@
       </div>
     </div>
   </div>
+
+  <script type="text/javascript">
+  //https://developer.mozilla.org/en-US/docs/Web/API/WindowEventHandlers/onbeforeunload
+  window.addEventListener('beforeunload', function (e) {
+    if(geid('editor_text').value.trim()!=''){
+      // Cancel the event
+      e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
+      // Chrome requires returnValue to be set
+      e.returnValue = '';
+    }
+  });
+  </script>
 {%endmacro%}
 
 {# titled header #}

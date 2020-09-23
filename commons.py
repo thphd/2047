@@ -679,7 +679,7 @@ def get_weekly_best_user(start=7, stop=14, n=10):
 
     wbu = aql(f'''
     for v in votes
-    filter v.t_c > '2020-09-11'
+    filter v.t_c > '{lastweek2}' and v.t_c <'{lastweek}'
     collect uid=v.to_uid with count into n
     sort n desc
     limit {n}

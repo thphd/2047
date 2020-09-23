@@ -553,12 +553,12 @@ class Paginator:
 
         sortbys = [
         ('综合', querystring(pagenumber, pagesize, order, 't_hn'), 't_hn'==sortby,'HackerNews 排序'),
-        ('回复', querystring(pagenumber, pagesize, order, 't_u'), 't_u'==sortby,'按最后回复时间排序'),
-        ('发表', querystring(pagenumber, pagesize, order, 't_c'), 't_c'==sortby,'按发表时间排序'),
+        ('即时', querystring(pagenumber, pagesize, order, 't_u'), 't_u'==sortby,'按最后回复时间排序'),
+        ('新帖', querystring(pagenumber, pagesize, order, 't_c'), 't_c'==sortby,'按发表时间排序'),
 
-        ('热度', querystring(pagenumber, pagesize, order, 'nreplies'), 'nreplies'==sortby,'按照回复数量排序'),
-        ('点赞', querystring(pagenumber, pagesize, order, 'amv'), 'amv'==sortby,'按照得票（赞）数排序'),
-        ('浏览', querystring(pagenumber, pagesize, order, 'vc'), 'vc'==sortby,'按照被浏览次数排序'),
+        ('回复', querystring(pagenumber, pagesize, order, 'nreplies'), 'nreplies'==sortby,'按照回复数量排序'),
+        ('高赞', querystring(pagenumber, pagesize, order, 'amv'), 'amv'==sortby,'按照得票（赞）数排序'),
+        ('观看', querystring(pagenumber, pagesize, order, 'vc'), 'vc'==sortby,'按照被浏览次数排序'),
         ]
 
         sortbys2 = [
@@ -592,18 +592,19 @@ class Paginator:
         button_groups = []
 
         if len(slots):
-            button_groups.append([])
-            button_groups.append(slots)
+            turnpage = []
 
             if pagenumber!=1:
-                button_groups[0].insert(0,('上一页',querystring(pagenumber-1, pagesize, order,sortby)))
+                turnpage.insert(0,('上一页',querystring(pagenumber-1, pagesize, order,sortby)))
 
             if pagenumber!=total_pages:
-                button_groups[0].insert(0, ('下一页',querystring(pagenumber+1, pagesize, order, sortby)))
+                turnpage.insert(0, ('下一页',querystring(pagenumber+1, pagesize, order, sortby)))
+
+            button_groups.append(turnpage)
+            button_groups.append(slots)
 
         # no need to sort if number of items < 2
         if count>3:
-            button_groups.append(orders)
 
             if mode=='thread' or mode=='user_thread':
                 button_groups.append(sortbys)
@@ -614,6 +615,7 @@ class Paginator:
             if mode=='post' or mode=='user_post' or mode=='post_q':
                 button_groups.append(sortbys3)
 
+            button_groups.append(orders)
             button_groups.append([('共 {:d}'.format(count), '')])
 
         return {

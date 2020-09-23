@@ -1,3 +1,46 @@
+{%macro switchy_tabs(tabs=[])%}
+{%set id = get_random_hex_string(6)%}
+{%set tablen = tabs|length %}
+
+  <div class="tablinks">
+    {%for tab in tabs%}
+      <a class="tablink_{{id}} {{'current' if loop.index0==0 else ''}}"
+      href="javascript:void(0)"
+      >{{tab[0]}}</a>
+    {%endfor%}
+  </div>
+
+  <div class="undertab">
+
+  {%for tab in tabs%}
+    <div class="undertab_{{id}}" style="{{'' if loop.index0==0 else 'display:none;'}}">
+      {{tab[1]}}
+    </div>
+  {%endfor%}
+  </div>
+
+  <script type="text/javascript">
+window.addEventListener('load', (event)=>{
+var tabs=gebcn(document)('undertab_{{id}}')
+var tablinks=gebcn(document)('tablink_{{id}}')
+// print(tabs, tablinks)
+
+function k(i){
+  var tab = tabs[i];
+  var tablink = tablinks[i];
+  tablink.onclick = ()=>{
+    foreach(tabs)(e=>{e.style.display='none'})
+    foreach(tablinks)(e=>{e.classList.remove('current')})
+    tab.style.display=''
+    tablink.classList.add('current')
+  }
+}
+for(var i=0;i<tabs.length;i++){k(i)}
+})
+  </script>
+{%endmacro%}
+
+
 {%extends 'base.html.jinja'%}
 {%block content%}
 
@@ -74,27 +117,21 @@
   </div>
   {%endmacro%}
 
-  {%set wb = get_weekly_best(7,14)%}
   <div class="box">
-    <div class="boxtitle">
-      上周最佳
+    <div class="boxtitle" title="按照被点赞的次数">
+      最佳帖文
     </div>
-    {{list_threads(wb)}}
+    <div class="navigator_quote">
+      {{switchy_tabs([
+        ['本周',list_threads(get_weekly_best(0, 7, n=15))],
+        ['上周',list_threads(get_weekly_best(7, 14, n=15))],
+        ['上月',list_threads(get_weekly_best(14, 14+30, n=15))],
+        ])}}
+    </div>
   </div>
 
-  {%set wb = get_weekly_best(14, 14+30, n=15)%}
+  {%macro list_users(wb)%}
   <div class="box">
-    <div class="boxtitle">
-      上月最佳
-    </div>
-    {{list_threads(wb)}}
-  </div>
-
-  {%set wb = get_weekly_best_user(7, 14, n=20)%}
-  <div class="box">
-    <div class="boxtitle">
-      上周最赞
-    </div>
     <div class="weekly_best">
       {%for i in wb%}
       <div class="weekly_best_item">
@@ -104,6 +141,20 @@
         </div>
       </div>
       {%endfor%}
+    </div>
+  </div>
+  {%endmacro%}
+
+  <div class="box">
+    <div class="boxtitle" title='按照被点赞的次数'>
+      高赞用户
+    </div>
+    <div class="navigator_quote">
+      {{switchy_tabs([
+        ['本周',list_users(get_weekly_best_user(0,7,n=20))],
+        ['上周',list_users(get_weekly_best_user(7,14,n=20))],
+        ['上月',list_users(get_weekly_best_user(14,44,n=20))],
+        ])}}
     </div>
   </div>
 
