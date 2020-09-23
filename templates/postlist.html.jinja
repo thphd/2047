@@ -7,7 +7,13 @@
 </div>
 {%endif%}
 
-{{macros.paginate(pagination)}}
+<div class="padlr">
+  <div class='nreplies'>
+    {{t.nreplies}}个{{'回答'if t.mode=='question' else '评论'}}
+  </div>
+</div>
+
+{{macros.paginate(pagination, class='padlr')}}
 
 <div class="threadlist">
 
@@ -23,7 +29,7 @@
 
 </div>
 
-{{macros.paginate(pagination)}}
+{{macros.paginate(pagination, class='padlr')}}
 
 
 {%if t and g.logged_in%}

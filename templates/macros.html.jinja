@@ -854,9 +854,9 @@
 {%endmacro%}
 
 {# pagination #}
-{%macro paginate(pagination)%}
+{%macro paginate(pagination, class='')%}
 {%if pagination.button_groups%}
-  <div class="pagination">
+  <div class="pagination {{class}}">
 
     {%for group in pagination.button_groups%}
     <div class="group">

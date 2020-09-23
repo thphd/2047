@@ -1,10 +1,10 @@
-{%macro switchy_tabs(tabs=[])%}
+{%macro switchy_tabs(tabs=[], index=0)%}
 {%set id = get_random_hex_string(6)%}
 {%set tablen = tabs|length %}
 
   <div class="tablinks">
     {%for tab in tabs%}
-      <a class="tablink_{{id}} {{'current' if loop.index0==0 else ''}}"
+      <a class="tablink_{{id}} {{'current' if loop.index0==index else ''}}"
       href="javascript:void(0)"
       >{{tab[0]}}</a>
     {%endfor%}
@@ -13,7 +13,7 @@
   <div class="undertab">
 
   {%for tab in tabs%}
-    <div class="undertab_{{id}}" style="{{'' if loop.index0==0 else 'display:none;'}}">
+    <div class="undertab_{{id}}" style="{{'' if loop.index0==index else 'display:none;'}}">
       {{tab[1]}}
     </div>
   {%endfor%}
@@ -44,7 +44,7 @@ for(var i=0;i<tabs.length;i++){k(i)}
 {%extends 'base.html.jinja'%}
 {%block content%}
 
-{{macros.paginate(pagination)}}
+{{macros.paginate(pagination, class='padlr')}}
 
 <div class="threadlist">
   {%for t in threadlist%}
@@ -52,7 +52,7 @@ for(var i=0;i<tabs.length;i++){k(i)}
   {%endfor%}
 </div>
 
-{{macros.paginate(pagination)}}
+{{macros.paginate(pagination, class='padlr')}}
 
 
 {%endblock%}
@@ -125,13 +125,13 @@ for(var i=0;i<tabs.length;i++){k(i)}
       {{switchy_tabs([
         ['本周',list_threads(get_weekly_best(0, 7, n=15))],
         ['上周',list_threads(get_weekly_best(7, 14, n=15))],
-        ['上月',list_threads(get_weekly_best(14, 14+30, n=15))],
-        ])}}
+        ['本月',list_threads(get_weekly_best(7, 30, n=15))],
+        ['上月',list_threads(get_weekly_best(30, 60, n=15))],
+        ], index=random.randint(0,4))}}
     </div>
   </div>
 
   {%macro list_users(wb)%}
-  <div class="box">
     <div class="weekly_best">
       {%for i in wb%}
       <div class="weekly_best_item">
@@ -142,7 +142,6 @@ for(var i=0;i<tabs.length;i++){k(i)}
       </div>
       {%endfor%}
     </div>
-  </div>
   {%endmacro%}
 
   <div class="box">
@@ -150,11 +149,12 @@ for(var i=0;i<tabs.length;i++){k(i)}
       高赞用户
     </div>
     <div class="navigator_quote">
-      {{switchy_tabs([
+      {{switchy_tabs(tabs=[
         ['本周',list_users(get_weekly_best_user(0,7,n=20))],
         ['上周',list_users(get_weekly_best_user(7,14,n=20))],
-        ['上月',list_users(get_weekly_best_user(14,44,n=20))],
-        ])}}
+        ['本月',list_users(get_weekly_best_user(7,30,n=20))],
+        ['上月',list_users(get_weekly_best_user(30,60,n=20))],
+        ], index=random.randint(0,4))}}
     </div>
   </div>
 
