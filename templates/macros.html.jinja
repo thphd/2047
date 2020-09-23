@@ -599,7 +599,7 @@
     </a>
 
     {%if t.count %}
-    <a class="response" href="{{url_to_last}}">{{t.count}} 个回复</a>
+    <a class="response" href="{{url_to_last}}">{{t.count}} 个{{'评论'if t.mode!='question' else '回答'}}</a>
     {%endif%}
 
     {%if t.count%}
