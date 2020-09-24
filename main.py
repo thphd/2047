@@ -206,6 +206,7 @@ def create_all_necessary_indices():
     ci('avatars',[['uid']])
     ci('admins',[['name']])
     ci('aliases',[['is','name'],['name','is']])
+    ci('operations',indexgen([['target'],[]], ['t_c']))
 
 is_integer = lambda i:isinstance(i, int)
 class Paginator:
@@ -2049,25 +2050,42 @@ def show_quotes():
         page_title="语录",
     )
 
-@stale_cache(ttr=3, ttl=120)
-def get_oplog():
-    l = aql('for i in operations sort i.t_c desc limit 100 \
-        let user = (for u in users filter u.uid==i.uid return u)[0]\
-         return merge(i,{username:user.name})', silent=True)
+@stale_cache(maxsize=512, ttr=3, ttl=1800)
+def get_oplog(target=None):
+    query = f'''
+    for i in operations
+    {'filter i.target==@target' if target else ''}
+    sort i.t_c desc limit 100
+    let user = (for u in users filter u.uid==i.uid return u)[0]
+    return merge(i,{{username:user.name}})
+    '''
 
+    if target:
+        l = aql(query, silent=True, target=target)
+    else:
+        l = aql(query, silent=True)
     s = ''
     for i in l:
         del i['_key']
         del i['_rev']
         del i['_id']
         s+= obj2json(i) + '\n'
-    return s
+    return s.strip()
 
 @app.route('/oplog')
 def oplog():
     # l = get_oplog()
     must_be_logged_in()
     s = get_oplog()
+
+    resp = make_response(s, 200)
+    resp.headers['Content-type'] = 'text/plain; charset=utf-8'
+    return resp
+
+@app.route('/oplog/<path:target>')
+def oplogt(target):
+    must_be_logged_in()
+    s = get_oplog(target=target)
 
     resp = make_response(s, 200)
     resp.headers['Content-type'] = 'text/plain; charset=utf-8'
