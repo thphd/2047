@@ -450,11 +450,20 @@ def _():
 
         timenow = time_iso_now()
 
+        while 1:
+            new_pid = str(obtain_new_id('pid'))
+            exists = aql('for p in posts filter p._key==@pid return p', silent=False, pid=new_pid)
+            if len(exists):
+                continue
+            else:
+                break
+
         newpost = dict(
             uid=uid,
             t_c=timenow,
             content=content,
             tid=tid,
+            _key=str(new_pid),
         )
         inserted = aql('insert @p in posts return NEW', p=newpost)[0]
         inserted['content']=None
@@ -812,7 +821,7 @@ let mvp = (for p in posts filter p.tid==t.tid sort p.votes desc limit 1 return p
 // mvp = max vote post, mv = max vote (of that post)
 // mvu = uid of mvp, amv = absolute max vote (of both the mvp and the thread)
 update t with {
-    votes:upv, nreplies, t_u, 
+    votes:upv, nreplies, t_u,
     mvp:mvp._key, mv:mvp.votes or 0, mvu:mvp.uid,
     amv: max([mvp.votes or 0, upv or 0])}
 in threads
@@ -1497,6 +1506,7 @@ def _():
     must_be_admin()
     tid = g.j['tid']
     ts = g.j['t_manual']
+    ts = str(ts)
     ttttt = dfs(ts) # sanity check
 
     if ttttt < dfs('1989-06-04'):
