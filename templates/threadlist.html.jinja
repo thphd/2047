@@ -124,8 +124,8 @@ for(var i=0;i<tabs.length;i++){k(i)}
     </div>
     <div class="navigator_quote">
       {{switchy_tabs([
+        ['三日',list_threads(get_weekly_best(0, 3, n=15))],
         ['本周',list_threads(get_weekly_best(0, 7, n=15))],
-        ['上周',list_threads(get_weekly_best(7, 14, n=15))],
         ['本月',list_threads(get_weekly_best(7, 30, n=15))],
         ['上月',list_threads(get_weekly_best(30, 60, n=15))],
         ], index=random.randint(0,3))}}
@@ -151,8 +151,8 @@ for(var i=0;i<tabs.length;i++){k(i)}
     </div>
     <div class="navigator_quote">
       {{switchy_tabs(tabs=[
+        ['三日',list_users(get_weekly_best_user(0,3,n=20))],
         ['本周',list_users(get_weekly_best_user(0,7,n=20))],
-        ['上周',list_users(get_weekly_best_user(7,14,n=20))],
         ['本月',list_users(get_weekly_best_user(7,30,n=20))],
         ['上月',list_users(get_weekly_best_user(30,60,n=20))],
         ], index=random.randint(0,3))}}
