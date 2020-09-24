@@ -521,7 +521,7 @@ img.headerbtn {
 a.title {}
 
 a.threadlist_title {
-    color: #2a5b8e;
+    /* color: #2a5b8e; */
     margin-left: 0;
     margin-right: 0;
     /* display: block; */
@@ -1642,6 +1642,7 @@ a.threadlist_title{font-size: 13px;}
 img.headerbtn{
   width: 28px;
   height: 28px;
+  display: none;
 }
 .headerlink{
 
@@ -1682,7 +1683,7 @@ img.headerbtn{
 
 a.headerlink{margin-left: .5em;font-size: 12px;}
 
-#site_logo{display: none;}
+#site_logo{/* display: none; */margin: 0;}
 span.personal_title{
   font-size: 8px;
 }

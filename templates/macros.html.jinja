@@ -548,7 +548,11 @@
   {%set tid = t.tid%}
   <div class='threadlist_titlecombo'>
 
-    <a href="/t/{{tid}}" class="threadlist_title">{{'[已标记为删除] ' if t.delete else ''}}{{t.title}}</a>
+    <a href="/t/{{tid}}" class="threadlist_title">{{
+      '[已标记为删除] ' if t.delete else ''
+    }}{{
+      '↑' if t.t_manual and t.t_manual>t.t_u else ''
+    }}{{t.title}}</a>
 
     {%if t.youtube%}
       <a class='tltyw' rel='noreferrer' href="https://www.youtube.com/watch?v={{t.youtube}}"><img class='threadlist_title_youtube' src="/images/youtube_small.png" alt=""></a>

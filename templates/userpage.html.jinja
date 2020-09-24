@@ -71,10 +71,10 @@
     <div class="userpage_let">
 
       <div class="userpage_name">
-        <span>发帖</span><a href="/u/{{u.uid}}/t">{{u.stats.nthreads}}</a>
+        <span>发帖</span><a href="/u/{{u.uid}}/t">{{u.stats.nthreads}} {%if u.stats.nthreads%}(点击查看){%endif%}</a>
       </div>
       <div class="userpage_name">
-        <span>回复</span><a href="/u/{{u.uid}}/p">{{u.stats.nposts}}</a>
+        <span>回复</span><a href="/u/{{u.uid}}/p">{{u.stats.nposts}} {%if u.stats.nposts%}(点击查看){%endif%}</a>
       </div>
 
       <div class="userpage_name">

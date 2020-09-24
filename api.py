@@ -400,7 +400,7 @@ def content_length_check(content, allow_short=False):
         raise Exception('content too short')
 
 def title_length_check(title):
-    if len(title)>75:
+    if len(title)>140:
         raise Exception('title too long')
     if len(title)<3:
         raise Exception('title too short')
