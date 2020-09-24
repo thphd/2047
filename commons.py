@@ -9,9 +9,22 @@ from cachetools.func import *
 from cachy import stale_cache
 
 @stale_cache(ttr=1, ttl=30)
-def readfile(fn, mode='rb', **kw):
-    with open(fn, mode, **kw) as f:
+def readfile(fn, mode='rb', *a, **kw):
+    with open(fn, mode, *a, **kw) as f:
         return f.read()
+
+def writefile(fn, data, mode='wb', *a, **kw):
+    with open(fn,mode,*a,**kw) as f:
+        f.write(data)
+
+def removefile(fn):
+    try:
+        os.remove(fn)
+    except Exception as e:
+        print(e)
+        print('failed to remove', fn)
+    else:
+        return
 
 def dispatch(f):
     import threading

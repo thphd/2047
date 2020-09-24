@@ -551,7 +551,9 @@
     <a href="/t/{{tid}}" class="threadlist_title">{{
       '[已标记为删除] ' if t.delete else ''
     }}{{
-      '↑' if t.t_manual and t.t_manual>t.t_u else ''
+      '↑' if t.t_manual and
+        format_time_datetime(t.t_manual)>=format_time_datetime(t.t_hn)
+      else ''
     }}{{t.title}}</a>
 
     {%if t.youtube%}
@@ -791,7 +793,8 @@
       <div class="editor_button_row">
         <button class="major" type="button" id="editor_btnpreview">预览</button>
         <button class='major' type="button" id="editor_btnsubmit">提交</button>
-        <a href="/t/7140" rel='noreferrer'>语法参考</a>
+        <a href="/t/7140" target='_blank' rel='noreferrer'>语法参考</a>
+        <a href="https://imgur.com/upload" target="_blank" rel='noreferrer'>传图</a>
 
         <button type="button" id="editor_quote" title='引用文字'>“</button>
         <button type="button" id="editor_code" title='插入程序代码'>code</button>

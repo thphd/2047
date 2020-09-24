@@ -19,35 +19,27 @@ def verify_publickey_message(pk, msg):
     pkbinfn = pkfn+'.gpg'
     msgfn = f'./temp/{fn}.msg'
 
-    with open(pkfn, 'w', encoding='utf-8') as f:
-        f.write(pk)
+    writefile(pkfn, pk, mode='w', encoding='utf-8')
+    writefile(msgfn, msg, mode='w', encoding='utf-8')
 
-    with open(msgfn, 'w', encoding='utf-8') as f:
-        f.write(msg)
+    def cleanup():
+        removefile(pkfn)
+        removefile(msgfn)
+        removefile(pkbinfn)
 
     # remove armor
     status = os.system(f'gpg --dearmor {pkfn}')
     if status != 0:
         print('status:', status)
-
-        os.remove(pkfn)
-        os.remove(msgfn)
-
-        raise Exception('failed to dearmor the public key')
-
-    os.remove(pkfn)
+        cleanup()
+        raise Exception('failed to dearmor the public key (there might be something wrong with your public key)')
 
     # verify
     status = os.system(f'gpg --no-default-keyring --keyring {pkbinfn} --verify {msgfn}')
     if status != 0:
         print('status:', status)
+        cleanup()
+        raise Exception('failed to verify the message (your public key is okay but the signature you supplied does not match the public key, or is of a wrong format)')
 
-        os.remove(pkbinfn)
-        os.remove(msgfn)
-
-        raise Exception('failed to verify the message')
-
-    os.remove(pkbinfn)
-    os.remove(msgfn)
-
+    cleanup()
     return True
