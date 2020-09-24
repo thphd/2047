@@ -2148,14 +2148,10 @@ def e5001(e):
 if __name__ == '__main__':
     dispatch(create_all_necessary_indices)
 
-    import os
-    if 'PORT' in os.environ:
-        port = os.environ['PORT']
-    else:
-        port = '5000'
+    port = get_environ('PORT') or 5000
 
-    if 'PROFILE' not in os.environ:
-        if 'DEBUG' in os.environ:
+    if not get_environ('PROFILE'):
+        if get_environ('DEBUG'):
             app.run(host='0.0.0.0', port=port, debug=True)
         else:
             app.run(host='0.0.0.0', port=port)

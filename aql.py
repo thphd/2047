@@ -31,7 +31,7 @@ class AQLController:
                     else:
                         raise Exception(str(resp))
 
-    def __init__(self, dburl, dbname, collections):
+    def __init__(self, dburl, dbname, collections=[]):
         self.dburl = dburl
         self.dbname = dbname
         self.collections = collections

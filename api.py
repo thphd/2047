@@ -752,7 +752,7 @@ let t_now = date_timestamp(@now)
 let t_man = date_timestamp(t.t_manual)
 
 let votes = t.amv or 0
-let points = votes * 3 + 1 + t.nreplies * .2
+let points = max([(votes - 0.9), 0]) * 3 + 1 + t.nreplies * .2
 let t_offset = 3600*1000*2
 let t_hn = max([t_now + t_offset - (t_now - t_submitted + t_offset) / sqrt(points), t_man])
 //let t_hn = max([t_now + t_offset - (t_now - t_updated + t_offset) / sqrt(points), t_man])

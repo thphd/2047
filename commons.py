@@ -343,9 +343,17 @@ else:
     def convert_markdown(s):
         return md.convert(s)
 
+def get_environ(k):
+    k = k.upper()
+    if k in os.environ:
+        return os.environ[k]
+    else:
+        return None
+
 # database connection
 from aql import AQLController
-aqlc = AQLController('http://127.0.0.1:8529', 'db2047',[])
+dbaddr = get_environ('dbaddr') or 'http://127.0.0.1:8529'
+aqlc = AQLController(dbaddr, 'db2047')
 aql = aqlc.aql
 
 # site pagination defaults
