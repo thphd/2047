@@ -376,7 +376,7 @@ class Paginator:
 
         return postlist, pagination_obj
 
-    @stale_cache(maxsize=128, ttr=3, ttl=10)
+    @stale_cache(maxsize=128, ttr=3, ttl=30)
     def get_thread_list(self,
         by='category',
         category='all',
@@ -416,19 +416,21 @@ class Paginator:
         querystring_complex = '''
         for i in threads
 
-        let u = (for u in users filter u.uid == i.uid return u)[0]
+        let user = (for u in users filter u.uid == i.uid return u)[0]
         let fin = (for p in posts filter p.tid == i.tid sort p.t_c desc limit 1 return p)[0]
         //let count = length(for p in posts filter p.tid==i.tid return p)
         let count = i.nreplies
         let ufin = (for j in users filter j.uid == fin.uid return j)[0]
         let c = (for c in categories filter c.cid==i.cid return c)[0]
 
+        //let mvu = ((i.mvu and i.mv>2) ?(for u in users filter u.uid == i.mvu return u)[0]: null)
+
         {filter}
 
         sort i.{sortby} {order}
         limit {start},{count}
         let kk = unset(i,'content')
-        return merge(i, {{user:u, last:unset(fin,'content'), lastuser:ufin, cname:c.name, count:count}})
+        return merge(i, {{user:user, last:unset(fin,'content'), lastuser:ufin, cname:c.name, count:count}})
          '''.format(
                 sortby = sortby,
                 order = order,
@@ -1526,6 +1528,7 @@ def route_get_avatar(uid):
 
             resp = make_response('', 307)
             resp.headers['Location'] = '/images/avatar-max-img.png'
+            resp.headers['Cache-Control']= 'max-age=864000, stale-while-revalidate=43200'
             return resp
 
     resp.headers['Content-Type'] = 'image/png'

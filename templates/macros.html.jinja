@@ -1,15 +1,16 @@
 <!-- all template macros of this project -->
 
-{%macro avatar(u, class="", plain=False, show_title=True)%}
+{%macro avatar(u, class="", plain=False, show_title=True, no_decoration=False)%}
   {%set uid = u.uid %}
-  {%set pt = show_title and u.personal_title%}
-  {%set pp = u.personal_party%}
+  {%set deco = not no_decoration%}
+  {%set pt = deco and show_title and u.personal_title%}
+  {%set pp = deco and u.personal_party%}
 
   {%set aurl =
     ('/avatar/'~u.uid~'.png'~
       (('?etag='~u.avatar_etag) if u.avatar_etag else ''))
 
-    if u.has_avatar
+    if u.has_avatar!=False
 
     else '/images/avatar-max-img.png'%}
 
@@ -563,9 +564,11 @@
   {%endcall%}
 {%endmacro%}
 
+{#
 {%macro post_postlist_header2(p)%}
   {{post(p, ['under_vote','publish_date_thread','vc','delete_thread','edit_thread','display_edit_status','thread','thread_header','view_thread_code'])}}
 {%endmacro%}
+#}
 
 {# one line of post, used in postlist's thread header, keep the style unchanged #}
 {%macro post_postlist_header_kept(p)%}
@@ -686,6 +689,17 @@
 
     <div class="rightmost">
       <a class="reply_count c{{t.cid}}" href="{{url_to_last}}">{{t.count}}</a>
+    </div>
+  {%endif%}
+
+  {%if t.mvp and t.mvu and t.mv > 2 %}
+    <div class="rightmost">
+      <div class="thread_contrib">
+        <a class='votenumber' href="/p/{{t.mvp}}">▲{{t.mv}}</a>
+        <div class="thread_contributer">
+          {{avatar({"uid": t.mvu}, no_decoration=True)}}
+        </div>
+      </div>
     </div>
   {%endif%}
 

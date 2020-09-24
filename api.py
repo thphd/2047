@@ -811,7 +811,11 @@ let t_u = ((for p in posts filter p.tid==t.tid and p.delete==null sort p.t_c des
 let mvp = (for p in posts filter p.tid==t.tid sort p.votes desc limit 1 return p)[0]
 // mvp = max vote post, mv = max vote (of that post)
 // mvu = uid of mvp, amv = absolute max vote (of both the mvp and the thread)
-update t with {votes:upv, nreplies, t_u, mvp:mvp._key, mv:mvp.votes or 0, mvu:mvp.uid, amv: max([mvp.votes or 0, upv or 0])} in threads
+update t with {
+    votes:upv, nreplies, t_u, 
+    mvp:mvp._key, mv:mvp.votes or 0, mvu:mvp.uid,
+    amv: max([mvp.votes or 0, upv or 0])}
+in threads
 return NEW
     ''', _id=int(tid), silent=True)
 

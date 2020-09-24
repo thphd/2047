@@ -900,7 +900,9 @@ body {
     opacity: .6;
 }
 
-.votenumber {}
+.thread_contrib .votenumber a {
+    display: flex;
+}
 
 
 a {
@@ -1635,6 +1637,9 @@ input[type="text"],input[type="password"] {
 }
 
 @media only screen and (max-width: 600px) {
+  .rightmost{
+    display: none;
+  }
   .reply_count{
     padding: 0.05em 0.35em;
     margin-right: 0;
@@ -1719,4 +1724,21 @@ span.personal_title{
 
 .hidden {
     display: none;
+}
+
+.thread_contrib {
+    display: flex;
+    align-items: center;
+}
+
+.thread_contributer .avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+}
+
+.thread_contrib .votenumber {
+    margin-right: 0.3em;
+    font-size: 15px;
+    color: #4ba84b;
 }
