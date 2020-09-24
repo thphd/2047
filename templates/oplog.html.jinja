@@ -1,0 +1,23 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+
+<div class="threadlist">
+
+  {%for l in oplog%}
+    <div class="threadlistitem padded">
+      {{macros.avatar(l.user)}}
+      {{macros.username(l.user)}}
+
+      <span class="padlr">{{l.op}}</span>
+      <span class="">{{l.target}}</span>
+      <span class='padlr'>{{format_time_relative_fallback(l.t_c)}}</span>
+
+      {%if l.reason%}
+      <span class="">reason: {{l.reason}}</span>
+      {%endif%}
+    </div>
+  {%endfor%}
+
+</div>
+
+{%endblock%}

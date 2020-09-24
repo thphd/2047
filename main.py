@@ -2051,41 +2051,54 @@ def show_quotes():
     )
 
 @stale_cache(maxsize=512, ttr=3, ttl=1800)
-def get_oplog(target=None):
+def get_oplog(target=None, raw=False):
     query = f'''
     for i in operations
     {'filter i.target==@target' if target else ''}
     sort i.t_c desc limit 100
     let user = (for u in users filter u.uid==i.uid return u)[0]
-    return merge(i,{{username:user.name}})
+    return merge(i,{{username:user.name, user}})
     '''
 
     if target:
         l = aql(query, silent=True, target=target)
     else:
         l = aql(query, silent=True)
+
+    if raw:
+        return l
+
     s = ''
     for i in l:
         del i['_key']
         del i['_rev']
         del i['_id']
+        del i['user']
         s+= obj2json(i) + '\n'
     return s.strip()
 
 @app.route('/oplog')
-def oplog():
+def oplog_():
     # l = get_oplog()
     must_be_logged_in()
-    s = get_oplog()
+    l = get_oplog(raw=True)
+
+    return render_template_g('oplog.html.jinja',
+        oplog = l,
+    )
 
     resp = make_response(s, 200)
     resp.headers['Content-type'] = 'text/plain; charset=utf-8'
     return resp
 
 @app.route('/oplog/<path:target>')
-def oplogt(target):
+def oplog_t(target):
     must_be_logged_in()
-    s = get_oplog(target=target)
+    l = get_oplog(target=target, raw=True)
+
+    return render_template_g('oplog.html.jinja',
+        oplog = l,
+    )
 
     resp = make_response(s, 200)
     resp.headers['Content-type'] = 'text/plain; charset=utf-8'

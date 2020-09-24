@@ -556,7 +556,7 @@
       {{delete_post(t, mode='thread')}}
 
       {%if g.logged_in and get_oplog('thread/'~t.tid)%}
-      <a href="/oplog/thread/{{t.tid}}" class='adminstuff viewcode'>管理记录</a>
+        <a href="/oplog/thread/{{t.tid}}" class='adminstuff viewcode'>管理记录</a>
       {%endif%}
     </div>
 
