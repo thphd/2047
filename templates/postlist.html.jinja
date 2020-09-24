@@ -7,7 +7,7 @@
 </div>
 {%endif%}
 
-{%if t%}
+{%if t and t.count%}
 <div class="padlr">
   <div class='nreplies'>
     {{t.nreplies}}个{{'回答'if t.mode=='question' else '评论'}}
