@@ -637,6 +637,7 @@ a.threadlist_title {
     align-items: flex-start;
     flex-flow: column;
     justify-content: flex-start;
+    font-size: 15px;
 }
 
 
@@ -1492,8 +1493,8 @@ textarea {
 }
 
 .avatar_line .avatar {
-    width: 48px;
-    height: 48px;
+    /* width: 48px; */
+    /* height: 48px; */
 }
 
 input[type="text"],input[type="password"] {
@@ -1699,4 +1700,23 @@ span.personal_title{
     font-size: 20px;
     padding-top: 10px;
     padding-bottom: 10px;
+}
+
+.foldable {
+    max-height: 700px;
+    overflow: hidden;
+}
+
+.unfold {
+    background: #ebebeb;
+    font-size: 12px;
+    padding: 7px;
+    color: gray;
+    border-radius: 3px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.hidden {
+    display: none;
 }

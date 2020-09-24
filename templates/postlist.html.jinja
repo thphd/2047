@@ -21,7 +21,7 @@
 
   {%for p in postlist%}
     {%if t%}
-      {{macros.post_postlist(p)}}
+      {{macros.post_postlist_threadless(p, in_thread=True)}}
 
     {%else%}
       {{macros.post_postlist_threadless(p)}}
@@ -43,11 +43,15 @@
 <div id="navigator" class="">
 
   {%if t%}
-    <div class="navigator_userpanel">
+    <div class="box navigator_userpanel">
+
+      <div class="boxtitle">
+        发起人
+      </div>
       {# publisher #}
       <div class="thread_header_info">
         <div class="avatar_line">
-          {{macros.avatar(t.user)}}
+          {{macros.avatar(t.user, show_title=False)}}
           {{macros.username(t.user)}}
 
         </div>

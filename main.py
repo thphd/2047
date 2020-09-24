@@ -1172,6 +1172,7 @@ def get_thread(tid):
         # threadlist=threadlist,
         postlist=postlist,
         pagination=pagination,
+        pagenumber=pagenumber,
         t=thobj,
         # threadcount=count,
         viewed_target='thread/'+str(tid) if not user_is_self else '',

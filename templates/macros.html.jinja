@@ -1,8 +1,8 @@
 <!-- all template macros of this project -->
 
-{%macro avatar(u, class="", plain=False)%}
+{%macro avatar(u, class="", plain=False, show_title=True)%}
   {%set uid = u.uid %}
-  {%set pt = u.personal_title%}
+  {%set pt = show_title and u.personal_title%}
   {%set pp = u.personal_party%}
 
   {%set aurl =
@@ -38,7 +38,7 @@
 {%endmacro%}
 
 {# one line of post #}
-{%macro post(p, metas, avatar_user=False, item_id=False, leftmost=False)%}
+{%macro post(p, metas, avatar_user=False, item_id=False, leftmost=False, left=True)%}
 
 {% set _idt = p.tid if 'threadlist' in metas %}
 {% set _ide = 'editor' if 'editor' in metas %}
@@ -65,6 +65,7 @@
     {%endif%}
     {%if leftmost%}{{leftmost}}{%endif%}
 
+  {%if left%}
   <div class="left">
     {# editor avatar should be current logged in user's #}
 
@@ -87,6 +88,7 @@
     {%endif%}
 
   </div>
+  {%endif%}
 
   <div class="right">
     <div class="details">
@@ -247,7 +249,7 @@
             <a class='adminstuff viewcode' href="/t/{{p.tid}}/code">源码</a>
 
           {%elif m=='at_reply' and t and g.logged_in%}
-            <a class='adminstuff at_reply' href="javascript:at_reply('{{p._key}}')">回复</a>
+            <a class='adminstuff at_reply' href="javascript:at_reply('{{p._key}}')">@作者</a>
 
           {%elif m=='link_to'%}
             {%if not t%}
@@ -444,32 +446,51 @@
   {{post(p, ['upper','publisher_upper','brief_upper','under_vote','publish_date_linkto','link_to','postlist','at_reply','edit_post','display_edit_status','post','view_post_code','delete_post'])}}
 {%endmacro%}
 
-{%macro delete_post(p)%}
+{%macro delete_post(p, mode='post')%}
+{%set targ = ('post/'~p._key) if mode=='post' else ('thread/'~p.tid)%}
 {%if can_do_to(g.logged_in, 'delete', p.uid)%}
   {%if not p.delete%}
-    <a class='adminstuff delete' href="javascript:mark_delete('{{'post/'~p._key}}')">删除</a>
+    <a class='adminstuff delete' href="javascript:mark_delete('{{targ}}')">删除</a>
 
   {%else%}
-    <a class='adminstuff undelete' href="javascript:mark_delete('{{'upost/'~p._key}}')">取消删除</a>
+    <a class='adminstuff undelete' href="javascript:mark_delete('{{'u'~targ}}')">取消删除</a>
 
   {%endif%}
 {%endif%}
 {%endmacro%}
 
-{%macro edit_post(p)%}
+{%macro edit_post(p, mode='post')%}
+{%set targ = ('post/'~p._key) if mode=='post' else ('thread/'~p.tid)%}
   {%if can_do_to(g.logged_in, 'edit', p.uid)%}
-    <a class='adminstuff edit' href="/editor?target=edit_post/{{p._key}}">编辑</a>
+    <a class='adminstuff edit' href="/editor?target=edit_{{targ}}">编辑</a>
   {%endif%}
 {%endmacro%}
 
-{%macro source_post(p)%}
+{%macro source_post(p,mode='post')%}
+{%set targ = ('/p/'~p._key) if mode=='post' else ('/t/'~p.tid)%}
   {%if can_do_to(g.current_user,'view_code',-1)%}
-    <a class='adminstuff viewcode' href="/p/{{p._key}}/code">源码</a>
+    <a class='adminstuff viewcode' href="{{targ}}/code">源码</a>
+  {%endif%}
+{%endmacro%}
+
+{%macro contentify(p, foldable=False)%}
+  <div class="post_content {{'foldable' if foldable else ''}}">
+    {%if not p.delete%}
+      {{(convert_markdown(p.content or '')|safe)}}
+    {%else%}
+      <s>内容被删除</s>
+    {%endif%}
+  </div>
+
+  {%if foldable%}
+    <div class="unfold hidden">
+      点击展开所有内容
+    </div>
   {%endif%}
 {%endmacro%}
 
 {# one line of post, used in postlist without a thread #}
-{%macro post_postlist_threadless(p)%}
+{%macro post_postlist_threadless(p, in_thread=False)%}
   {%call post(p, metas=[], avatar_user=p.user, item_id=p._key)%}
 
   <div class="meta upper">
@@ -486,13 +507,7 @@
   </div>
   {%endif%}
 
-  <div class="post_content">
-    {%if not p.delete%}
-      {{(convert_markdown(p.content or '')|safe)}}
-    {%else%}
-      <s>内容被删除</s>
-    {%endif%}
-  </div>
+  {{contentify(p, foldable=True)}}
 
   {{edit_status(p)}}
 
@@ -507,6 +522,12 @@
       {{format_time_relative_fallback(p.t_c)}}
     </a>
 
+    {%if in_thread%}
+      {%if g.logged_in%}
+        <a class='adminstuff at_reply' href="javascript:at_reply('{{p._key}}')">@回复</a>
+      {%endif%}
+    {%endif%}
+
     {{edit_post(p)}}
     {{source_post(p)}}
     {{delete_post(p)}}
@@ -516,7 +537,29 @@
 {%endmacro%}
 
 {# one line of post, used in postlist's thread header #}
-{%macro post_postlist_header(p)%}
+{%macro post_postlist_header(t)%}
+  {%call post(t, metas=[], left=False)%}
+    {{contentify(t, foldable=(pagenumber!=1))}}
+
+    <div class="meta">
+      {{undervote(t, target_type='thread')}}
+
+      {# publish date#}
+      <a class="date" href="/t/{{t.tid}}">
+        {{format_time_relative_fallback(t.t_c)}}
+      </a>
+
+      {{view_count(t)}}
+      {{edit_post(t, mode='thread')}}
+      {{source_post(t, mode='thread')}}
+      {{move_thread(t)}}
+      {{delete_post(t, mode='thread')}}
+    </div>
+
+  {%endcall%}
+{%endmacro%}
+
+{%macro post_postlist_header2(p)%}
   {{post(p, ['under_vote','publish_date_thread','vc','delete_thread','edit_thread','display_edit_status','thread','thread_header','view_thread_code'])}}
 {%endmacro%}
 
@@ -629,22 +672,9 @@
       {%endif%}
     {%endif%}
 
-    {%if t.vc%}
-    <span>{{t.vc}} 次浏览</span>
-    {%endif%}
-
-    {%if can_do_to(g.logged_in, 'delete', t.uid)%}
-      {%if not t.delete%}
-      <a class='adminstuff delete' href="javascript:mark_delete('{{'thread/'~t.tid}}')">删除</a>
-      {%else%}
-      <a class='adminstuff undelete' href="javascript:mark_delete('{{'uthread/'~t.tid}}')">取消删除</a>
-      {%endif%}
-    {%endif%}
-
-    {%if can_do_to(g.logged_in,'move',t.uid)%}
-      <a class='adminstuff move_to_category' href="javascript:move_to_category('{{'thread/'~t.tid}}')">移动</a>
-    {%endif%}
-
+    {{view_count(t)}}
+    {{delete_post(t, mode=='thread')}}
+    {{move_thread(t)}}
   </div>
 
   {%if t.count and 0%}
@@ -656,6 +686,18 @@
   {%endif%}
 
   {%endcall%}
+{%endmacro%}
+
+{%macro view_count(t)%}
+{%if t.vc%}
+<span>{{t.vc}} 次浏览</span>
+{%endif%}
+{%endmacro%}
+
+{%macro move_thread(t)%}
+{%if can_do_to(g.logged_in,'move',t.uid)%}
+  <a class='adminstuff move_to_category' href="javascript:move_to_category('{{'thread/'~t.tid}}')">移动</a>
+{%endif%}
 {%endmacro%}
 
 {# one line of thread, used in threadlist #}

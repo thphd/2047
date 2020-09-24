@@ -1025,12 +1025,48 @@ function viewed(){
       .then(print)
       .catch(console.error)
     }
-  },10*1000)
+  },5*1000)
 }
 
 document.addEventListener("DOMContentLoaded", process_all_youtube_reference);
 document.addEventListener("DOMContentLoaded", browser_check);
 document.addEventListener("DOMContentLoaded", viewed);
+
+// fold/expand
+document.addEventListener("DOMContentLoaded", ()=>{
+  var tlis = gebcn(document)('threadlistitem')
+
+  foreach(tlis)(e=>{
+    var foldable = gebcn(e)('foldable')
+    if(foldable.length){foldable=foldable[0]}else{return}
+    var unfold = gebcn(e)('unfold')
+    if(unfold.length){unfold=unfold[0]}else{return}
+
+    unfold.onclick = function(){
+      unfold.classList.add('hidden')
+      foldable.classList.remove('foldable')
+    }
+
+    // change visibility of the unfold button base on necessity
+    function changestateaccordingly(){
+      if((foldable.clientHeight || foldable.offsetHeight)
+        < foldable.scrollHeight){
+          unfold.classList.remove('hidden')
+      }else{
+        unfold.classList.add('hidden')
+      }
+      // print(e.id, foldable.scrollHeight)
+    }
+
+    //because image changes the height of its container after load
+    var imgs = gebtn(foldable)('img')
+    foreach(imgs)(e=>{
+      e.onload = changestateaccordingly
+    })
+    // foldable.onresize = changestateaccordingly
+    changestateaccordingly()
+  })
+})
 
 function qr_current(){
   qr(window.location.href)
