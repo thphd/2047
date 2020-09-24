@@ -1042,18 +1042,22 @@ document.addEventListener("DOMContentLoaded", ()=>{
     var unfold = gebcn(e)('unfold')
     if(unfold.length){unfold=unfold[0]}else{return}
 
+    var expanded = false
     unfold.onclick = function(){
+      expanded = true
       unfold.classList.add('hidden')
       foldable.classList.remove('foldable')
     }
 
     // change visibility of the unfold button base on necessity
     function changestateaccordingly(){
-      if((foldable.clientHeight || foldable.offsetHeight)
-        < foldable.scrollHeight){
+      if(((foldable.clientHeight || foldable.offsetHeight)
+        < (foldable.scrollHeight-40) )&& expanded==false){
           unfold.classList.remove('hidden')
+          foldable.classList.add('foldable')
       }else{
         unfold.classList.add('hidden')
+        foldable.classList.remove('foldable')
       }
       // print(e.id, foldable.scrollHeight)
     }
