@@ -53,7 +53,7 @@
 
       {%if u.public_key%}
       <div class="userpage_name">
-        <span>公钥</span><a href="/public_key/{{u.name}}">/public_key/{{u.name}}</a>
+        <span>公钥</span><a href="/public_key/{{u.name}}">/public_key/{{u.name}}</a>{%if u.pgp_login%}<span>(已验证)</span>{%endif%}
       </div>
       {%endif%}
 
@@ -71,10 +71,10 @@
     <div class="userpage_let">
 
       <div class="userpage_name">
-        <span>发帖</span><a href="/u/{{u.uid}}/t">{{u.stats.nthreads}} {%if u.stats.nthreads%}(点击查看){%endif%}</a>
+        <span>发文</span><a href="/u/{{u.uid}}/t">{{u.stats.nthreads}} 篇 {%if u.stats.nthreads%}(点击查看){%endif%}</a>
       </div>
       <div class="userpage_name">
-        <span>回复</span><a href="/u/{{u.uid}}/p">{{u.stats.nposts}} {%if u.stats.nposts%}(点击查看){%endif%}</a>
+        <span>评论</span><a href="/u/{{u.uid}}/p">{{u.stats.nposts}} 条 {%if u.stats.nposts%}(点击查看){%endif%}</a>
       </div>
 
       <div class="userpage_name">

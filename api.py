@@ -245,6 +245,8 @@ def _():
         else:
             break
 
+    # user sucessfully logged in with pgp
+    aql('update @u with {pgp_login:true} in users', u=user)
     return {'error':False, 'message':'login success', 'setuid':user['uid']}
 
 @register('login')
