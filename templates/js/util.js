@@ -176,6 +176,11 @@ function api(j, display){
   })
 }
 
+function aa(action, j, display){
+  j.action = action
+  return api(j, display)
+}
+
 //  generate timed pings
 function timed(interval){
   setTimeout(function(){
@@ -1238,6 +1243,15 @@ function delete_entity(key){
   .then(res=>{
     window.location.reload()
   })
+  .catch(alert)
+}
+
+function follow(uid, is_follow){
+  aa('follow',{
+    uid:uid,
+    follow:is_follow,
+  })
+  .then(r=>{window.location.reload()})
   .catch(alert)
 }
 

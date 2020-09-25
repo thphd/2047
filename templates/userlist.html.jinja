@@ -7,7 +7,7 @@
 </div>
 {%endif%}
 
-{{macros.paginate(pagination, class='padlr')}}
+{{macros.paginate(pagination, class='padlr') if pagination}}
 
 <div class="threadlist">
 
@@ -16,6 +16,6 @@
   {%endfor%}
 
 </div>
-{{macros.paginate(pagination, class='padlr')}}
+{{macros.paginate(pagination, class='padlr') if pagination}}
 
 {%endblock%}

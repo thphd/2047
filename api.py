@@ -855,6 +855,10 @@ def update_user_votecount(uid):
         nposts:length(for p in posts filter p.uid==u.uid return p),
         nlikes:length(for v in votes filter v.to_uid==u.uid and v.vote==1 return v),
         nliked:length(for v in votes filter v.uid==u.uid and v.vote==1 return v),
+
+        nfollowings:length(for f in followings filter f.uid==u.uid and f.follow==true return f),
+        nfollowers:length(for f in followings filter f.to_uid==u.uid and f.follow==true return f),
+
     } in users
     ''', uid=int(uid), silent=True)
 
@@ -1595,6 +1599,64 @@ def _():
 
     aql('for i in entities filter i._key==@k remove i in entities', k=_key)
 
+    return {'error':False}
+
+
+aqlc.create_collection('followings')
+
+def did_follow(uid, to_uid):
+    followed_before = aql('''for i in followings filter i.uid==@uid and i.to_uid==@to_uid return i''', uid=uid, to_uid=to_uid, silent=True)
+    if not followed_before:
+        return False
+    else:
+        return followed_before[0]['follow']
+
+def get_followers(uid, followings=False, limit=5):
+    if followings:
+        return aql(f'''
+        for i in followings filter i.uid==@uid and i.follow==true sort i.t_c desc
+        let user = (for u in users filter u.uid==i.to_uid return u)[0]
+        limit {limit}
+        return merge(i, {{user}})
+        ''', uid=uid, silent=True)
+    else:
+        return aql(f'''
+        for i in followings filter i.to_uid==@uid and i.follow==true sort i.t_c desc
+        let user = (for u in users filter u.uid==i.uid return u)[0]
+        limit {limit}
+        return merge(i, {{user}})
+        ''', uid=uid, silent=True)
+
+@register('follow')
+def _():
+    must_be_logged_in()
+    j=g.j
+    uid = j['uid']
+    follow = j['follow'] # Boolean
+    assert follow in [True, False]
+
+    if g.selfuid == uid:
+        raise Exception('you cannot follow yourself')
+
+    user = get_user_by_id(uid)
+    if not user:
+        raise Exception('user does not exist')
+
+    if follow == True:
+        followed_before = aql('''for i in followings filter i.uid==@uid and i.to_uid==@to_uid return i''', uid=g.selfuid, to_uid=uid, silent=True)
+
+        if not followed_before:
+            make_notification_uids([uid], g.selfuid, 'follow', url='')
+
+    aql('''
+    upsert {uid:@uid, to_uid:@to_uid} insert {follow:@follow, uid:@uid, to_uid:@to_uid, t_c:@ts} update {follow:@follow, t_u:@ts}
+    in followings
+    ''', uid=g.selfuid, to_uid=uid,
+        ts=time_iso_now(), follow=follow
+    )
+
+    update_user_votecount(uid)
+    update_user_votecount(g.selfuid)
     return {'error':False}
 
 def obj2json(obj):

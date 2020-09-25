@@ -12,7 +12,17 @@
         <span class='userpage_username'>{{macros.username(u, class='', as_link=False)}}{{'（已封禁于 '~format_time_dateifnottoday(u.t_d)~'）'if u.delete else ''}}</span>
 
         {%if g.logged_in%}
-        <a href="/editor?target=username/{{u.name}}">发私信给ta</a>
+          <a href="/editor?target=username/{{u.name}}">发私信给ta</a>
+          {%if u.stats.ifollowedhim%}
+            {%if u.stats.hefollowedme%}
+            <a class='mutualfollow' href="javascript:follow({{u.uid}}, false)">互相关注</a>
+            {%else%}
+            <a class='followed' href="javascript:follow({{u.uid}}, false)">已关注</a>
+            {%endif%}
+          {%else%}
+            <a class='not_followed' href="javascript:follow({{u.uid}}, true)">关注</a>
+          {%endif%}
+
         {%endif%}
 
         {%if can_do_to(g.logged_in, 'add_alias', u.uid)%}
@@ -83,6 +93,19 @@
       <div class="userpage_name">
         <span>送出赞</span>{{u.stats.nliked or 0}}</span>
       </div>
+      <div class="userpage_name">
+        <span>关注了</span><a href='/u/{{u.uid}}/fo'>{{u.nfollowings}} 人</a>
+        {%for u in u.stats.followings[:5]%}{{
+          macros.avatar(u.user, class='follower_avatar', no_decoration=True)
+        }}{%endfor%}
+      </div>
+
+      <div class="userpage_name">
+        <span>关注者</span><a href='/u/{{u.uid}}/fr'>{{u.nfollowers}} 人</a>
+        {%for u in u.stats.followers[:5]%}{{
+          macros.avatar(u.user, class='follower_avatar', no_decoration=True)
+        }}{%endfor%}
+      </div>
 
       <div class="userpage_name">
         <span>资料浏览</span><span>{{u.vc or 0}} 次</span>
@@ -105,7 +128,7 @@
   {%endfor%}
 
 {%if g.is_admin%}
-  <div class="">
+  <div class="padlr">
     <span>invitation:</span> <a href='/invitation/{{u.invitation}}'>{{u.invitation}}</a>
   </div>
 {%endif%}

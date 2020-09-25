@@ -18,7 +18,7 @@
     <img class="{{class}}" src="{{aurl}}">
 
   {%else%}
-    <a class="avatar_outer" href="/u/{{uid}}">{%if pp%}<img class='personal_title' src='/avatar/{{pp}}.png'>{%elif pt%}<span class='personal_title'>{{pt}}</span>{%endif%}<img class="avatar" src="{{aurl}}" alt=""></a>
+    <a class="avatar_outer" href="/u/{{uid}}">{%if pp%}<img class='personal_title' src='/avatar/{{pp}}.png'>{%elif pt%}<span class='personal_title'>{{pt}}</span>{%endif%}<img class="{{class or 'avatar'}}" src="{{aurl}}" alt=""></a>
 
   {%endif%}
 {%endmacro%}
@@ -747,16 +747,24 @@
   {{post(p, ['message'])}}
 {%endmacro%}
 
+{%macro array_usernames(arr)%}
+  {%for u in arr%}{%if loop.index0%}{%if
+    loop.index0==(arr|length-1)
+    %}、{%else%}、{%endif%}{%endif%}{{
+    username(u)|trim
+  }}{%endfor%}
+{%endmacro%}
+
 {# one line of notification, used in notification_list #}
 {%macro post_notification(p)%}
-  {%call post(p,['notification'])%}
+  {%call post(p, avatar_user=p.from_user, metas=['notification'])%}
   <div class="post_content">
     {%if p.why == 'reply_thread'%}
       {%if not p.from_users%}
-        <a href="/u/{{p.from_uid}}">{{(p.from_user and p.from_user.name) or p.from_uid}}</a>
+        {{username(p.from_user)|trim}}
 
       {%else%}
-        {%for u in p.from_users%}{%if loop.index0%}、{%endif%}<a href="/u/{{u.uid}}">{{u.name or u.uid}}</a>{%endfor%}
+        {{array_usernames(p.from_users)}}
 
       {%endif%}
 
@@ -777,13 +785,10 @@
 
     {%elif 'at' in (p.why or '')%}
       {%if not p.from_users%}
-        <a href="/u/{{p.from_uid}}">{{(p.from_user and p.from_user.name) or p.from_uid}}</a>
+        {{username(p.from_user)}}
 
       {%else%}
-        {%for u in p.from_users%}
-          {%if loop.index0%}和{%endif%}<a href="/u/{{u.uid}}">{{u.name or u.uid}}</a>
-
-        {%endfor%}
+        {{array_usernames(p.from_users)}}
 
       {%endif%}
 
@@ -791,6 +796,14 @@
       <a href="{{p.url}}">{{'评论：' if 'post'in p.why else '帖子：'}}{{p.title or p.url}}</a>
       <span>中 @ 了你</span>
 
+    {%elif p.why=='follow'%}
+      {%if not p.from_users%}
+        {{username(p.from_user)}}
+      {%else%}
+        {{array_usernames(p.from_users)}}
+
+      {%endif%}
+        关注了你
     {%else%}
       <span>unknown reason</span>
     {%endif%}

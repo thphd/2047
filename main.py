@@ -207,6 +207,7 @@ def create_all_necessary_indices():
     ci('admins',[['name']])
     ci('aliases',[['is','name'],['name','is']])
     ci('operations',indexgen([['target'],[]], ['t_c']))
+    ci('followings', indexgen([['uid','follow'],['to_uid','follow']],['t_c']))
 
 is_integer = lambda i:isinstance(i, int)
 class Paginator:
@@ -1186,16 +1187,11 @@ def get_thread(tid):
 # list of user posts.
 @app.route('/u/<int:uid>/p')
 def uposts(uid):
-    uobj = aql('''
-    for u in users filter u.uid==@uid
-    return u
-    ''', uid=uid, silent=True)
+    uobj = get_user_by_id(uid)
 
-    if len(uobj)!=1:
+    if not uobj:
         abort(404, 'user not exist')
         return make_response('user not exist', 404)
-
-    uobj = uobj[0]
 
     upld = user_post_list_defaults
     pagenumber = rai('page') or upld['pagenumber']
@@ -1229,6 +1225,45 @@ def uposts(uid):
         # threadcount=count,
 
     )
+
+# list of followed/follower
+@app.route('/u/<int:uid>/fo')
+def ufollowing(uid):
+    uobj = get_user_by_id(uid)
+
+    if not uobj:
+        abort(404, 'user not exist')
+        return make_response('user not exist', 404)
+
+    ul = aql('''for i in followings filter i.uid==@uid
+    sort i.t_c desc
+    let user = (for u in users filter u.uid==i.to_uid return u)[0]
+    return merge(user, {t_c: i.t_c})
+    ''', uid=uid)
+
+    return render_template_g('userlist.html.jinja',
+        page_title = uobj['name'] + ' 关注的人',
+        userlist = ul,
+    )
+@app.route('/u/<int:uid>/fr')
+def ufollower(uid):
+    uobj = get_user_by_id(uid)
+
+    if not uobj:
+        abort(404, 'user not exist')
+        return make_response('user not exist', 404)
+
+    ul = aql('''for i in followings filter i.to_uid==@uid
+    sort i.t_c desc
+    let user = (for u in users filter u.uid==i.uid return u)[0]
+    return merge(user, {t_c: i.t_c})
+    ''', uid=uid)
+
+    return render_template_g('userlist.html.jinja',
+        page_title = uobj['name'] + ' 的关注者',
+        userlist = ul,
+    )
+
 
 @app.route('/p/all')
 def get_all_posts():
@@ -1408,6 +1443,12 @@ def _userpage(uid):
         ''',uid=uid, silent=True)[0]
 
     uobj['stats']=stats
+    if g.logged_in:
+        stats['ifollowedhim'] = did_follow(g.selfuid, uid)
+        stats['hefollowedme'] = did_follow(uid, g.selfuid)
+
+    stats['followers'] = get_followers(uid, limit=6)
+    stats['followings'] = get_followers(uid, limit=6, followings=True)
 
     uobj['public_key']=get_public_key_by_uid(uid)
     uobj['alias'] = get_alias_user_by_name(uobj['name'])
