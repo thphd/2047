@@ -776,6 +776,8 @@ def before_request():
     else:
         g.using_browser = True
 
+    salt = g.session['salt'] if 'salt' in g.session else '==nosalt=='
+
     # ----
 
     # log the user in
@@ -794,7 +796,7 @@ def before_request():
 
         if not is_static:
             # print_info(g.logged_in['name'], 'browser' if g.using_browser else '')
-            log_info(f'({g.selfuid})', g.logged_in['name'], 'browser' if g.using_browser else '==naked==')
+            log_info(f'({g.selfuid})', g.logged_in['name'], 'browser' if g.using_browser else '==naked==', salt)
 
         # when is the last time you check your inbox?
         if 't_inbox' not in g.current_user:
@@ -819,11 +821,10 @@ def before_request():
         return
 
     # now seems you're not logged in. we have to be more strict to you
+    salt = g.session['salt'] if 'salt' in g.session else '==nosalt=='
+
     if not is_static:
-        if g.using_browser:
-            log_info(ipstr, 'browser')
-        else:
-            log_err(ipstr, '==naked==')
+        log_info(ipstr, 'browser' if g.using_browser else '==naked==', salt)
 
 
     if non_critical_paths or g.using_browser:
