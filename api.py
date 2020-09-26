@@ -1027,6 +1027,7 @@ def _():
             n = aql('update @k with @o in votes return NEW',k=vote,o=vobj,silent=True)[0]
 
         update_post_votecount(_id)
+        update_thread_votecount(post['tid'])
 
         update_user_votecount(post['uid'])
         update_user_votecount(g.current_user['uid'])

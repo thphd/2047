@@ -302,7 +302,7 @@ body>#content {
 }
 
 .post_content li {
-    margin: .5em 0;
+    margin: .7em 0;
     /* line-height: 170%; */
 }
 
@@ -956,6 +956,8 @@ span.votenumber {}
     transform: translate(-50%,-50%);
     box-shadow: 0 0 11px #00000061;
     -ms-transform: translate(-50%,-50%);
+    width: 80vw;
+    max-width: 600px;
 }
 
 #editor_text::placeholder {
@@ -1409,6 +1411,7 @@ span.quoting {
     text-align: right;
     font-style: italic;
     color: #b5b5b5;
+    font-size: 90%;
     /* margin-top: .5em; */
 }
 

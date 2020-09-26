@@ -734,9 +734,51 @@
 {%endmacro%}
 
 {# one line of user, used in userlist #}
-{%macro post_userlist(p)%}
-  {{post(p, ['userpage_meta','userlist'])}}
+{%macro post_userlist(u)%}
+{%call post(u, metas=[], avatar_user=u)%}
+  <div class="post_content">
+    {{username(u, class='userlist_name')}}
+
+    {%if g.is_admin%}
+    {%if u.invited_by%}
+      (由<a href="/u/{{u.invited_by}}">{{u.invited_by}}</a>邀请)
+    {%endif%}
+
+    {%if u.ip_addr and g.current_user['uid']==5108%}(from: {{u.ip_addr}}){%endif%}
+    {%if u.salt%}(salt:{{u.salt}}){%endif%}
+
+    {%endif%}
+
+    {{brief(u,'userlist_brief')}}
+
+  </div>
+
+
+  <div class="meta">
+    {# register date #}
+    <span>{{format_time_relative_fallback(u.t_c)}}</span>
+    <span>uid: {{u.uid}}</span>
+
+    {%if u.nthreads%}
+    <a href='/u/{{u.uid}}/t' class="threads">{{u.nthreads}} 个帖子</a>
+    {%endif%}
+
+    {%if u.nposts%}
+    <a href='/u/{{u.uid}}/p' class="response">{{u.nposts}} 个回复</a>
+    {%endif%}
+
+    {%if u.nliked%}
+    <a href='/u/{{u.uid}}' class="nliked">点赞 {{u.nliked}} 次</a>
+    {%endif%}
+
+    {%if u.nlikes%}
+    <a href='/u/{{u.uid}}' class="nlikes">被赞 {{u.nlikes}} 次</a>
+    {%endif%}
+
+  </div>
+{%endcall%}
 {%endmacro%}
+
 
 {# one line of conv, used in convlist #}
 {%macro post_conversation(p)%}
