@@ -867,6 +867,8 @@
       <div class="editor_button_row">
         <button class="major" type="button" id="editor_btnpreview">预览</button>
         <button class='major' type="button" id="editor_btnsubmit">提交</button>
+        <button class='major' type="button" id="editor_btnsubmitdelay">延时</button>
+
         <a href="/t/7140" target='_blank' rel='noreferrer'>语法参考</a>
         <a href="https://imgur.com/upload" target="_blank" rel='noreferrer'>传图</a>
 
@@ -927,7 +929,7 @@
   {%endif%}
 
   {%if page_subheader%}
-    <div class="subheader post_content">
+    <div class="subheader post_content padlr">
       {{convert_markdown(page_subheader)|safe}}
     </div>
   {%endif%}

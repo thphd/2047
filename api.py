@@ -883,6 +883,7 @@ updateable_personal_info = [
     ('showcase', '个人主页展示帖子或评论（例如“t7113”或者“p247105”，中间逗号或空格隔开），限4项'),
     ('ignored_categories', '主页不显示的分类（数字ID，中间用逗号隔开，例如不想看水区和江湖，就写“4,21”）'),
     ('background_color', '背景色（R,G,B 用半角逗号隔开，0-255）（你浏览本站的时候，以及别人浏览你的个人主页或帖子的时候，背景颜色都会变成这个）'),
+    # ('delay_send', '启用延时发送功能（yes即启用，留空即停用）（发帖的时候可以选择延时发送）'),
 ]
 
 def eat_rgb(s):
@@ -1652,7 +1653,7 @@ def _():
     upsert {uid:@uid, to_uid:@to_uid} insert {follow:@follow, uid:@uid, to_uid:@to_uid, t_c:@ts} update {follow:@follow, t_u:@ts}
     in followings
     ''', uid=g.selfuid, to_uid=uid,
-        ts=time_iso_now(), follow=follow
+        ts=time_iso_now(), follow=follow, silent=True,
     )
 
     update_user_votecount(uid)

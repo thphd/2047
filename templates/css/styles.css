@@ -55,7 +55,7 @@ div#site_name {/* color: #ffffff; */font-family: arial;/* display: inline-block;
 
 .details .meta {
   font-size: 12px;
-  color: #cacaca;
+  color: #b6b6b6;
   justify-content: flex-start;
   align-items: center;
   flex-flow: row;
@@ -188,7 +188,7 @@ span.last_commented_date {
 
 
 .pagenumber.current {
-    background: #4a914b;
+    background: #4a914bb8;
     padding: 2px 4px;
     /* padding-left: 2px; */
     color: white;
@@ -265,7 +265,7 @@ span.last_commented_date {
 .right {
     flex-grow: 1;
     flex-direction: column;
-    /* justify-content: center; */
+    justify-content: center;
     display: flex;
 }
 
@@ -352,7 +352,7 @@ span.floor_num {color: #652929;}
 .subheader {
     font-size: 16px;
     color: #8db4d6;
-    padding: 0 12px;
+    /* padding: 0 12px; */
 }
 
 .post_content a {
@@ -966,8 +966,8 @@ a.gotmail {
 }
 
 a.gotmail {
-    /* color: red; */
-    background: #ff00003d;
+    color: white;
+    background: #ff0000;
     padding: 3px;
     border-radius: 3px;
 }

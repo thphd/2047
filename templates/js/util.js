@@ -440,6 +440,7 @@ var editor_target = geid('editor_target')
 if (editor_target){
   var bpreview = geid('editor_btnpreview')
   var bsubmit = geid('editor_btnsubmit')
+  var bsubmitd = geid('editor_btnsubmitdelay')
   var preview = geid('editor_preview')
   var editor_text = geid('editor_text')
   var editor_title = geid('editor_title')
@@ -589,6 +590,26 @@ if (editor_target){
       bpreview.disabled = false
       bsubmit.disabled = false
     })
+  }
+
+  bsubmitd.onclick = function(){
+    var pr = prompt('打算延时多少秒发送呀？')
+    if(pr){
+      pr = parseInt(pr)
+      if (pr<=1){
+        geid('editor_btnsubmit').click()
+        return
+      }
+      var c = 0
+      setInterval(()=>{
+        c+=1
+        if (c>=pr){
+          geid('editor_btnsubmit').click()
+        }else{
+          display_notice(`倒计时 ${pr-c} 秒`)
+        }
+      }, 1000)
+    }
   }
 }
 

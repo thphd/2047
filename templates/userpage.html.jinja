@@ -20,7 +20,9 @@
             <a class='followed' href="javascript:follow({{u.uid}}, false)">已关注</a>
             {%endif%}
           {%else%}
+            {%if u.uid!=g.selfuid%}
             <a class='not_followed' href="javascript:follow({{u.uid}}, true)">关注</a>
+            {%endif%}
           {%endif%}
 
         {%endif%}
