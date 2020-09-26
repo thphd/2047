@@ -537,10 +537,11 @@
   {%endcall%}
 {%endmacro%}
 
-{# one line of post, used in postlist's thread header #}
+{# one line of post(thread), used in postlist's thread header #}
 {%macro post_postlist_header(t)%}
   {%call post(t, metas=[], left=False)%}
     {{contentify(t, foldable=(pagenumber!=1))}}
+    {{edit_status(t)}}
 
     <div class="meta">
       {{undervote(t, target_type='thread')}}

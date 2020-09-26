@@ -188,8 +188,10 @@ span.last_commented_date {
 
 
 .pagenumber.current {
-    background: #dcf3dc;
+    background: #4a914b;
+    padding: 2px 4px;
     /* padding-left: 2px; */
+    color: white;
 }
 
 .pagination {
