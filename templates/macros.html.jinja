@@ -613,7 +613,7 @@
 
   </div>
 
-  {%set url_to_last = get_url_to_post_given_details(t.tid,t.last._key,t.count)%}
+  {%set url_to_last = get_url_to_post_given_details(t.tid,t.last._key,t.count or 0)%}
 
   <div class="meta">
     {{category_bubble(t)}}
