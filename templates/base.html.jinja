@@ -18,6 +18,18 @@
 {%set bc = (u and u.background_color) or (t and t.user and t.user.background_color) or (g.logged_in and g.logged_in.background_color) or False%}
 {%set ebc = (bc and eat_rgb(bc)) or False%}
 
+{%macro hl(url, name)%}
+<a class='headerlink {{'active' if request.full_path.startswith(url)}}' href="{{url}}">{{name}}</a>
+{%endmacro%}
+
+{%macro redcircle(number)%}
+{%if number%}
+<div class="redcircle"><div class="redcircle_inner">{{
+  number
+}}</div></div>
+{%endif%}
+{%endmacro%}
+
 <body {%if ebc%}style="background-color:{{ebc}}"{%endif%}>
   <div class="header_bkgnd">
     <div id="header" class="">
@@ -30,41 +42,28 @@
         </a>
 
         <!-- <a class='headerlink' href="/">首页</a> -->
-        <a class="headerlink" href="/?sortby=t_c">新帖</a>
-        <a class="headerlink" href="/p/all">近评</a>
+        {{hl('/?sortby=t_c', '新帖')}}
+        {{hl('/p/all', '近评')}}
       </div>
 
-      {%macro redcircle(number)%}
-      {%if number%}
-      <div class="redcircle"><div class="redcircle_inner">{{
-        number
-      }}</div></div>
-      {%endif%}
-      {%endmacro%}
 
       <div class="rightalign">
 
         {%if g.logged_in%}
 
-        {%set nu = g.logged_in.num_notif %}
-        <a href="/n" class="headerlink">提醒{{redcircle(nu)}}</a>
+          {{hl('/n','提醒'~redcircle(g.logged_in.num_notif))}}
+          {{hl('/m','私信'~redcircle(g.logged_in.num_unread))}}
 
-        {%set nu = g.logged_in.num_unread %}
-        <a href="/m" class="headerlink">私信{{redcircle(nu)}}</a>
+          <a class='headerlink' href="javascript:logout()">登出</a>
 
-        <a class='headerlink' href="javascript:void(0)" onclick="logout();">登出</a>
+          {{hl('/u/'~g.current_user.uid, g.current_user.name)}}
 
-
-        {{macros.username(g.logged_in, class='headerlink')}}
-
-
-
-        {{macros.avatar(g.logged_in, class='headerbtn')}}
+          {{macros.avatar(g.logged_in, class='headerbtn')}}
 
         {%else%}
 
-        <a class="headerlink" href="/register">注册</a>
-        <a class="headerlink" href="/login">登录</a>
+          {{hl('/register', '注册')}}
+          {{hl('/login','登录')}}
 
         {%endif%}
 
