@@ -19,11 +19,11 @@
 {%set ebc = (bc and eat_rgb(bc)) or False%}
 
 <body {%if ebc%}style="background-color:{{ebc}}"{%endif%}>
-  <div class="outerbox">
+  <div class="header_bkgnd">
     <div id="header" class="">
       <div class="leftalign">
         {# left 2 right: logo, [links], search, [uavatar, uname, login/logout] #}
-        <a href="/">
+        <a class="headerblock" href="/">
           {%if 0%}<img id="site_logo" src="/images/logo.png" alt="">{%endif%}
           <img id="site_logo" src='/images/2049bbslogo_clipped_small_pressed.png' alt="">
           {#<div id="site_name">{{site_name_header}}</div>#}
@@ -34,26 +34,32 @@
         <a class="headerlink" href="/p/all">近评</a>
       </div>
 
+      {%macro redcircle(number)%}
+      {%if number%}
+      <div class="redcircle"><div class="redcircle_inner">{{
+        number
+      }}</div></div>
+      {%endif%}
+      {%endmacro%}
+
       <div class="rightalign">
 
         {%if g.logged_in%}
 
         {%set nu = g.logged_in.num_notif %}
-        <a href="/n" class="headerlink {{'gotmail' if nu else ''}}">提醒{{' ('~nu~')' if nu else ''}}</a>
+        <a href="/n" class="headerlink">提醒{{redcircle(nu)}}</a>
 
         {%set nu = g.logged_in.num_unread %}
-        <a href="/m" class="headerlink {{'gotmail' if nu else ''}}">私信{{' ('~nu~')' if nu else ''}}</a>
+        <a href="/m" class="headerlink">私信{{redcircle(nu)}}</a>
 
         <a class='headerlink' href="javascript:void(0)" onclick="logout();">登出</a>
 
-        <a class='headerlink' href="/u/{{g.logged_in.uid}}">
-          <div class="headerbtn">
-            {{g.logged_in.name}}
-          </div>
-        </a>
-        <a class='headerlink' href="/u/{{g.logged_in.uid}}">
-          {{macros.avatar(g.logged_in, plain=True, class='headerbtn')}}
-        </a>
+
+        {{macros.username(g.logged_in, class='headerlink')}}
+
+
+
+        {{macros.avatar(g.logged_in, class='headerbtn')}}
 
         {%else%}
 
@@ -64,7 +70,11 @@
 
       </div>
 
-    </div>
+  </div>
+
+  </div>
+
+  <div class="outerbox">
     <div class="lr">
       <div id="content" class="">
         {{macros.header()}}

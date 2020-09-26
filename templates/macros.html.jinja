@@ -655,10 +655,6 @@
       {{format_time_relative_fallback(t.t_c)}}
     </a>
 
-    {%if t.count %}
-    <a class="response" href="{{url_to_last}}">{{t.count}} 个{{'评论'if t.mode!='question' else '回答'}}</a>
-    {%endif%}
-
     {%if t.count%}
     {{username(t.lastuser, href=url_to_last)}}
 
@@ -678,6 +674,10 @@
           {{format_time_relative_fallback(t.t_c)}}
         </a>
       {%endif%}
+    {%endif%}
+
+    {%if t.count %}
+      <a class="response" href="{{url_to_last}}">{{t.count}} 个{{'评论'if t.mode!='question' else '回答'}}</a>
     {%endif%}
 
     {{view_count(t)}}
