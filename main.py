@@ -1239,7 +1239,7 @@ def ufollowing(uid):
     sort i.t_c desc
     let user = (for u in users filter u.uid==i.to_uid return u)[0]
     return merge(user, {t_c: i.t_c})
-    ''', uid=uid)
+    ''', uid=uid, silent=True)
 
     return render_template_g('userlist.html.jinja',
         page_title = uobj['name'] + ' 关注的人',
@@ -1257,7 +1257,7 @@ def ufollower(uid):
     sort i.t_c desc
     let user = (for u in users filter u.uid==i.uid return u)[0]
     return merge(user, {t_c: i.t_c})
-    ''', uid=uid)
+    ''', uid=uid, silent=True)
 
     return render_template_g('userlist.html.jinja',
         page_title = uobj['name'] + ' 的关注者',
