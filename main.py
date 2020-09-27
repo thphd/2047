@@ -918,7 +918,7 @@ def get_all_threads():
 
     if not g.logged_in:
         threadlist = remove_hidden_from_visitor(threadlist)
-        categories = remove_hidden_from_visitor(categories)
+        # categories = remove_hidden_from_visitor(categories)
     else:
         threadlist = remove_hidden_from_visitor(threadlist)
 
