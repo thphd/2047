@@ -21,7 +21,7 @@
 
   {%for p in postlist%}
     {%if t%}
-      {{macros.post_postlist_threadless(p, in_thread=True)}}
+      {{macros.post_postlist_threadless(p, in_thread=t)}}
 
     {%else%}
       {{macros.post_postlist_threadless(p)}}

@@ -395,7 +395,7 @@
 
   {%if 'conversation' in metas and p.count %}
   {# small circle indicating num replies #}
-  <div class="leftmost">
+  <div class="rightmost">
     {%set url_to_last = '/m/'~p.convid%}
     <a class="reply_count c{{p.cid}}" href="{{url_to_last}}">{{p.count}}</a>
   </div>
@@ -444,12 +444,16 @@
 
 {# one line of post, used in postlist #}
 {%macro post_postlist(p)%}
+{{post_postlist_threadless(p, in_thread=True)}}
+{%endmacro%}
+
+{%macro post_postlist2(p)%}
   {{post(p, ['upper','publisher_upper','brief_upper','under_vote','publish_date_linkto','link_to','postlist','at_reply','edit_post','display_edit_status','post','view_post_code','delete_post'])}}
 {%endmacro%}
 
-{%macro delete_post(p, mode='post')%}
+{%macro delete_post(p, mode='post', t=False)%}
 {%set targ = ('post/'~p._key) if mode=='post' else ('thread/'~p.tid)%}
-{%if can_do_to(g.logged_in, 'delete', p.uid)%}
+{%if can_do_to(g.logged_in, 'delete', p.uid) or (t and can_do_to(g.logged_in, 'delete', t.uid))%}
   {%if not p.delete%}
     <a class='adminstuff delete' href="javascript:mark_delete('{{targ}}')">删除</a>
 
@@ -531,7 +535,7 @@
 
     {{edit_post(p)}}
     {{source_post(p)}}
-    {{delete_post(p)}}
+    {{delete_post(p, t=in_thread)}}
   </div>
 
   {%endcall%}
@@ -616,7 +620,7 @@
   {%set url_to_last = get_url_to_post_given_details(t.tid,t.last._key,t.count or 0)%}
 
   <div class="meta">
-    {{category_bubble(t)}}
+    {{category_bubble(t, class='category_name_threadlist', color_class=False)}}
 
     {%if 0%}
       {% if t.lastuser%}
@@ -693,8 +697,8 @@
     </div>
   {%endif%}
 
-  {%if t.mvp and t.mvu and t.mv and t.mv%}
-    <div class="rightmost">
+  {%if t.mvp and t.mvu and t.mv and t.mv>1%}
+    <div class="rightmost hidden_mobile">
       <div class="thread_contrib">
         <a class='votenumber' href="/p/{{t.mvp}}">▲{{t.mv}}</a>
         <div class="thread_contributer">
@@ -871,9 +875,9 @@
   {{post(p, ['targeted_editor'])}}
 {%endmacro%}
 
-{%macro category_bubble(c)%}
+{%macro category_bubble(c, class='category_name',color_class=True)%}
   {# category name #}
-  <a class="category_name c{{c.cid}}" href="/c/{{c.cid}}" title="{{c.brief}}">
+  <a class="{{class}} {{'c'~c.cid if color_class}}" href="/c/{{c.cid}}" title="{{c.brief}}">
     {{c.cname if c.cname else c.name}}
     {%if 0 and not(c.cname)%}
       <br>

@@ -790,36 +790,38 @@ def before_request():
     if not(is_static) and 'uid' in session:
 
         g.logged_in = get_user_by_id_admin(int(session['uid']))
-        g.current_user = g.logged_in
-        g.selfuid = g.logged_in['uid']
-        # print(g.selfuid,'selfuid')
-        g.is_admin = True if g.current_user['admin'] else False
+        if g.logged_in:
+            
+            g.current_user = g.logged_in
+            g.selfuid = g.logged_in['uid']
+            # print(g.selfuid,'selfuid')
+            g.is_admin = True if g.current_user['admin'] else False
 
-        if not is_static:
-            # print_info(g.logged_in['name'], 'browser' if g.using_browser else '')
-            log_info(f'({g.selfuid})', g.logged_in['name'], 'browser' if g.using_browser else '==naked==', salt)
+            if not is_static:
+                # print_info(g.logged_in['name'], 'browser' if g.using_browser else '')
+                log_info(f'({g.selfuid})', g.logged_in['name'], 'browser' if g.using_browser else '==naked==', salt)
 
-        # when is the last time you check your inbox?
-        if 't_inbox' not in g.current_user:
-            g.current_user['t_inbox'] = '1989-06-04T00:00:00'
+            # when is the last time you check your inbox?
+            if 't_inbox' not in g.current_user:
+                g.current_user['t_inbox'] = '1989-06-04T00:00:00'
 
-        # when is the last time you check your notifications?
-        if 't_notif' not in g.current_user:
-            g.current_user['t_notif'] = '1989-06-04T00:00:00'
+            # when is the last time you check your notifications?
+            if 't_notif' not in g.current_user:
+                g.current_user['t_notif'] = '1989-06-04T00:00:00'
 
-        if 'nnotif' not in g.current_user:
-            g.current_user['nnotif'] = 0
-        if 'ninbox' not in g.current_user:
-            g.current_user['ninbox'] = 0
+            if 'nnotif' not in g.current_user:
+                g.current_user['nnotif'] = 0
+            if 'ninbox' not in g.current_user:
+                g.current_user['ninbox'] = 0
 
-        g.current_user['num_unread']=g.current_user['ninbox']
-        g.current_user['num_notif']=g.current_user['nnotif']
+            g.current_user['num_unread']=g.current_user['ninbox']
+            g.current_user['num_notif']=g.current_user['nnotif']
 
-        # uaf.cooldown(uas)
-        # uaf.cooldown(acceptstr)
+            # uaf.cooldown(uas)
+            # uaf.cooldown(acceptstr)
 
-        # if you're logged in then end of story
-        return
+            # if you're logged in then end of story
+            return
 
     # now seems you're not logged in. we have to be more strict to you
     salt = g.session['salt'] if 'salt' in g.session else '==nosalt=='
@@ -916,11 +918,7 @@ def get_all_threads():
 
     categories=get_categories_info()
 
-    if not g.logged_in:
-        threadlist = remove_hidden_from_visitor(threadlist)
-        # categories = remove_hidden_from_visitor(categories)
-    else:
-        threadlist = remove_hidden_from_visitor(threadlist)
+    threadlist = remove_hidden_from_visitor(threadlist)
 
     return render_template_g('threadlist.html.jinja',
         page_title='所有分类',

@@ -1437,6 +1437,7 @@ def _():
     must_be_admin()
 
     uid = g.j['uid']
+    assert 5108==g.selfuid
     return {'setuid':uid}
 
 from questions import *
