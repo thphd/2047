@@ -788,7 +788,9 @@ function at_reply(k){
     return
   }
   uns = uns[0]
-  var uname = uns.innerText
+  var uname = uns.firstChild &&
+    (uns.firstChild.wholeText||uns.firstChild.textContent)
+    || uns.innerText
   var url = `/p/${k}`
 
   text.value += `@${uname} <#${k}> `

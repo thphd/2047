@@ -1,10 +1,16 @@
 <!-- all template macros of this project -->
 
+{%macro titlify(u)%}
+{%if u.name%}{{u.name}} ({{u.uid}}){%endif%}
+{%endmacro%}
+
 {%macro avatar(u, class="", plain=False, show_title=True, no_decoration=False)%}
   {%set uid = u.uid %}
   {%set deco = not no_decoration%}
   {%set pt = deco and show_title and u.personal_title%}
   {%set pp = deco and u.personal_party%}
+
+  {%set title = titlify(u)%}
 
   {%set aurl =
     ('/avatar/'~u.uid~'.png'~
@@ -15,10 +21,10 @@
     else '/images/avatar-max-img.png'%}
 
   {%if plain%}
-    <img class="{{class}}" src="{{aurl}}">
+    <img title="{{title}}" class="{{class}}" src="{{aurl}}">
 
   {%else%}
-    <a class="avatar_outer" href="/u/{{uid}}">{%if pp%}<img class='personal_title' src='/avatar/{{pp}}.png'>{%elif pt%}<span class='personal_title'>{{pt}}</span>{%endif%}<img class="{{class or 'avatar'}}" src="{{aurl}}" alt=""></a>
+    <a title="{{title}}" class="avatar_outer" href="/u/{{uid}}">{%if pp%}<img class='personal_title' src='/avatar/{{pp}}.png'>{%elif pt%}<span class='personal_title'>{{pt}}</span>{%endif%}<img class="{{class or 'avatar'}}" src="{{aurl}}" alt=""></a>
 
   {%endif%}
 {%endmacro%}
@@ -26,10 +32,12 @@
 {%macro username(u, class='user_name', href=None, as_link=True)%}
   {%set href = href or '/u/'~ u.uid %}
   {%set watching = '鹿' in (u.name or '')%}
+  {%set title = titlify(u)%}
+
   {%if as_link%}
-    <a href='{{href}}' class="{{class}}">{%if u.delete%}<s>{%endif%}{{u.name or u.uid}}{%if u.delete%}</s>{%endif%}{%if watching%}<sup>观察</sup>{%endif%}</a>
+    <a title="{{title}}" href='{{href}}' class="{{class}}">{%if u.delete%}<s>{%endif%}{{u.name or u.uid}}{%if u.delete%}</s>{%endif%}{%if watching%}<sup>观察</sup>{%endif%}</a>
   {%else%}
-    <span class="{{class}}">{%if u.delete%}<s>{%endif%}{{u.name or u.uid}}{%if u.delete%}</s>{%endif%}{%if watching%}<sup>观察</sup>{%endif%}</span>
+    <span title="{{title}}" class="{{class}}">{%if u.delete%}<s>{%endif%}{{u.name or u.uid}}{%if u.delete%}</s>{%endif%}{%if watching%}<sup>观察</sup>{%endif%}</span>
   {%endif%}
 
 {%endmacro%}
