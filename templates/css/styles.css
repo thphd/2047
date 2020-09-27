@@ -759,7 +759,7 @@ code .nf {
     border-radius: 4px;
     border: #00000030 1px solid;
     overflow: hidden;
-    box-shadow: 0 0 6px #0000001c;
+    box-shadow: 0 0 6px #0000000a;
 }
 
 
@@ -1792,7 +1792,7 @@ span.personal_title{
 
 .header_bkgnd {
     background: #404451;
-    box-shadow: 0 0 5px #0000005c;
+    box-shadow: 0 0 6px #0000000b;
 }
 
 a.threadlist_title:hover, a.threadlist_title:active, a.threadlist_title:focus {
