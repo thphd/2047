@@ -502,23 +502,36 @@
   {%endif%}
 {%endmacro%}
 
+{%macro small_title(p, mode='post')%}
+  {%set t = p.t if mode=='post' else p%}
+  {%set url = '/p/'~p._key if mode=='post' else '/t/'~p.tid%}
+
+  {%if t and t.title %}
+    <div class="post_thread_title">
+      <a href="{{url}}">
+        {%if mode=='post'%}{{
+          '回答问题：'if t.mode=='question'else'回复文章：'
+        }}{%else%}
+          {{'发布问题：' if t.mode=='question'else'发表文章：'}}
+        {%endif%}
+        {{t.title}}</a>
+    </div>
+  {%endif%}
+{%endmacro%}
+
 {# one line of post, used in postlist without a thread #}
 {%macro post_postlist_threadless(p, in_thread=False)%}
   {%call post(p, metas=[], avatar_user=p.user, item_id=p._key)%}
 
   <div class="meta upper">
     {# publisher #}
+    {%if p.user%}
     {{username(p.user)}}
     {{brief(p.user)}}
+    {%endif%}
   </div>
 
-  {%if p.t and p.t.title %}
-  <div class="post_thread_title">
-    <a href="/p/{{p._key}}">
-      {{'回答'if p.t.mode=='question'else'回复'}}
-      {{p.t.title}}</a>
-  </div>
-  {%endif%}
+  {{small_title(p)}}
 
   {{contentify(p, foldable=True)}}
 
@@ -550,8 +563,17 @@
 {%endmacro%}
 
 {# one line of post(thread), used in postlist's thread header #}
-{%macro post_postlist_header(t)%}
-  {%call post(t, metas=[], left=False)%}
+{%macro post_postlist_header(t, left=False)%}
+  {%call post(t, metas=[], left=left)%}
+    {%if left==True%}
+      <div class="meta upper">
+        {{username(t.user) if t.user}}
+        {{brief(t.user) if t.user}}
+      </div>
+
+      {{small_title(t, mode=='thread')}}
+    {%endif%}
+
     {{contentify(t, foldable=(pagenumber!=1))}}
     {{edit_status(t)}}
 
@@ -584,7 +606,11 @@
 #}
 
 {# one line of post, used in postlist's thread header, keep the style unchanged #}
-{%macro post_postlist_header_kept(p)%}
+{%macro post_postlist_header_kept(t)%}
+  {{post_postlist_header(t, left=True)}}
+{%endmacro%}
+
+{%macro post_postlist_header_kept2(p)%}
   {{post(p, ['under_vote','publisher','publish_date_thread','delete_thread','edit_thread','display_edit_status','thread','view_thread_code'])}}
 {%endmacro%}
 
@@ -960,7 +986,7 @@
 
 {# titled header #}
 {%macro header()%}
-  {%if page_title%}
+  {%if page_title and not hide_title%}
     <div class="header padded">
       <a class="header_title" href="{{
         (request.full_path[:-1] if request.full_path[-1]=='?' else request.full_path)

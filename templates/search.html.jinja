@@ -1,0 +1,49 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+
+{%if not query%}
+  <div class="search_section">
+  <img src="/images/jiangle.jpg" alt="jiangle">
+  </div>
+{%else%}
+<br>
+{%endif%}
+
+<div class="search_section padlr">
+  <input type="text" value="{{query}}" id='search_term' placeholder="请输入关键字，例如“三个代表”">
+  <button type="button" id='btn_search'>搜索</button>
+</div>
+
+<div class="threadlist">
+
+  {%if users%}
+    <div class="search_terms padded">
+      用户搜索结果
+    </div>
+
+    {%for u in users%}
+      {{macros.post_userlist(u)}}
+    {%endfor%}
+  {%endif%}
+
+  {%if results%}
+    <div class="seach_terms padded">
+      关键字搜索结果 (
+      {%for term in terms%}
+        {{term}}
+      {%endfor%}
+      )
+
+    </div>
+
+    {%for r in results%}
+      {%if r.title%}
+        {{macros.post_postlist_header_kept(r)}}
+      {%else%}
+        {{macros.post_postlist_threadless(r)}}
+      {%endif%}
+    {%endfor%}
+  {%endif%}
+
+</div>
+{%endblock%}

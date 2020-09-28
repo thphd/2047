@@ -12,7 +12,7 @@ class AQLController:
                 self.dburl + endp,
                 auth = r.auth.HTTPBasicAuth('root',''),
                 json = kw,
-                timeout = 5,
+                timeout = 12,
                 proxies = {},
             ).json()
 

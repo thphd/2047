@@ -791,7 +791,7 @@ def before_request():
 
         g.logged_in = get_user_by_id_admin(int(session['uid']))
         if g.logged_in:
-            
+
             g.current_user = g.logged_in
             g.selfuid = g.logged_in['uid']
             # print(g.selfuid,'selfuid')
@@ -2146,6 +2146,26 @@ def oplog_t(target):
     resp = make_response(s, 200)
     resp.headers['Content-type'] = 'text/plain; charset=utf-8'
     return resp
+
+from search import search_term
+@app.route('/search')
+def search():
+    q = ras('q').strip()
+    if not q:
+        return render_template_g(
+            'search.html.jinja',
+            hide_title=True,
+            page_title='搜索',
+        )
+    else:
+        result = search_term(q, start=0, length=20)
+        return render_template_g(
+            'search.html.jinja',
+            query=q,
+            hide_title=True,
+            page_title='搜索 - '+flask.escape(q),
+            **result
+        )
 
 @app.route('/404/<string:to_show>')
 def f404(to_show):

@@ -403,7 +403,7 @@ img.headerbtn {
 .post_content {
     margin-bottom: 4px;
     /* padding: 0 12px; */
-    font-size: 15px;
+    font-size: 14px;
     /* display: flex; */
     /* flex-wrap: nowrap; */
     /* flex-direction: column; */
@@ -1839,4 +1839,26 @@ a.threadlist_title:hover, a.threadlist_title:active, a.threadlist_title:focus {
     background: #f1f1f1;
     padding: 1px 3px;
     border-radius: 3px;
+}
+
+.search_section {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+input#search_term {
+    margin-right: 0.3em;
+    max-width: 16em;
+    width: 100%;
+    /* margin-bottom: 0.3em; */
+}
+
+.search_section img {
+    max-width: 100%;
+}
+
+.search_section>* {
+    margin-bottom: 0.6em;
+    /* margin-top: 0.3em; */
 }

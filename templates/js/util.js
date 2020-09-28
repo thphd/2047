@@ -1310,3 +1310,25 @@ function b64encode(s){
   s = s.reduce((a,b)=>a+b)
   return btoa(s)
 }
+
+var btn_search = geid('btn_search')
+if(btn_search){
+  var st = geid('search_term')
+  btn_search.onclick = ()=>{
+    var term = st.value.trim()
+
+    if(!term){
+      return
+    }
+
+    window.location.href = '/search?q='+term
+  }
+
+  st.onkeypress=function(e){
+    if (e.keyCode==13){
+      btn_search.click()
+    }
+  }
+
+  st.focus()
+}
