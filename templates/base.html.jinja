@@ -31,6 +31,14 @@
 {%endmacro%}
 
 <body {%if ebc%}style="background-color:{{ebc}}"{%endif%}>
+  {%if g.current_user and g.current_user.hide_avatar%}
+    <style>
+      .left {
+        display:none;
+      }
+    </style>
+  {%endif%}
+
   <div class="header_bkgnd">
     <div id="header" class="">
       <div class="leftalign">
@@ -59,7 +67,7 @@
 
           {{hl('/u/'~g.current_user.uid, g.current_user.name)}}
 
-          {{macros.avatar(g.logged_in, class='headerbtn')}}
+          {{macros.avatar(g.logged_in, class='headerbtn', no_decoration=True)}}
 
         {%else%}
 

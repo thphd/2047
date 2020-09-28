@@ -1661,7 +1661,7 @@ input[type="text"],input[type="password"] {
 }
 
 .foldable {
-    max-height: 700px;
+    max-height: 500px;
     overflow: hidden;
 }
 

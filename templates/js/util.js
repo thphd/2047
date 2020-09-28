@@ -592,24 +592,27 @@ if (editor_target){
     })
   }
 
-  bsubmitd.onclick = function(){
-    var pr = prompt('打算延时多少秒发送呀？')
-    if(pr){
-      pr = parseInt(pr)
-      if (pr<=1){
-        geid('editor_btnsubmit').click()
-        return
-      }
-      var c = 0
-      setInterval(()=>{
-        c+=1
-        if (c>=pr){
+  if(bsubmitd){
+    bsubmitd.onclick = function(){
+      var pr = prompt('打算延时多少秒发送呀？')
+      if(pr){
+        pr = parseInt(pr)
+        if (pr<=1){
           geid('editor_btnsubmit').click()
-        }else{
-          display_notice(`倒计时 ${pr-c} 秒`)
+          return
         }
-      }, 1000)
+        var c = 0
+        setInterval(()=>{
+          c+=1
+          if (c>=pr){
+            geid('editor_btnsubmit').click()
+          }else{
+            display_notice(`倒计时 ${pr-c} 秒`)
+          }
+        }, 1000)
+      }
     }
+    
   }
 }
 

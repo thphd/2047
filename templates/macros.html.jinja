@@ -497,7 +497,7 @@
 
   {%if foldable%}
     <div class="unfold hidden">
-      点击展开所有内容
+      ↓ 点击展开所有内容 ↓
     </div>
   {%endif%}
 {%endmacro%}
@@ -947,7 +947,7 @@
       <div class="editor_button_row">
         <button class="major" type="button" id="editor_btnpreview">预览</button>
         <button class='major' type="button" id="editor_btnsubmit">提交</button>
-        <button class='major' type="button" id="editor_btnsubmitdelay">延时</button>
+        {%if g.logged_in.delay_send%}<button class='major' type="button" id="editor_btnsubmitdelay">延时</button>{%endif%}
 
         <a href="/t/7140" target='_blank' rel='noreferrer'>语法参考</a>
         <a href="https://imgur.com/upload" target="_blank" rel='noreferrer'>传图</a>
