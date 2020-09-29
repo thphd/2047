@@ -7,7 +7,7 @@
 {%macro avatar(u, class="", plain=False, show_title=True, no_decoration=False)%}
   {%set uid = u.uid %}
   {%set deco = not no_decoration%}
-  {%set pt = deco and show_title and u.personal_title and False%}
+  {%set pt = deco and show_title and (not g.current_user or not g.current_user.hide_title) and u.personal_title%}
   {%set pp = deco and u.personal_party%}
 
   {%set title = titlify(u)%}

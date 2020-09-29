@@ -1013,7 +1013,7 @@ def getpostvotes(pid):
         sort v.t_c desc
         let user = (for i in users filter i.uid==v.uid return i)[0]
         return merge(v, {user})
-        ''', id=pid)
+        ''', id=pid, silent=True)
     votes = [' '.join([str(v['vote']), v['t_c'], v['user']['name']]) for v in votes]
     votes = '\n'.join(votes)
     return make_text_response(votes)
@@ -1027,7 +1027,7 @@ def getthreadvotes(pid):
         sort v.t_c desc
         let user = (for i in users filter i.uid==v.uid return i)[0]
         return merge(v, {user})
-        ''', id=pid)
+        ''', id=pid, silent=True)
     votes = [' '.join([str(v['vote']), v['t_c'], v['user']['name']]) for v in votes]
     votes = '\n'.join(votes)
     return make_text_response(votes)
@@ -2194,6 +2194,26 @@ def search():
             hide_title=True,
             page_title='搜索 - '+flask.escape(q),
             **result
+        )
+
+from pmf import search_term as pm_search_term
+@app.route('/ccpfinder')
+def searchpm():
+    q = ras('q').strip()
+    if not q:
+        return render_template_g(
+            'searchpm.html.jinja',
+            hide_title=True,
+            page_title='党员查',
+        )
+    else:
+        result = pm_search_term(q)
+        return render_template_g(
+            'searchpm.html.jinja',
+            query=q,
+            hide_title=True,
+            page_title='党员查 - '+flask.escape(q),
+            **result,
         )
 
 @app.route('/404/<string:to_show>')

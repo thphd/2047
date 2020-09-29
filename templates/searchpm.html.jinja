@@ -1,0 +1,78 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+
+{%if not query%}
+<div class="search_section">
+  <h1>党员查</h1>
+</div>
+
+<div class="post_content padlr" style="max-width:563px; margin:-1em auto 1em;">
+{{convert_markdown('''
+## 法律声明
+
+- 搜索结果不包含完整的身份信息，仅可用于验证某人的共产党员身份，不构成隐私侵犯。
+- 若您认为搜索结果包含的信息对你构成不利影响，请立即联系我们，我们的通信地址在页面下方。
+
+北京市五道口计算机技术有限公司
+
+''')|safe}}
+</div>
+
+  <div class="search_section">
+  <img src="/images/pooh.jpg" alt="jiangle">
+  </div>
+{%else%}
+<br>
+{%endif%}
+
+<div class="search_section padlr">
+  <input type="text" value="{{query}}" id='search_term' placeholder="请输入关键字，例如“光明”、“浙江”">
+  <button type="button" id='btn_searchpm'>拉清单</button>
+</div>
+
+<div class="threadlist">
+
+
+{%macro pair(i, keyname, display)%}
+  {%if i[keyname] and i[keyname]!='null'%}
+  <div class="pmspair">
+    <span class='pmskeyname'>{{display}}</span>
+    {%if g.logged_in or keyname=='id'%}
+      <span class='pmsvalue'>{{i[keyname]}}</span>
+    {%else%}
+      <span class='pmsvalue'>{{redact(i[keyname])}}</span>
+    {%endif%}
+  </div>
+  {%endif%}
+{%endmacro%}
+
+
+<div class="seach_terms padded">
+  搜索结果 (
+  {%for term in terms%}
+    {{term}}
+  {%endfor%}
+  )
+
+</div>
+
+{%for i in pms%}
+<div class="pmsresult padlr">
+  {{pair(i, 'id', '编号')}}
+  {{pair(i, 'name', '姓名')}}
+  {{pair(i, 'gender', '性别')}}
+  {{pair(i, 'race', '民族')}}
+  {{pair(i, 'education', '教育')}}
+  {{pair(i, 'sfz', '身份证')}}
+  <br>
+  {{pair(i, 'committee', '支部')}}
+  {{pair(i, 'area', '籍贯')}}
+  {{pair(i, 'addr', '地址')}}
+  {{pair(i, 'mobile', '电话')}}
+  {{pair(i, 'mobile2', '电话2')}}
+
+</div>
+{%endfor%}
+
+</div>
+{%endblock%}

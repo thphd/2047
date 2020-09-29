@@ -1862,3 +1862,29 @@ input#search_term {
     margin-bottom: 0.6em;
     /* margin-top: 0.3em; */
 }
+
+.search_section h1 {
+    /* letter-spacing: 8em; */
+    color: #c79131;
+}
+
+.pmspair {
+    display: inline-block;
+    /* margin: 0.2em 0; */
+    font-size: 12px;
+}
+
+.pmsresult {
+    margin: 0.5em 0;
+}
+
+.pmskeyname {
+    background: #b9a411;
+    color: white;
+    padding: 1px 3px;
+    border-radius: 3px;
+}
+
+.pmsvalue {
+    color: #d02a2a;
+}

@@ -885,6 +885,7 @@ updateable_personal_info = [
     ('background_color', '背景色（R,G,B 用半角逗号隔开，0-255）（你浏览本站的时候，以及别人浏览你的个人主页或帖子的时候，背景颜色都会变成这个）'),
     ('delay_send', '启用延时发送功能（yes即启用，留空即停用）（发帖的时候可以选择延时发送）'),
     ('hide_avatar', '隐藏页面中的头像（yes即隐藏，留空即显示）'),
+    ('hide_title', '隐藏头像上方的绿帽（yes即隐藏，留空即显示）'),
 ]
 
 def eat_rgb(s):

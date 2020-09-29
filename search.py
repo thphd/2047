@@ -1,12 +1,15 @@
 from commons import *
 
+def break_terms(s):
+    s = s.split(' ')
+    s = [i.strip() for i in s if len(i.strip())]
+    s = s[:4] # take first 4 terms only
+    return s
+
 @stale_cache(maxsize=256, ttr=10, ttl=3600)
 def search_term(s, start=0, length=25):
     # 1. break str into pieces
-    s = s.split(' ')
-    s = [i.strip() for i in s if len(i.strip())]
-
-    s = s[:4] # take first 4 terms only
+    s = break_terms(s)
 
     query = 'for i in sv search '
 

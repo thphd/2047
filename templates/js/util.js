@@ -612,7 +612,7 @@ if (editor_target){
         }, 1000)
       }
     }
-    
+
   }
 }
 
@@ -1332,6 +1332,26 @@ if(btn_search){
       btn_search.click()
     }
   }
+  st.focus()
+}
 
+var btn_searchpm = geid('btn_searchpm')
+if(btn_searchpm){
+  var st = geid('search_term')
+  btn_searchpm.onclick = ()=>{
+    var term = st.value.trim()
+
+    if(!term){
+      return
+    }
+
+    window.location.href = '/ccpfinder?q='+term
+  }
+
+  st.onkeypress=function(e){
+    if (e.keyCode==13){
+      btn_searchpm.click()
+    }
+  }
   st.focus()
 }

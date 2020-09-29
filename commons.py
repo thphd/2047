@@ -432,6 +432,7 @@ def linkify(s):
     return lines
 
 common_links = linkify('''
+新手指南 /t/7623 如题
 用户名录 /u/all 本站用户名册
 评论集合 /p/all 全站评论集合
 老用户 /t/7108 原2049用户取回账号方式
@@ -528,6 +529,19 @@ from flask import request
 def is_pincong_org():
     return 'pincong.org' in request.host
 
+def redact(s):
+    out = []
+    for idx, l in enumerate(s):
+        if idx==0:
+            out.append(l)
+        else:
+            if idx%5>1:
+                out.append(l)
+            else:
+                out.append('*')
+
+    return ''.join(out)
+
 if __name__ == '__main__':
     print(parse_showcases('''
 如“t7113”或者“p247105”）,t112,p1
@@ -568,7 +582,7 @@ cant_login_info = convert_markdown('''
 invitation_info = convert_markdown('''
 # 没有邀请码怎么办
 
-参见[这里](/t/7109)。
+参见[这里](/t/7109)获取邀请码。
 ''')
 
 public_key_info = convert_markdown('''
@@ -599,13 +613,14 @@ messaging_warning = convert_markdown('''
 register_warning = convert_markdown('''
 # 不想被封号？
 
-使用2047的所有用户都必须遵守[《服务条款》](/t/7110)，违反《服务条款》的用户，其违规内容会被删除，违规账号会被封禁。
+使用2047的所有用户都**必须**遵守[《服务条款》](/t/7110)，违反《服务条款》的用户，其违规内容会被删除，违规账号会被封禁。
 
 概括来讲：
 
 - 在他人楼下不得作出任何无礼行为，包括脏话、歧视、骚扰、控诉、调戏讽刺挖苦、重复灌水、强迫他人接受观点。如果确实有需要，可以另开一楼。
 - 对管理、对内容有任何意见，请私信联系管理员。
-- 对服务条款不满意的话，我们推荐你去[品葱](https://pincong.rocks)，那里没有服务条款，对用户更加包容
+
+不受欢迎行为清单详见[品葱行为倡议](/t/7623)。虽然它只是一份倡议，但是我们经过研究决定封禁所有违反倡议的用户。
 
 ''')
 
