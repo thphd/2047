@@ -10,6 +10,7 @@
 {{convert_markdown('''
 ## 法律声明
 
+- 数据来自 <https://pincong.rocks/article/23108>
 - 搜索结果不包含完整的身份信息，仅可用于验证某人的共产党员身份，不构成隐私侵犯。
 - 若您认为搜索结果包含的信息对你构成不利影响，请立即联系我们，我们的通信地址在页面下方。
 
@@ -47,6 +48,7 @@
 {%endmacro%}
 
 
+{%if terms%}
 <div class="seach_terms padded">
   搜索结果 (
   {%for term in terms%}
@@ -55,7 +57,7 @@
   )
 
 </div>
-
+{%endif%}
 {%for i in pms%}
 <div class="pmsresult padlr">
   {{pair(i, 'id', '编号')}}
