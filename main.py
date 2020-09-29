@@ -2204,7 +2204,7 @@ def searchpm():
         return render_template_g(
             'searchpm.html.jinja',
             hide_title=True,
-            page_title='党员查',
+            page_title='维尼查',
         )
     else:
         result = pm_search_term(q)
@@ -2212,7 +2212,7 @@ def searchpm():
             'searchpm.html.jinja',
             query=q,
             hide_title=True,
-            page_title='党员查 - '+flask.escape(q),
+            page_title='维尼查 - '+flask.escape(q),
             **result,
         )
 
