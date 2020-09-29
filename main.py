@@ -1371,9 +1371,9 @@ def get_alias_user_by_name(uname):
 @app.route('/member/<string:name>')
 def userpage_byname(name):
     # check if user exists
-    res = aql('for u in users filter u.name==@n return u', n=name)
+    res = get_user_by_name(name)
 
-    if len(res)==0:
+    if not res:
         # assert is_legal_username(name)
         name=flask.escape(name)
 
@@ -1389,7 +1389,7 @@ def userpage_byname(name):
         '''
         ), 404)
 
-    u = res[0]
+    u = res
     return _userpage(u['uid'])
 
 def _userpage(uid):
