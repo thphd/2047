@@ -54,7 +54,8 @@ def search_term(term):
 
     for idx, i in enumerate(s):
         query += '('
-        query += f' boost(ngram_match(i.name, @term{idx}, 0.7, "text_zh"), 2.5)'
+        query += f' boost(phrase(i.name, @term{idx}, "text_zh"), 2.5)'
+        query += f' or boost(ngram_match(i.name, @term{idx}, 1, "text_zh"), 1)'
         query += f' or ngram_match(i.addr, @term{idx}, 0.6,"text_zh")'
         query += f' or ngram_match(i.committee, @term{idx}, 0.6,"text_zh")'
         query += f' or ngram_match(i.area, @term{idx}, 0.6,"text_zh")'
