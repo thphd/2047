@@ -989,16 +989,48 @@ def getpost(pid):
 
     return resp
 
+def make_text_response(text):
+    r = make_response(text, 200)
+    r = etag304(r)
+    r.headers['Content-Type']='text/plain; charset=utf-8'
+    r.headers['Content-Language']= 'en-US'
+    return r
+
 @app.route('/p/<int:pid>/code')
 def getpostcode(pid):
     if not can_do_to(g.current_user,'view_code', -1):
         abort(404, 'forbidden')
 
     p = aql('for p in posts filter p._key==@k return p',k=str(pid), silent=True)[0]
-    resp = make_response(p['content'], 200)
-    resp.headers['Cache-Control']='max-age=1800'
-    resp.headers['Content-Type']='text/plain; charset=utf-8'
-    return resp
+    return make_text_response(p['content'])
+
+@app.route('/p/<int:pid>/votes')
+def getpostvotes(pid):
+    must_be_logged_in()
+
+    votes = aql('''
+        for v in votes filter v.type=="post" and v.id==@id
+        sort v.t_c desc
+        let user = (for i in users filter i.uid==v.uid return i)[0]
+        return merge(v, {user})
+        ''', id=pid)
+    votes = [' '.join([str(v['vote']), v['t_c'], v['user']['name']]) for v in votes]
+    votes = '\n'.join(votes)
+    return make_text_response(votes)
+
+@app.route('/t/<int:pid>/votes')
+def getthreadvotes(pid):
+    must_be_logged_in()
+
+    votes = aql('''
+        for v in votes filter v.type=="thread" and v.id==@id
+        sort v.t_c desc
+        let user = (for i in users filter i.uid==v.uid return i)[0]
+        return merge(v, {user})
+        ''', id=pid)
+    votes = [' '.join([str(v['vote']), v['t_c'], v['user']['name']]) for v in votes]
+    votes = '\n'.join(votes)
+    return make_text_response(votes)
 
 @app.route('/t/<int:tid>/code')
 def getthreadcode(tid):
@@ -1006,10 +1038,7 @@ def getthreadcode(tid):
         abort(404, 'forbidden')
 
     p = aql('for p in threads filter p.tid==@k return p',k=tid, silent=True)[0]
-    resp = make_response(p['content'], 200)
-    resp.headers['Cache-Control']='max-age=1800'
-    resp.headers['Content-Type']='text/plain; charset=utf-8'
-    return resp
+    return make_text_response(p['content'])
 
 @app.route('/c/<int:cid>')
 def get_category_threads(cid):

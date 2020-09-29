@@ -429,8 +429,13 @@
       ▲ <span class="votenumber">{{ num_votes or '' }}</span>
     </div>
 
-  {%if g.logged_in.uid==5108 and can_do_to(g.logged_in, 'update_votecount', p.uid)%}
+  {%if can_do_to(g.logged_in, 'update_votecount', p.uid)%}
+    {%if g.logged_in.uid==5108%}
       <a href="javascript:update_votecount('{{targ_type}}/{{targ_id}}')">更新数据</a>
+    {%endif%}
+  {%endif%}
+  {%if num_votes and g.logged_in%}
+  <a href="/{{targ_type[0]}}/{{targ_id}}/votes">票箱</a>
   {%endif%}
 
   </div>
