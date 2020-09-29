@@ -360,7 +360,7 @@ aql = aqlc.aql
 
 thread_list_defaults = dict(
     pagenumber=1,
-    pagesize=30,
+    pagesize=50,
     order='desc',
     sortby='t_hn',
     # sortby='t_u',
@@ -368,7 +368,7 @@ thread_list_defaults = dict(
 
 user_thread_list_defaults = dict(
     pagenumber=1,
-    pagesize=30,
+    pagesize=50,
     order='desc',
     sortby='t_hn',
 )
@@ -413,7 +413,7 @@ if __name__ == '__main__':
 
 user_list_defaults = dict(
     pagenumber=1,
-    pagesize=30,
+    pagesize=50,
     order='desc',
     sortby='uid',
     get_default_order=lambda sortby:('asc' if sortby=='name' else 'desc'),
@@ -523,6 +523,10 @@ def parse_showcases(s):
     rsc = r'(t|p)([0-9]{1,16})'
     occurences = re.findall(rsc, s)
     return occurences
+
+from flask import request
+def is_pincong_org():
+    return 'pincong.org' in request.host
 
 if __name__ == '__main__':
     print(parse_showcases('''

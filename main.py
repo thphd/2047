@@ -1462,7 +1462,7 @@ def _userpage(uid):
             sortby = 't_c'
 
             ninvs = aql('return length(for i in invitations filter i.uid==@k\
-            return i)',k=selfuid)[0]
+            return i)',k=selfuid,silent=True)[0]
 
             k = aql(f'for i in invitations filter i.uid==@k\
             let users = (for u in users filter u.invitation==i._key return u)\
