@@ -228,7 +228,7 @@ combined_youtube_extractor_regex = \
 # @lru_cache(maxsize=4096)
 def replace_ytb_f(match):
     vid = match.group(1) or match.group(2)
-    return '<div class="youtube-player-unprocessed" data-id="{}"></div>'.format(vid)
+    return f'<div class="youtube-player-unprocessed" data-id="{vid}"></div><a href="https://youtu.be/{vid}">去YouTube上播放</a>'.format(vid)
 
 def replace_pincong(s):
     def f(match):
@@ -576,7 +576,8 @@ password_warning = convert_markdown('''
 cant_login_info = convert_markdown('''
 # 2049bbs老用户请注意
 
-如果你是2049bbs的老用户，请注意2047的数据库中没有你的密码记录（因为2049bbs早前并未公开这些记录），所以你是无法登录的。请按照[这里](/t/7108)的指示取回你的老账号。
+如果你是2049bbs的老用户，请注意2047的数据库中没有你的密码记录（因为2049bbs早前并未公开这些记录），所以你是无法登录的，也无法注册同名账户。请按照[这里](/t/7108)的指示取回你的老账号。
+
 ''')
 
 invitation_info = convert_markdown('''

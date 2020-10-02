@@ -856,6 +856,7 @@ def before_request():
         log_err('blocked [{}][{}][{}][{:.2f}][{:.2f}][{:.2f}]'.format(uas, acceptstr[-50:], ipstr, uaf.d[uas], uaf.d[acceptstr], uaf.d[ipstr] if ipstr in uaf.d else -1))
 
         if random.random()>0:
+            time.sleep(15+random.random()*45)
             return ('rate limit exceeded', 429)
         elif random.random()>0.02:
             return (b'please wait a moment before accesing this page'+base64.b64encode(os.urandom(int(random.random()*256))), 200)

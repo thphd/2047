@@ -326,7 +326,7 @@ body>#content {
 
 
 .post_content img {
-    max-height: 4000px;
+    /* max-height: 4000px; */
     max-width: 100%;
     border-style: none none none dashed;
     border-color: #00000038;

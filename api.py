@@ -260,6 +260,10 @@ def _():
     if not u:
         raise Exception('username not found')
 
+    if 'delete' in u and u['delete']:
+        raise Exception('your account has been banned')
+
+
     # find password object
     p = aql('for p in passwords filter p.uid==@uid return p', uid=u['uid'])
     if len(p)==0:
