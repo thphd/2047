@@ -1809,7 +1809,7 @@ def e(s): return make_response({'error':s}, 500)
 
 @app.route('/api', methods=['GET', 'POST'])
 def apir():
-
+    # method check
     if request.method not in ['GET','POST']:
         return e('support GET and POST only')
 
@@ -1817,6 +1817,7 @@ def apir():
         if request.content_length > 1024*1024*3: # 3MB limit
             return e('request too large')
 
+    # json body
     j = request.get_json(silent=False)
 
     if j is None:
@@ -1833,13 +1834,14 @@ def apir():
         if 'action' not in j:
             return e('action not specified in json')
 
-    # print(j)
+    # find out what action to take
     action = j['action']
 
+    # method limitation
     if action!='ping' and request.method != 'POST':
         return e('you must use POST for actions other than "ping"')
 
-    # CSRF
+    # CSRF prevention
     if action!='ping':
         # check if referrer == self
         if request.referrer and request.referrer.startswith(request.host_url):
@@ -1849,51 +1851,54 @@ def apir():
             log_err(request.host_url)
             return e('use a referrer field or the request will be considered an CSRF attack')
 
-    j['logged_in'] = g.logged_in
-    if action in api_registry:
-        g.j = j
-
-        if action not in ('ping','viewed_target','browser_check'):
-            print_up('API >>', j)
-
-        try:
-            answer = api_registry[action]()
-
-        except Exception as ex:
-            traceback.print_exc()
-            errstr = ex.__class__.__name__+'/{}'.format(str(ex))
-            print_err('Exception in api "{}":'.format(action), errstr)
-            return e(errstr)
-
-        else:
-            if answer is None:
-                raise Exception('return value is None, what the fuck?')
-
-            response = make_response(answer)
-
-            if action not in ('ping','viewed_target','browser_check'):
-                print_down('API <<', answer)
-
-            if 'setuid' in answer:
-                g.session['uid'] = answer['setuid']
-                save_session(response)
-
-            if 'setbrowser' in answer or ('browser' not in g.session and 'ping'==action):
-                g.session['browser'] = 1
-                save_session(response)
-
-            if 'salt' not in g.session:
-                g.session['salt'] = get_random_hex_string(3)
-                save_session(response)
-
-            if 'logout' in answer:
-                if 'uid' in g.session:
-                    del g.session['uid']
-                    save_session(response)
-
-            return response
-    else:
+    # is the function registered?
+    # j['logged_in'] = g.logged_in
+    if action not in api_registry:
         return e('action function not registered')
+
+    # thread-local access to json body
+    g.j = j
+
+    if action not in ('ping','viewed_target','browser_check'):
+        print_up('API >>', j)
+
+    # perform action
+    try:
+        answer = api_registry[action]()
+        if answer is None:
+            raise Exception('return value is None, what the fuck?')
+    except Exception as ex:
+        traceback.print_exc()
+        errstr = ex.__class__.__name__+'/{}'.format(str(ex))
+        print_err('Exception in api "{}":'.format(action), errstr)
+        return e(errstr)
+
+    # send the response back
+    response = make_response(answer)
+
+    if action not in ('ping','viewed_target','browser_check'):
+        print_down('API <<', answer)
+
+    # set cookies accordingly
+
+    if 'setuid' in answer:
+        g.session['uid'] = answer['setuid']
+        save_session(response)
+
+    if 'setbrowser' in answer or ('browser' not in g.session and 'ping'==action):
+        g.session['browser'] = 1
+        save_session(response)
+
+    if 'salt' not in g.session:
+        g.session['salt'] = get_random_hex_string(3)
+        save_session(response)
+
+    if 'logout' in answer:
+        if 'uid' in g.session:
+            del g.session['uid']
+            save_session(response)
+
+    return response
 
 @app.route('/upload', methods=['POST'])
 def upload_file():

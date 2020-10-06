@@ -20,8 +20,25 @@
   <title>{{page_title}} - {{site_name}}</title>
   {%block meta%}{%endblock%}
 </head>
-{%set bc = (u and u.background_color) or (t and t.user and t.user.background_color) or (g.logged_in and g.logged_in.background_color) or False%}
-{%set ebc = (bc and eat_rgb(bc)) or False%}
+
+{%macro get_colors(k)%}
+    {%set bc = (u and u[k]) or (t and t.user and t.user[k]) or (g.logged_in and g.logged_in[k]) or False%}
+    {%set color = (bc and eat_rgb(bc)) or False%}
+  {{color}}
+{%endmacro%}
+
+{%set bc = get_colors('background_color')%}
+
+{%macro color_if(k, prop='background-color', in_css=False)%}
+{%set bc = get_colors(k)%}
+{%if bc%}
+  {%if in_css%}
+  {{prop}}:{{bc}};
+  {%else%}
+  style="{{prop}}:{{bc}};"
+  {%endif%}
+{%endif%}
+{%endmacro%}
 
 {%macro hl(url, name)%}
 <a class='headerlink {{'active' if request.full_path.startswith(url)}}' href="{{url}}">{{name}}</a>
@@ -35,7 +52,7 @@
 {%endif%}
 {%endmacro%}
 
-<body {%if ebc%}style="background-color:{{ebc}}"{%endif%}>
+<body {{color_if('background_color')}}>
   {%if g.current_user and g.current_user.hide_avatar%}
     <style>
       .left {
@@ -52,7 +69,15 @@
     </style>
   {%endif%}
 
-  <div class="header_bkgnd">
+  <div class="header_bkgnd" {{color_if('header_background_color')}}>
+    {%if color_if('header_text_color')%}
+      <style>
+        .headerlink{
+          {{color_if('header_text_color', 'color', in_css=True,)}}
+        }
+      </style>
+    {%endif%}
+
     <div id="header" class="">
       <div class="leftalign">
         {# left 2 right: logo, [links], search, [uavatar, uname, login/logout] #}

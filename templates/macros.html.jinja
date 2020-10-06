@@ -8,7 +8,7 @@
   {%set uid = u.uid %}
   {%set deco = not no_decoration%}
   {%set pt = deco and show_title and (not g.current_user or not g.current_user.hide_title) and u.personal_title%}
-  {%set pp = deco and u.personal_party%}
+  {%set pp = deco and show_title and (not g.current_user or not g.current_user.hide_title) and u.personal_party%}
 
   {%set title = titlify(u)%}
 
@@ -949,6 +949,9 @@
 
       {%endif%}
       <textarea placeholder="支持markdown语法，拖动右下角缩放" id="editor_text" class="{{'has_title' if title else ''}}">{{content if content}}</textarea>
+
+
+
       <div class="editor_button_row">
         <button class="major" type="button" id="editor_btnpreview">预览</button>
         <button class='major' type="button" id="editor_btnsubmit">提交</button>
