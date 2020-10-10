@@ -36,16 +36,29 @@ os.environ['GITHUB_TOKEN'] = tok
 
 from github_release import *
 
-try:
-    gh_release_delete('thphd/2047','0.0.1')
-except Exception as e:
-    print(e)
+while 1:
+    while 1:
+        try:
+            gh_release_delete('thphd/2047','0.0.1')
+        except Exception as e:
+            print(e)
+        else:
+            break
 
-gh_release_create('thphd/2047', '0.0.1',
-    publish=True,
-    # name="database backup",
-    asset_pattern=basename_p,
-    prerelease=True,
-    )
 
-os.remove(basename_p)
+    try:
+        gh_release_create('thphd/2047', '0.0.1',
+            publish=True,
+            # name="database backup",
+            asset_pattern=basename_p,
+            prerelease=True,
+            )
+
+        os.remove(basename_p)
+
+    except Exception as e:
+        print(e)
+        import time
+        time.sleep(1)
+    else:
+        break
