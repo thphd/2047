@@ -21,10 +21,10 @@
   {%block meta%}{%endblock%}
 </head>
 
-{%macro get_colors(k)%}
+{%macro get_colors(k, raw=False)%}
     {%set bc = (u and u[k]) or (t and t.user and t.user[k]) or (g.logged_in and g.logged_in[k]) or False%}
     {%set color = (bc and eat_rgb(bc)) or False%}
-  {{color}}
+  {%if not raw%}{{color}}{%else%}{{bc}}{%endif%}
 {%endmacro%}
 
 {%set bc = get_colors('background_color')%}
@@ -70,6 +70,17 @@
   {%endif%}
 
   <div class="header_bkgnd" {{color_if('header_background_color')}}>
+    {%set eaten = eat_rgb(get_colors('header_background_color', raw=True), raw=True)%}
+    {%if eaten and (eaten[0]*0.3+eaten[1]*0.6+eaten[2]*0.1 > 128) %}
+      <style>
+        .headerlink:hover, .headerlink:focus, .headerlink:active, .headerlink.active{
+          background:#00000024;
+        }
+      </style>
+    {%else%}
+      <meta name="eaten" content="{{eaten}}">
+    {%endif%}
+
     {%if color_if('header_text_color')%}
       <style>
         .headerlink{

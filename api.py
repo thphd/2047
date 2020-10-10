@@ -896,7 +896,7 @@ updateable_personal_info = [
     ('hide_title', '隐藏头像上方的绿帽（yes即隐藏，留空即显示）'),
 ]
 
-def eat_rgb(s):
+def eat_rgb(s, raw=False):
     s = s.split(',')
     if len(s)!=3:
         return False
@@ -907,6 +907,8 @@ def eat_rgb(s):
         return False
 
     s = [max(0,min(255, i)) for i in  s]
+    if raw:
+        return s 
     return f'rgb({s[0]}, {s[1]}, {s[2]})'
 
 @register('update_personal_info')
