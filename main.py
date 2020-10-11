@@ -861,11 +861,20 @@ def before_request():
         uaf.judge(acceptstr, weight) and
         (uaf.judge(ipstr, weight) if not is_local else True)
     )
+    def uafd(k):
+        if k in uaf.d:
+            return uaf.d[k]
+        else:
+            return -1
+
     if not allowed:
-        log_err('blocked [{}][{}][{}][{:.2f}][{:.2f}][{:.2f}]'.format(uas, acceptstr[-50:], ipstr, uaf.d[uas], uaf.d[acceptstr], uaf.d[ipstr] if ipstr in uaf.d else -1))
+        log_err('blocked [{}][{}][{}][{:.2f}][{:.2f}][{:.2f}]'.format(
+            uas, acceptstr[-50:],
+            ipstr, uafd(uas),
+            uafd(acceptstr), uafd(ipstr)))
 
         if random.random()>0:
-            time.sleep(15+random.random()*45)
+            time.sleep(10+random.random()*25)
             return ('rate limit exceeded', 429)
         elif random.random()>0.02:
             return (b'please wait a moment before accesing this page'+base64.b64encode(os.urandom(int(random.random()*256))), 200)
@@ -874,7 +883,7 @@ def before_request():
     else:
         # m = uaf.get_max()
         # log_up('max: [{}][{:.2f}]black[{}]'.format(m[0][-50:],m[1], uaf.blacklist))
-        log_up(f'now:[{uas[:50]}][{acceptstr[-50:]}][{ipstr}][{uaf.d[uas]:.2f}, {uaf.d[acceptstr]:.2f}, {(uaf.d[ipstr] if ipstr in uaf.d else -1):.2f}]')
+        log_up(f'now:[{uas[:50]}][{acceptstr[-50:]}][{ipstr}][{uafd(uas):.2f}, {uafd(acceptstr):.2f}, {uafd(ipstr):.2f}]')
 
 def tryint(str):
     try:
