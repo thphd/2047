@@ -972,6 +972,9 @@ def _():
             raise Exception('tag already exists')
         tags.append(tagname)
 
+        if len(tags)>6:
+            raise Exception('最多只能加6个标签')
+
         # check tag record existence
         tag = aqlc.from_filter('tags', 'i.name==@n', n=tagname)
 
