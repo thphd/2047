@@ -206,16 +206,16 @@ span.last_commented_date {
 .threadlistitem > *{/* align-items: stretch; */}
 
 .header {
-    font-size: 22px;
+    /* font-size: 22px; */
     /* margin: .6em 0; */
-    color: #000000;
+    /* color: #000000; */
     display: flex;
     justify-items: center;
     align-items: center;
     align-content: center;
     flex-direction: row;
     justify-content: space-between;
-    padding: 0 17px;
+    /* padding: 0 17px; */
     /* letter-spacing: 0.03em; */
 }
 
@@ -721,10 +721,11 @@ code .nf {
     display: flex;
     text-decoration: none;
     color: black;
+    font-size: 22px;
 }
 
 .header > .makepost {
-    font-size: 75%;
+    font-size: 14px;
     border-style: solid;
     border-width: 1px;
     border-radius: .3em;
@@ -1791,7 +1792,7 @@ span.personal_title{
 
 
 .header_bkgnd {
-    background: #444444;
+    background: #555;
     box-shadow: 0 0 6px #0000000b;
 }
 
@@ -1887,4 +1888,26 @@ input#search_term {
 
 .pmsvalue {
     color: #d02a2a;
+}
+
+.tag {
+    background-color: #4c7150;
+    color: white;
+    padding: 2px 3px;
+    font-size: 12px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+.taglist {
+    margin-bottom: 8px;
+    font-size: 12px;
+}
+
+.tag>* {
+    color: white;
+}
+
+.taglist>* {
+    margin-right: 3px;
 }

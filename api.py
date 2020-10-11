@@ -155,6 +155,10 @@ def es(k):
     j = g.j
     return (str(j[k]) if ((k in j) and (k is not None)) else None)
 
+def eb(k):
+    j = g.j
+    return ((True if j[k] else False) if k in j else False)
+
 def ei(k):
     j = g.j
     return (int(j[k]) if ((k in j) and (k is not None)) else None)
@@ -908,7 +912,7 @@ def eat_rgb(s, raw=False):
 
     s = [max(0,min(255, i)) for i in  s]
     if raw:
-        return s 
+        return s
     return f'rgb({s[0]}, {s[1]}, {s[2]})'
 
 @register('update_personal_info')
@@ -933,6 +937,68 @@ def _():
         uid=g.current_user['uid'], upd=upd, silent=True)
 
     return {'error':False}
+
+aqlc.create_collection('tags')
+@register('edit_tag')
+def _():
+    must_be_logged_in()
+    banned_check()
+
+    target_type,_id = parse_target(es('target'))
+    tagname = es('name')
+    to_remove = eb('delete')
+
+    assert target_type == 'thread'
+
+    # check if thread actually exists
+    thread = get_thread(_id)
+
+    if 'tags' in thread:
+        tags = thread['tags']
+    else:
+        tags = []
+
+    if not can_do_to(g.current_user, 'edit', thread['uid']):
+        raise Exception('insufficient priviledge')
+
+    # check legality of tagname
+    m = re.fullmatch(tagname_regex, tagname)
+    if m is None:
+        raise Exception('tagname illegal')
+
+    if not to_remove:
+        # add new tag
+        if tagname in tags:
+            raise Exception('tag already exists')
+        tags.append(tagname)
+
+        # check tag record existence
+        tag = aqlc.from_filter('tags', 'i.name==@n', n=tagname)
+
+        # if tag doesn't exist:
+        if not tag:
+            aql('insert @k into tags', k=dict(
+                name=tagname,
+                t_c=time_iso_now(),
+                uid=g.selfuid,
+            ))
+
+        thread['tags'] = tags
+        aql('update @t with @t in threads', t=thread, silent=True)
+
+    else:
+        # remove existing tag
+        if tagname not in tags:
+            raise Exception('tag not in thread')
+
+        tags = [i for i in tags if i!=tagname]
+        thread['tags'] = tags
+
+        aql('update @t with @t in threads', t=thread, silent=True)
+
+    return {'error':False}
+
+
 
 @register('cast_vote')
 def _():
@@ -1311,8 +1377,7 @@ def send_message(fromuid, touid, content):
 def _():
     j = g.j
     must_be_logged_in()
-    if not g.current_user['admin']:
-        raise Exception("you are not admin")
+    must_be_admin()
 
     reason = es('reason')
     uid = ei('uid')
@@ -1353,9 +1418,12 @@ def _():
 
         return {'error':False}
 
+def is_self_admin():
+    return True if g.current_user and g.current_user['admin'] else False
+
 def must_be_admin():
     must_be_logged_in()
-    if not g.current_user['admin']:
+    if not is_self_admin():
         raise Exception("you are not admin")
 
 @register('add_alias')

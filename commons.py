@@ -180,6 +180,8 @@ username_regex_pgp = r'2047login#(' + username_regex_proto + r')#(.{19})'
 username_regex_pgp_new = r'2047login##(.*?)##(.{19})'
 username_regex_string = str(username_regex).replace('\\\\','\\')
 
+tagname_regex = username_regex_proto.replace('16','10')
+
 at_extractor_regex = r'(^|[^0-9a-zA-Z\u4e00-\u9fff\-\_\.])@([0-9a-zA-Z\u4e00-\u9fff\-\_\.]{2,16}?)(?=[^0-9a-zA-Z\u4e00-\u9fff\-\_\.]|$)'
 
 # @lru_cache(maxsize=4096)

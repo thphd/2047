@@ -160,7 +160,7 @@ def create_all_necessary_indices():
 
     ciut('threads', ['tid'])
     ci('threads', indexgen(
-            [['delete'],['uid'],['delete','cid']],
+            [['delete'],['uid'],['delete','cid'],['delete','tags[*]'],['tags[*]']],
             ['t_u','t_c','nreplies','vc','votes','t_hn','amv'],
     ))
     ci('threads', indexgen([[]], ['t_hn_u']))
@@ -381,6 +381,7 @@ class Paginator:
     def get_thread_list(self,
         by='category',
         category='all',
+        tagname='yadda',
         uid=0,
         sortby='t_u',
         order='desc',
@@ -390,11 +391,13 @@ class Paginator:
 
         ts = time.time()
 
-        assert by in ['category', 'user']
+        assert by in ['category', 'user', 'tag']
         assert category=='all' or category=='deleted' or is_integer(category)
         assert is_integer(uid)
         assert sortby in ['t_u', 't_c', 'nreplies', 'vc', 'votes','t_hn','amv']
         assert order in ['desc', 'asc']
+
+        assert re.fullmatch(tagname_regex, tagname)
 
         pagenumber = max(1, pagenumber)
         assert pagesize<=50
@@ -408,10 +411,13 @@ class Paginator:
             elif category=='deleted':
                 filter = 'filter i.delete==true'
             else:
-                filter = 'filter i.cid == {} and i.delete!=true'.format(category)
+                filter = f'filter i.cid == {category} and i.delete==null'
             mode='thread'
+        elif by=='tag':
+            filter = f'filter "{tagname}" in i.tags and i.delete==null'
+            mode='tag_thread'
         else: # filter by user
-            filter = 'filter i.uid == {}'.format(uid)
+            filter = f'filter i.uid == {uid}'
             mode='user_thread'
 
         querystring_complex = '''
@@ -507,6 +513,9 @@ class Paginator:
 
         elif mode=='user_thread':
             defaults = user_thread_list_defaults
+        elif mode=='tag_thread':
+            defaults = thread_list_defaults
+
         elif mode=='user_post':
             defaults = user_post_list_defaults
         elif mode=='user':
@@ -1074,6 +1083,35 @@ def get_category_threads(cid):
         pagination=pagination,
         categories=get_categories_info(),
         category=catobj,
+        # threadcount=count,
+
+    )
+
+@app.route('/tag/<string:tag>')
+def get_tag_threads(tag):
+
+    pagenumber = rai('page') or thread_list_defaults['pagenumber']
+    pagesize = rai('pagesize') or thread_list_defaults['pagesize']
+    order = ras('order') or thread_list_defaults['order']
+    sortby = ras('sortby') or thread_list_defaults['sortby']
+
+    rpath = request.path
+    # print(request.args)
+
+    threadlist, pagination = pgnt.get_thread_list(
+        by='tag', tagname=tag,
+        sortby=sortby,
+        order=order,
+        pagenumber=pagenumber, pagesize=pagesize,
+        path = rpath)
+
+    return render_template_g('threadlist.html.jinja',
+        page_title='标签 - '+tag,
+        # page_subheader=(catobj['brief'] or '').replace('\\',''),
+        threadlist=threadlist,
+        pagination=pagination,
+        categories=get_categories_info(),
+        # category=catobj,
         # threadcount=count,
 
     )

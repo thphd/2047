@@ -995,24 +995,45 @@
 {# titled header #}
 {%macro header()%}
   {%if page_title and not hide_title%}
-    <div class="header padded">
-      <a class="header_title" href="{{
-        (request.full_path[:-1] if request.full_path[-1]=='?' else request.full_path)
-      }}">{{page_title}}</a>
+    <div class="padded">
+      {%if t%}
+        <div class="taglist">
+          {%if t.tags%}
+            {%for tag in t.tags%}
+              <div class='tag'>
+                <a href="/tag/{{tag}}">{{tag}}</a>
+                {%if can_do_to(g.current_user, 'edit', t.uid)%}
+                <a href="javascript:delete_tag({{t.tid}},'{{tag}}')"
+                  title='删除标签'>×</a>
+                {%endif%}
+              </div>
+            {%endfor%}
+          {%endif%}
+          {%if can_do_to(g.current_user, 'edit', t.uid)%}
+            <a class='tagadd' href="javascript:add_tag({{t.tid}})">添加标签</a>
+          {%endif%}
+        </div>
+      {%endif%}
 
-      {{category_bubble(t.category) if (t and t.category) else ''}}
+      <div class="header">
+        <a class="header_title" href="{{
+          (request.full_path[:-1] if request.full_path[-1]=='?' else request.full_path)
+        }}">{{page_title}}</a>
 
-      {%if g.logged_in and category%}
+        {{category_bubble(t.category) if (t and t.category) else ''}}
+
+        {%if g.logged_in and category%}
         <a class='makepost' href="/editor?target=category/{{category.cid}}">发新帖</a>
-      {%endif%}
+        {%endif%}
 
-      {%if g.logged_in and categories and not category%}
+        {%if g.logged_in and categories and not category%}
         <a class='makepost' href="javascript:alert('请在右边分类列表中选择一个分类（手机用户请翻到页面最下方）')">发新帖</a>
-      {%endif%}
+        {%endif%}
 
-      {%if can_send_message%}
+        {%if can_send_message%}
         <a class='makepost' href="javascript:send_new_message()">写私信</a>
-      {%endif%}
+        {%endif%}
+      </div>
     </div>
   {%endif%}
 

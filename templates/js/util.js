@@ -1355,3 +1355,22 @@ if(btn_searchpm){
   }
   st.focus()
 }
+
+function add_tag(tid){
+  var tagname = prompt('请输入标签')
+  tagname = tagname.trim()
+  if (!tagname){return}
+  aa('edit_tag',{target:'thread/'+tid.toString(), name:tagname})
+  .then(res=>{
+    window.location.reload()
+  })
+  .catch(alert)
+}
+function delete_tag(tid, tagname){
+  if(!confirm('确定要删除标签：'+tagname+' 吗？')){return}
+  aa('edit_tag',{target:'thread/'+tid.toString(), name:tagname, delete:true})
+  .then(res=>{
+    window.location.reload()
+  })
+  .catch(alert)
+}
