@@ -174,15 +174,16 @@ url_regex = r'((((http|https|ftp):(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-
 # dont use for now
 
 # username rule
-username_regex_proto = r'[0-9a-zA-Z\u4e00-\u9fff\-\_\.]{2,16}'
+legal_chars = r'0-9a-zA-Z\u4e00-\u9fbb\-\_\.'
+username_regex_proto = f'[{legal_chars}]' + r'{2,16}'
 username_regex=r'^' + username_regex_proto + r'$'
 username_regex_pgp = r'2047login#(' + username_regex_proto + r')#(.{19})'
 username_regex_pgp_new = r'2047login##(.*?)##(.{19})'
 username_regex_string = str(username_regex).replace('\\\\','\\')
 
-tagname_regex = username_regex_proto.replace('16','10')
+tagname_regex = username_regex_proto.replace('2,16','1,10')
 
-at_extractor_regex = r'(^|[^0-9a-zA-Z\u4e00-\u9fff\-\_\.])@([0-9a-zA-Z\u4e00-\u9fff\-\_\.]{2,16}?)(?=[^0-9a-zA-Z\u4e00-\u9fff\-\_\.]|$)'
+at_extractor_regex = fr'(^|[^{legal_chars}])@([{legal_chars}]{{2,16}}?)(?=[^{legal_chars}]|$)'
 
 # @lru_cache(maxsize=4096)
 def extract_ats(s): # extract @usernames out of text
@@ -198,8 +199,8 @@ def replace_ats(s): # replace occurence
 
     return re.sub(at_extractor_regex, f, s, flags=re.MULTILINE)
 
-post_autolink_regex = r'<[#p]/?([0-9]{1,16})>'
-thread_autolink_regex = r'<t/?([0-9]{1,16})>'
+post_autolink_regex = r'</?[#p]/?([0-9]{1,16})>'
+thread_autolink_regex = r'</?t/?([0-9]{1,16})>'
 
 # @lru_cache(maxsize=4096)
 def replace_pal(s):
