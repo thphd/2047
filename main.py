@@ -397,7 +397,7 @@ class Paginator:
         assert sortby in ['t_u', 't_c', 'nreplies', 'vc', 'votes','t_hn','amv']
         assert order in ['desc', 'asc']
 
-        assert re.fullmatch(tagname_regex, tagname)
+        assert re.fullmatch(tagname_regex_long, tagname)
 
         pagenumber = max(1, pagenumber)
         assert pagesize<=50

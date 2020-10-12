@@ -181,6 +181,7 @@ username_regex_pgp = r'2047login#(' + username_regex_proto + r')#(.{19})'
 username_regex_pgp_new = r'2047login##(.*?)##(.{19})'
 username_regex_string = str(username_regex).replace('\\\\','\\')
 
+tagname_regex_long = username_regex_proto.replace('2,16','1,40')
 tagname_regex = username_regex_proto.replace('2,16','1,10')
 
 at_extractor_regex = fr'(^|[^{legal_chars}])@([{legal_chars}]{{2,16}}?)(?=[^{legal_chars}]|$)'
