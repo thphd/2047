@@ -6,7 +6,7 @@ sand.py
 sand.js
 secret.bin
 jinja_test/
-dump
+dump*
 *?deploy.sh
 j*b/
 ga.png
@@ -22,7 +22,7 @@ prof/*
 hash.py
 default_ques*
 *creds*
-arangodb.bat
+arangodb*.bat
 temp/
 templates/images/material
 prof/

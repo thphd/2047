@@ -2,11 +2,9 @@
 # assume you already cloned the repo
 # assume you start this script via ./2047/deploy.sh
 
-# install arangodb
+# install [latest stable version of] arangodb
 
-wget https://download.arangodb.com/arangodb37/Community/Linux/arangodb3_3.7.1-1_amd64.deb
-
-# wget https://download.arangodb.com/arangodb37/Community/Linux/arangodb3-client_3.7.1-1_amd64.deb
+wget https://download.arangodb.com/nightly/3.7/Linux/arangodb3_3.7.3~~nightly-1_amd64.deb
 
 dpkg -i arangodb3_3.7.1-1_amd64.deb
 
@@ -44,7 +42,7 @@ python3.7 -m pip install forbiddenfruit
 git clone https://github.com/flavono123/identicon
 python3.7 -m pip install -e ./identicon
 
-# upload the backup to ./2047/dump
+# upload the dumped database backup files to ./2047/dump
 # cd 2047
 # run ./database_restore.bat to load data from the backup
 
