@@ -449,6 +449,7 @@ common_links = linkify('''
 语录 /quotes 你不是一个人在战斗
 oplog /oplog 管理日志
 英雄 /hero BE4的实验性项目
+维尼查 /t/7830 鱼和熊掌不可兼得
 ''')
 
 friendly_links = linkify('''

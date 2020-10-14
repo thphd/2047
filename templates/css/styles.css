@@ -504,13 +504,14 @@ img.headerbtn {
 }
 
 .post_content :not(pre)> code {
-    margin: 0 4px;
+    margin: 1px 4px;
     background-color: #e9f3f7;
-    padding: 2px 5px;
+    padding: 0px 3px;
     border-radius: 3px;
     border-style: solid;
     /* color: black; */
     border-color: #bedaee;
+    display: inline-block;
 }
 
 .invitations {
@@ -545,7 +546,7 @@ a.threadlist_title {
     /* display: inline-block; */
     margin: 0 0 .4em 0;
     /* display: block; */
-    white-space: pre-wrap;       /* Since CSS 2.1 */
+    white-space: break-spaces;       /* Since CSS 2.1 */
     white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
     white-space: -pre-wrap;      /* Opera 4-6 */
     white-space: -o-pre-wrap;    /* Opera 7 */
@@ -1906,6 +1907,7 @@ input#search_term {
 
 .tag>* {
     color: white;
+    /* vertical-align: middle; */
 }
 
 .taglist>* {
