@@ -307,8 +307,10 @@ class Paginator:
         start = (pagenumber-1)*pagesize
         count = pagesize
 
+        filter = QueryString()
+
         if by=='thread':
-            filter = 'filter i.tid == {}'.format(tid)
+            filter.append('filter i.tid == @tid', tid=tid)
 
             if mode=='question':
                 mode='post_q'
@@ -316,56 +318,55 @@ class Paginator:
                 mode='post'
 
         elif by=='user': # filter by user
-            filter = 'filter i.uid == {}'.format(uid)
+            filter.append('filter i.uid == @uid', uid=uid)
             mode='user_post'
+            
         elif by=='all':
-            filter = ''
+            filter.append('')
             mode='user_post'
 
         selfuid = g.selfuid
 
+
+        qsc = querystring_complex = QueryString('for i in posts')
+        qsc+=filter
+
         if apply_origin:
-            querystring_complex = '''
-            for i in posts
-            {filter}
+            qsc+=QueryString('''
+                let u = (for u in users filter u.uid==i.uid return u)[0]
+                let t = unset((for t in threads filter t.tid==i.tid return t)[0],'content')
 
-            let u = (for u in users filter u.uid==i.uid return u)[0]
-            let t = unset((for t in threads filter t.tid==i.tid return t)[0],'content')
-
-            let self_voted = length(for v in votes filter v.uid=={selfuid} and v.id==to_number(i._key) and v.type=='post' and v.vote==1 return v)
-
-            sort i.{sortby} {order}
-            limit {start},{count}
-            return merge(i, {{user:u}},{{self_voted}},{{t}})
-            '''.format(
-                selfuid = selfuid,
-                sortby = sortby,order=order,start=start,count=count,filter=filter,
+                let self_voted = length(for v in votes filter v.uid==@selfuid and v.id==to_number(i._key) and v.type=='post' and v.vote==1 return v)
+                ''',
+                selfuid=selfuid
+            )
+            qsc+=QueryString('''
+                sort i.{sortby} {order}
+                limit {start},{count}
+                return merge(i, {{user:u}},{{self_voted}},{{t}})
+                '''.format(
+                    sortby = sortby,order=order,start=start,count=count,
+                )
             )
         else:
-            querystring_complex = '''
-            for i in posts
-            {filter}
-
-            let u = (for u in users filter u.uid==i.uid return u)[0]
-            let self_voted = length(for v in votes filter v.uid=={selfuid} and v.id==to_number(i._key) and v.type=='post' and v.vote==1 return v)
-
-            sort i.{sortby} {order}
-            limit {start},{count}
-            return merge(i, {{user:u}},{{self_voted}})
-            '''.format(
-                selfuid = selfuid,
-                sortby = sortby,order=order,start=start,count=count,filter=filter,
+            qsc+=QueryString('''
+                let u = (for u in users filter u.uid==i.uid return u)[0]
+                let self_voted = length(for v in votes filter v.uid==@selfuid and v.id==to_number(i._key) and v.type=='post' and v.vote==1 return v)
+            ''', selfuid=selfuid)
+            qsc+=QueryString('''
+                sort i.{sortby} {order}
+                limit {start},{count}
+                return merge(i, {{user:u}},{{self_voted}})
+                '''.format(
+                    sortby = sortby,order=order,start=start,count=count,
+                )
             )
 
-        querystring_simple = '''
-        return length(for i in posts {filter} return i)
-        '''.format(filter=filter)
+        qss = querystring_simple = QueryString('return length(for i in posts')\
+            + filter + QueryString('return i)')
 
-        count = aql(querystring_simple, silent=True)[0]
-        # print('done',time.time()-ts);ts=time.time()
-
-        postlist = aql(querystring_complex, silent=True)
-        # print('done',time.time()-ts);ts=time.time()
+        count = aql(qss.s, silent=True, **qss.kw)[0]
+        postlist = aql(qsc.s, silent=True, **qsc.kw)
 
         # uncomment if you want floor number in final output.
         # for idx, p in enumerate(postlist):
@@ -405,55 +406,60 @@ class Paginator:
         start = (pagenumber-1)*pagesize
         count = pagesize
 
+        filter = QueryString()
+
         if by=='category':
             if category=='all':
-                filter = 'filter i.delete==null'
+                filter.append('filter i.delete==null')
             elif category=='deleted':
-                filter = 'filter i.delete==true'
+                filter.append('filter i.delete==true')
             else:
-                filter = f'filter i.cid == {category} and i.delete==null'
+                filter.append('filter i.cid == @category and i.delete==null', category=category)
             mode='thread'
         elif by=='tag':
-            filter = f'filter "{tagname}" in i.tags and i.delete==null'
+            filter.append('filter @tagname in i.tags and i.delete==null', tagname=tagname)
             mode='tag_thread'
         else: # filter by user
-            filter = f'filter i.uid == {uid}'
+            filter.append('filter i.uid==@iuid', iuid=uid)
             mode='user_thread'
 
-        querystring_complex = '''
-        for i in threads
+        querystring_complex = QueryString('''
+            for i in threads
 
-        let user = (for u in users filter u.uid == i.uid return u)[0]
-        let fin = (for p in posts filter p.tid == i.tid sort p.t_c desc limit 1 return p)[0]
-        //let count = length(for p in posts filter p.tid==i.tid return p)
-        let count = i.nreplies
-        let ufin = (for j in users filter j.uid == fin.uid return j)[0]
-        let c = (for c in categories filter c.cid==i.cid return c)[0]
+            let user = (for u in users filter u.uid == i.uid return u)[0]
+            let fin = (for p in posts filter p.tid == i.tid sort p.t_c desc limit 1 return p)[0]
+            //let count = length(for p in posts filter p.tid==i.tid return p)
+            let count = i.nreplies
+            let ufin = (for j in users filter j.uid == fin.uid return j)[0]
+            let c = (for c in categories filter c.cid==i.cid return c)[0]
 
-        //let mvu = ((i.mvu and i.mv>2) ?(for u in users filter u.uid == i.mvu return u)[0]: null)
+            //let mvu = ((i.mvu and i.mv>2) ?(for u in users filter u.uid == i.mvu return u)[0]: null)
+        ''')
 
-        {filter}
-
-        sort i.{sortby} {order}
-        limit {start},{count}
-        let kk = unset(i,'content')
-        return merge(i, {{user:user, last:unset(fin,'content'), lastuser:ufin, cname:c.name, count:count}})
-         '''.format(
-                sortby = sortby,
-                order = order,
-                start = start,
-                count = count,
-                filter = filter,
+        querystring_complex += filter
+        querystring_complex.append('''
+            sort i.{sortby} {order}
+            limit {start},{count}
+            let kk = unset(i,'content')
+            return merge(i, {{user:user, last:unset(fin,'content'), lastuser:ufin, cname:c.name, count:count}})
+             '''.format(
+                    sortby = sortby,
+                    order = order,
+                    start = start,
+                    count = count,
+            )
         )
 
-        querystring_simple = '''
-        return length(for i in threads {filter} return i)
-        '''.format(filter=filter)
+        qss = querystring_simple = \
+            QueryString('return length(for i in threads')\
+            + filter\
+            + QueryString('return i)')
 
-        count = aql(querystring_simple, silent=True)[0]
+        count = aql(qss.s, silent=True, **qss.kw)[0]
         # print('done',time.time()-ts);ts=time.time()
 
-        threadlist = aql(querystring_complex, silent=True)
+        qsc = querystring_complex
+        threadlist = aql(qsc.s, silent=True, **qsc.kw)
         # print('done',time.time()-ts);ts=time.time()
 
         pagination_obj = self.get_pagination_obj(count, pagenumber, pagesize, order, path, sortby, mode)
@@ -619,7 +625,7 @@ class Paginator:
         # no need to sort if number of items < 2
         if count>3:
 
-            if mode=='thread' or mode=='user_thread':
+            if mode=='thread' or mode=='user_thread' or mode=='tag_thread':
                 button_groups.append(sortbys)
 
             if mode=='user':

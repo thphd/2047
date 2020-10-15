@@ -355,7 +355,7 @@ def get_environ(k):
         return None
 
 # database connection
-from aql import AQLController
+from aql import AQLController, QueryString
 dbaddr = get_environ('dbaddr') or 'http://127.0.0.1:8529'
 aqlc = AQLController(dbaddr, 'db2047')
 aql = aqlc.aql

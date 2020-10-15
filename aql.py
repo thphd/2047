@@ -92,6 +92,25 @@ class AQLController:
         self.prepare()
         return self.aql('for i in {} filter {} return i'.format(_from, _filter), **kw)
 
+class QueryString:
+    def __init__(self, s='', **kw):
+        self.s = s
+        self.kw = kw.copy()
+
+    def append(self, s='', **kw):
+        self.s += '\n' + s
+        self.kw.update(kw)
+
+    def prepend(self, s='', **kw):
+        self.s = s+'\n'+self.s
+        self.kw.update(kw)
+
+    def __add__(self, b):
+        k = self.kw.copy()
+        k.update(b.kw)
+        result = QueryString(self.s+'\n'+b.s, **k)
+        return result
+
 if __name__ == '__main__':
 
     aqlc = AQLController('http://127.0.0.1:8529', 'test',[
