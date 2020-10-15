@@ -55,6 +55,8 @@ def dtdt_from_stamp(stamp):
     return dtdt.fromisoformat(stamp)
 
 dfs = dtdt_from_stamp
+def dfshk(stamp):
+    return dfs(stamp).replace(tzinfo=working_timezone)
 
 # proper time formatting
 # input: string iso timestamp
@@ -84,7 +86,7 @@ def format_time_dateifnottoday(s):
     return format_time_absolute_fallback(s)
 
 def format_time_relative_fallback(s):
-    dt = dfs(s).replace(tzinfo=working_timezone)
+    dt = dfshk(s)
     now = dtn(working_timezone)
 
     past = now-dt # larger=>longer in the past
@@ -107,7 +109,7 @@ def format_time_relative_fallback(s):
         return format_time_dateonly(s)
 
 def format_time_absolute_fallback(s):
-    dt = dfs(s).replace(tzinfo=working_timezone)
+    dt = dfshk(s)
     now = dtn(working_timezone)
 
     past = now-dt # larger=>longer in the past

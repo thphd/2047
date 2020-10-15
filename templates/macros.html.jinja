@@ -444,13 +444,15 @@
 
 {%macro edit_status(p)%}
   {# if object has been edited #}
-  {%if p.editor and p.t_e %}
+  {%if p.editor and p.t_c and p.t_e and
+    (dfshk(p.t_e) - dfshk(p.t_c) > dttd(seconds=2*60))%}
+
     <div class='edited_by'>
-      <span>[ 由</span>
+      <span>( 由</span>
       <a href="/u/{{p.editor}}">{{'作者' if p.editor==p.uid else '其他人'}}</a>
       <span>于</span>
-      <span>{{format_time_dateonly(p.t_e)}}</span>
-      <span>编辑 ]</span>
+      <span>{{format_time_relative_fallback(p.t_e)}}</span>
+      <span>编辑 )</span>
     </div>
   {%endif%}
 {%endmacro%}
