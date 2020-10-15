@@ -42,6 +42,37 @@ for(var i=0;i<tabs.length;i++){k(i)}
 {%endmacro%}
 
 
+
+{%macro list_users(wb)%}
+  <div class="weekly_best">
+    {%for i in wb%}
+    <div class="weekly_best_item">
+      <div class='weekly_best_votes'>{{i.n or ''}}</div>
+      <div class='weekly_best_title'>
+        {{macros.username(i.user)}}
+      </div>
+    </div>
+    {%endfor%}
+  </div>
+{%endmacro%}
+
+
+{%macro list_threads(wb) %}
+<div class="weekly_best">
+  {%for i in wb%}
+  <div class="weekly_best_item">
+    <div class='weekly_best_votes'>{{i.amv or ''}}</div>
+    <div class='weekly_best_title'>
+      {%set url = ('/p/'~i.mvp) if i.mv> i.votes else ('/t/'~i.tid)%}
+      <a href="{{url}}">{{i.title}}</a>
+    </div>
+  </div>
+  {%endfor%}
+</div>
+{%endmacro%}
+
+
+
 {%extends 'base.html.jinja'%}
 {%block content%}
 
@@ -105,19 +136,7 @@ for(var i=0;i<tabs.length;i++){k(i)}
 
   {%endif%}
 
-  {%macro list_threads(wb) %}
-  <div class="weekly_best">
-    {%for i in wb%}
-    <div class="weekly_best_item">
-      <div class='weekly_best_votes'>{{i.amv}}</div>
-      <div class='weekly_best_title'>
-        {%set url = ('/p/'~i.mvp) if i.mv> i.votes else ('/t/'~i.tid)%}
-        <a href="{{url}}">{{i.title}}</a>
-      </div>
-    </div>
-    {%endfor%}
-  </div>
-  {%endmacro%}
+
 
   <div class="box">
     <div class="boxtitle" title="按照被点赞的次数">
@@ -129,22 +148,9 @@ for(var i=0;i<tabs.length;i++){k(i)}
         ['本周',list_threads(get_weekly_best(0, 7, n=15))],
         ['本月',list_threads(get_weekly_best(7, 30, n=15))],
         ['上月',list_threads(get_weekly_best(30, 60, n=15))],
-        ], index=0)}}
+        ], index=random.randint(0,5)%4)}}
     </div>
   </div>
-
-  {%macro list_users(wb)%}
-    <div class="weekly_best">
-      {%for i in wb%}
-      <div class="weekly_best_item">
-        <div class='weekly_best_votes'>{{i.n}}</div>
-        <div class='weekly_best_title'>
-          {{macros.username(i.user)}}
-        </div>
-      </div>
-      {%endfor%}
-    </div>
-  {%endmacro%}
 
   <div class="box">
     <div class="boxtitle" title='按照被点赞的次数'>
@@ -156,7 +162,16 @@ for(var i=0;i<tabs.length;i++){k(i)}
         ['本周',list_users(get_weekly_best_user(0,7,n=20))],
         ['本月',list_users(get_weekly_best_user(7,30,n=20))],
         ['上月',list_users(get_weekly_best_user(30,60,n=20))],
-        ], index=random.randint(0,3))}}
+        ], index=random.randint(0,5)%4)}}
+    </div>
+  </div>
+
+  <div class="box">
+    <div class="boxtitle">
+      同一作者
+    </div>
+    <div class="navigator_quote">
+      {{list_threads(get_user_picked_threads(g.selfuid))}}
     </div>
   </div>
 

@@ -738,6 +738,22 @@ def get_weekly_best_user(start=7, stop=14, n=10):
 
     return wbu
 
+@stale_cache(ttr=20, ttl=1800)
+def get_user_best_threads(uid):
+    return aql('''
+        for t in threads
+        filter t.uid==@uid and t.delete==null
+        sort t.amv desc
+        limit 40
+        return t
+    ''', uid=int(uid), silent=True)
+
+def get_user_picked_threads(uid):
+    ts = get_user_best_threads(uid)
+    ts = random.sample(ts,min(7, len(ts)))
+    ts = sorted(ts, key=lambda t:t['amv'] if 'amv' in t else 0, reverse=True)
+    return ts
+
 if __name__ == '__main__':
     print('filtgen')
     print(indexgen([['cond1'],['cond2'],['cond1','cond2']], ['sort1','sort2']))
