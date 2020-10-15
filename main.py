@@ -124,7 +124,7 @@ def route_static(frompath, topath, maxage=1800):
 
         if maxage!=0:
             resp.headers['Cache-Control']= \
-                f'max-age={str(maxage)}, stale-while-revalidate=60'
+                f'max-age={str(maxage)}, stale-while-revalidate=86400'
 
         return resp
 
@@ -141,7 +141,7 @@ def favicon():
     resp = make_response(b, 200)
     resp = etag304(resp)
     resp.headers['Content-Type']='image/png'
-    resp.headers['Cache-Control'] = 'max-age=8640000'
+    resp.headers['Cache-Control'] = 'max-age=864000'
     return resp
 
 def create_all_necessary_indices():
@@ -1001,7 +1001,7 @@ def getpost(pid):
     url = get_url_to_post(str(pid))
     resp = make_response('', 307)
     resp.headers['Location'] = url
-    resp.headers['Cache-Control']= 'max-age=86400'
+    resp.headers['Cache-Control']= 'max-age=86400, stale-while-revalidate=864000'
 
     # user_is_self = p['uid'] == g.selfuid
     # if not user_is_self: increment_view_counter('post', pid)
@@ -1645,7 +1645,7 @@ def route_get_avatar(uid):
 
             resp = make_response('', 307)
             resp.headers['Location'] = '/images/avatar-max-img.png'
-            resp.headers['Cache-Control']= 'max-age=864000, stale-while-revalidate=43200'
+            resp.headers['Cache-Control']= 'max-age=43200, stale-while-revalidate=864000'
             return resp
 
     resp.headers['Content-Type'] = 'image/png'
@@ -1655,7 +1655,7 @@ def route_get_avatar(uid):
     if 'no-cache' in request.args:
         resp.headers['Cache-Control']= 'no-cache'
     else:
-        resp.headers['Cache-Control']= 'max-age=864000, stale-while-revalidate=43200'
+        resp.headers['Cache-Control']= 'max-age=43200, stale-while-revalidate=864000'
     return resp
 
     # # default: 307 to logo.png
