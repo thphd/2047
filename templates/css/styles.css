@@ -1668,15 +1668,23 @@ input[type="text"],input[type="password"] {
 }
 
 .unfold {
-    background: #ebebeb;
+    /* background: #ebebeb; */
+    background: repeating-linear-gradient(
+  45deg,
+  #ebebeb,
+  #ebebeb 20px,
+  #eae8c8 20px,
+  #eae8c8 40px
+);
     font-size: 12px;
     padding: 7px;
-    color: gray;
+    color: #5a5a5a;
     border-radius: 3px;
     text-align: center;
     cursor: pointer;
     margin-top: -4px;
     margin-bottom: 5px;
+    box-shadow: 0 -3px 10px #0000001a;
 }
 
 .hidden {
