@@ -63,14 +63,17 @@
 
     </div>
 
+    {%set upt = get_user_picked_threads(t.uid)%}
+    {%if upt%}
     <div class="box">
       <div class="boxtitle">
         同一作者
       </div>
       <div class="navigator_quote">
-        {{list_threads(get_user_picked_threads(t.uid))}}
+        {{list_threads(upt)}}
       </div>
     </div>
+    {%endif%}
 
   {%endif%}
 
