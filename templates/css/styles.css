@@ -512,6 +512,7 @@ img.headerbtn {
     /* color: black; */
     border-color: #bedaee;
     display: inline-block;
+    font-size: 90%;
 }
 
 .invitations {
@@ -542,7 +543,7 @@ a.threadlist_title {
 
 .post_content pre {
     background-color: #f1f1f1;
-    padding: 1em;
+    padding: 2px 5px;
     /* display: inline-block; */
     margin: 0 0 .4em 0;
     /* display: block; */
@@ -551,8 +552,9 @@ a.threadlist_title {
     white-space: -pre-wrap;      /* Opera 4-6 */
     white-space: -o-pre-wrap;    /* Opera 7 */
     word-wrap: break-word;       /* Internet Explorer 5.5+ */
-    font-size: 90%;
+    font-size: 12px;
     overflow: auto;
+    line-height: 1.2;
 }
 
 
@@ -695,7 +697,7 @@ a.threadlist_title {
 
 code {
     font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,ubuntu, source code pro, monospace;
-    line-height: 1.4;
+    /* line-height: 1.4; */
 }
 
 code .k, code .kd {
@@ -1819,6 +1821,7 @@ a.threadlist_title:hover, a.threadlist_title:active, a.threadlist_title:focus {
 
 .redcircle {
     background: red;
+    color: white;
     /* width: 1.5em; */
     /* height: 1.5em; */
     padding: 0.1em 0.4em;
