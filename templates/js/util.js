@@ -552,6 +552,11 @@ if (editor_target){
         process_all_youtube_reference()
       }
 
+      if(hljs){
+        document.querySelectorAll('pre code').forEach(block=>{
+          hljs.highlightBlock(block)
+        })
+      }
     })
     .catch(alert)
     .then(()=>{
