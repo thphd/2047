@@ -27,3 +27,10 @@ temp/
 templates/images/material
 prof/
 tbd.py
+
+templates/highlight/*.*
+!templates/highlight/*.js
+!templates/highlight/LICENSE
+
+templates/highlight/styles/*.*
+!templates/highlight/styles/atom-one-light.css

@@ -132,6 +132,7 @@ route_static('static', 'static')
 route_static('images', 'templates/images', 3600*12)
 route_static('css', 'templates/css', 3600)
 route_static('js', 'templates/js', 3600)
+route_static('highlight', 'templates/highlight', 3600*6)
 route_static('jgawb', 'jgawb', 1800)
 route_static('jicpb', 'jicpb', 1800)
 
