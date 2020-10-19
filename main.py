@@ -321,7 +321,7 @@ class Paginator:
         elif by=='user': # filter by user
             filter.append('filter i.uid == @uid', uid=uid)
             mode='user_post'
-            
+
         elif by=='all':
             filter.append('')
             mode='user_post'
@@ -712,7 +712,8 @@ class UAFilter:
             self.d[ua]+=3*weight
 
             if self.d[ua]>75 and (ua not in self.blacklist):
-                self.blacklist+=ua
+                # self.blacklist+=ua
+                pass
 
             return False
         else:
