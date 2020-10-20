@@ -95,7 +95,8 @@
         {# left 2 right: logo, [links], search, [uavatar, uname, login/logout] #}
         <a class="headerblock" href="/">
           {%set logourl =
-            '/images/2049bbslogo_clipped_small_pressed.png'
+            ('/images/2049bbslogo_clipped_small_pressed.png' and
+            '/images/204720201020.png')
           if not is_pincong_org() else
             '/images/pincong_logo.svg'
           %}
