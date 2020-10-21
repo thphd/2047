@@ -1101,7 +1101,10 @@ document.addEventListener("DOMContentLoaded", ()=>{
     //because image changes the height of its container after load
     var imgs = gebtn(foldable)('img')
     foreach(imgs)(e=>{
-      e.onload = changestateaccordingly
+      e.onload = ()=>{
+        changestateaccordingly()
+        setTimeout(changestateaccordingly, 100)
+      }
     })
     // foldable.onresize = changestateaccordingly
     changestateaccordingly()
