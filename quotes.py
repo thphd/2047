@@ -30,9 +30,7 @@ Happiness is a virtue, not its reward. 快乐是一种美德，而不是一种�
 Be careful what you wish for, lest it come true! 小心许愿，当心成真！##伊索寓言
 '''
 
-from forbiddenfruit import curse
-curse(list, 'map', lambda self,f:list(map(f,self)))
-curse(list, 'filter', lambda self,f:list(filter(f,self)))
+import monkeypatch
 
 quotes = quotes.split('\n').map(lambda l:l.strip()).filter(lambda l:len(l)>0)
 

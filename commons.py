@@ -308,16 +308,32 @@ if 0:
 
 elif 1:
     import mistletoe
+    from html_stuff import parse_html, sanitize_html
 
-    @lru_cache(maxsize=8192)
-    def convert_markdown(s):
+    def just_markdown(s):
         s = replace_pal(s)
         s = replace_tal(s)
 
         s = replace_ats(s)
         s = replace_pincong(s)
         s = replace_ytb(s)
-        return mistletoe.markdown(s)
+        html = mistletoe.markdown(s)
+
+        return html
+
+    @lru_cache(maxsize=8192)
+    def convert_markdown(s):
+        out = just_markdown(s)
+
+        try:
+            soup = parse_html(out)
+            sanitize_html(soup)
+            out = soup.prettify()
+        except Exception as e:
+            print_err('failed to parse with bs4')
+            out = '(parse failure: check your HTML)'
+
+        return out
 
 else:
 
