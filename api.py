@@ -412,7 +412,7 @@ def content_length_check(content, allow_short=False):
 def title_length_check(title):
     if len(title)>140:
         raise Exception('title too long')
-    if len(title)<3:
+    if len(title)<2:
         raise Exception('title too short')
 
 def get_thread(tid):
@@ -565,6 +565,12 @@ def _():
         if len(lp) >= 1:
             if lp[0]['content'] == content:
                 raise Exception('repeatedly posting same content')
+
+        # check if the same title has been used before
+        jk = aql('for t in threads filter t.title==@title limit 1 return 1', title=title, silent=True)
+        if len(jk):
+            raise Exception('这个标题被别人使用过')
+
 
         # ask for a new tid
         tid = obtain_new_id('tid')
