@@ -1924,3 +1924,7 @@ input#search_term {
 .taglist>* {
     margin-right: 3px;
 }
+
+.adminstuff.favorite {
+    color: purple;
+}

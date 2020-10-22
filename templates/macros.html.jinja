@@ -479,6 +479,20 @@
 {%endif%}
 {%endmacro%}
 
+{%macro favorite(p, mode='post')%}
+{%set targ = ('post/'~p._key) if mode=='post' else ('thread/'~p.tid)%}
+{%set count = '('~p.nfavs~')' if p.nfavs else '' %}
+{%if g.logged_in%}
+  {%if not p.favorited%}
+    <a class='adminstuff favorite' href="javascript:favorite('{{targ}}')">收藏{{count}}</a>
+
+  {%else%}
+    <a class='adminstuff favorite' href="javascript:favorite('{{targ}}', true)">已收藏{{count}}</a>
+
+  {%endif%}
+{%endif%}
+{%endmacro%}
+
 {%macro edit_post(p, mode='post')%}
 {%set targ = ('post/'~p._key) if mode=='post' else ('thread/'~p.tid)%}
   {%if can_do_to(g.logged_in, 'edit', p.uid)%}
@@ -498,7 +512,7 @@
     {%if not p.delete%}
       {{(convert_markdown(p.content or '')|safe)}}
     {%else%}
-      <s>内容被删除</s>
+      <s>标记为删除</s>
     {%endif%}
   </div>
 
@@ -562,6 +576,7 @@
     {%endif%}
 
     {{edit_post(p)}}
+    {{favorite(p)}}
     {{source_post(p)}}
     {{delete_post(p, t=in_thread)}}
   </div>
@@ -594,6 +609,7 @@
 
       {{view_count(t)}}
       {{edit_post(t, mode='thread')}}
+      {{favorite(t, mode='thread')}}
       {{source_post(t, mode='thread')}}
       {{move_thread(t)}}
       {{delete_post(t, mode='thread')}}

@@ -209,6 +209,7 @@ def create_all_necessary_indices():
     ci('aliases',[['is','name'],['name','is']])
     ci('operations',indexgen([['target'],[]], ['t_c']))
     ci('followings', indexgen([['uid','follow'],['to_uid','follow']],['t_c']))
+    ci('favorites', indexgen([['uid']], ['t_c','pointer']))
 
 is_integer = lambda i:isinstance(i, int)
 class Paginator:
@@ -266,20 +267,11 @@ class Paginator:
         return userlist, pagination_obj
 
     def get_post_one(self, pid):
-        selfuid = g.selfuid
-
-        qs = '''for i in posts filter i._key==@pid
-
-        let u = (for u in users filter u.uid==i.uid return u)[0]
-        let self_voted = length(for v in votes filter v.uid==@selfuid and v.id==to_number(i._key) and v.type=='post' and v.vote==1 return v)
-
-        return merge(i, {user:u},{self_voted})
-        '''
-
-        ps = aql(qs, pid=str(pid),selfuid=selfuid, silent=True)
-        if len(ps)<1: return False
-        ps = ps[0]
-        return ps
+        pl = self.get_post_list(by='ids', ids=['posts/'+str(pid)])
+        if pl:
+            return pl[0]
+        else:
+            return False
 
     def get_post_list(self,
         by='thread',
@@ -293,9 +285,10 @@ class Paginator:
 
         path='',
         mode='',
-        apply_origin=False):
+        apply_origin=False,
+        ids=[]):
 
-        assert by in ['thread', 'user','all']
+        assert by in ['thread', 'user','all', 'ids']
         assert is_integer(tid)
         assert is_integer(uid)
 
@@ -303,10 +296,14 @@ class Paginator:
         # sortby = 't_c'
         assert order in ['desc', 'asc']
 
+        assert isinstance(ids, list)
+
         pagenumber = max(1, pagenumber)
 
         start = (pagenumber-1)*pagesize
         count = pagesize
+
+        qsc = querystring_complex = QueryString('for i in posts')
 
         filter = QueryString()
 
@@ -326,58 +323,64 @@ class Paginator:
             filter.append('')
             mode='user_post'
 
+        elif by=='ids':
+            qsc = QueryString('for id in @ids let i = document(id)', ids=ids)
+
         selfuid = g.selfuid
 
-
-        qsc = querystring_complex = QueryString('for i in posts')
         qsc+=filter
+
+        qsc+=QueryString('''
+            let u = (for u in users filter u.uid==i.uid return u)[0]
+            let self_voted = length(for v in votes filter v.uid==@selfuid and v.id==to_number(i._key) and v.type=='post' and v.vote==1 return v)
+
+            let favorited = length(for f in favorites
+            filter f.uid==@selfuid and f.pointer==i._id return f)
+
+        ''', selfuid=selfuid)
 
         if apply_origin:
             qsc+=QueryString('''
-                let u = (for u in users filter u.uid==i.uid return u)[0]
                 let t = unset((for t in threads filter t.tid==i.tid return t)[0],'content')
-
-                let self_voted = length(for v in votes filter v.uid==@selfuid and v.id==to_number(i._key) and v.type=='post' and v.vote==1 return v)
-                ''',
-                selfuid=selfuid
-            )
-            qsc+=QueryString('''
-                sort i.{sortby} {order}
-                limit {start},{count}
-                return merge(i, {{user:u}},{{self_voted}},{{t}})
-                '''.format(
-                    sortby = sortby,order=order,start=start,count=count,
-                )
+                '''
             )
         else:
-            qsc+=QueryString('''
-                let u = (for u in users filter u.uid==i.uid return u)[0]
-                let self_voted = length(for v in votes filter v.uid==@selfuid and v.id==to_number(i._key) and v.type=='post' and v.vote==1 return v)
-            ''', selfuid=selfuid)
+            qsc+=QueryString('let t = null')
+
+        if by!='ids':
             qsc+=QueryString('''
                 sort i.{sortby} {order}
                 limit {start},{count}
-                return merge(i, {{user:u}},{{self_voted}})
+                return merge(i, {{user:u, self_voted, t, favorited}})
                 '''.format(
                     sortby = sortby,order=order,start=start,count=count,
                 )
             )
 
-        qss = querystring_simple = QueryString('return length(for i in posts')\
-            + filter + QueryString('return i)')
+            qss = querystring_simple = QueryString('return length(for i in posts')\
+                + filter + QueryString('return i)')
 
-        count = aql(qss.s, silent=True, **qss.kw)[0]
-        postlist = aql(qsc.s, silent=True, **qsc.kw)
+            count = aql(qss.s, silent=True, **qss.kw)[0]
+            postlist = aql(qsc.s, silent=True, **qsc.kw)
 
-        # uncomment if you want floor number in final output.
-        # for idx, p in enumerate(postlist):
-        #     p['floor_num'] = idx + start + 1
+            # uncomment if you want floor number in final output.
+            # for idx, p in enumerate(postlist):
+            #     p['floor_num'] = idx + start + 1
 
-        pagination_obj = self.get_pagination_obj(count, pagenumber, pagesize, order, path, sortby, mode=mode)
+            pagination_obj = self.get_pagination_obj(count, pagenumber, pagesize, order, path, sortby, mode=mode)
 
-        remove_duplicate_brief(postlist)
+            remove_duplicate_brief(postlist)
 
-        return postlist, pagination_obj
+            return postlist, pagination_obj
+
+        else:
+            qsc+=QueryString('''
+            return merge(i, {user:u, self_voted, t, favorited})
+            ''')
+
+            postlist = aql(qsc.s, silent=True, **qsc.kw)
+            remove_duplicate_brief(postlist)
+            return postlist
 
     @stale_cache(maxsize=128, ttr=3, ttl=30)
     def get_thread_list(self,
@@ -407,6 +410,20 @@ class Paginator:
         start = (pagenumber-1)*pagesize
         count = pagesize
 
+        querystring_complex = QueryString('''
+            for i in threads
+
+            let user = (for u in users filter u.uid == i.uid return u)[0]
+            let count = i.nreplies
+
+            let fin = (for p in posts filter p.tid == i.tid sort p.t_c desc limit 1 return p)[0]
+            //let count = length(for p in posts filter p.tid==i.tid return p)
+            let ufin = (for j in users filter j.uid == fin.uid return j)[0]
+            let c = (for c in categories filter c.cid==i.cid return c)[0]
+
+            //let mvu = ((i.mvu and i.mv>2) ?(for u in users filter u.uid == i.mvu return u)[0]: null)
+        ''')
+
         filter = QueryString()
 
         if by=='category':
@@ -420,29 +437,14 @@ class Paginator:
         elif by=='tag':
             filter.append('filter @tagname in i.tags and i.delete==null', tagname=tagname)
             mode='tag_thread'
-        else: # filter by user
+        elif by=='user': # filter by user
             filter.append('filter i.uid==@iuid', iuid=uid)
             mode='user_thread'
-
-        querystring_complex = QueryString('''
-            for i in threads
-
-            let user = (for u in users filter u.uid == i.uid return u)[0]
-            let fin = (for p in posts filter p.tid == i.tid sort p.t_c desc limit 1 return p)[0]
-            //let count = length(for p in posts filter p.tid==i.tid return p)
-            let count = i.nreplies
-            let ufin = (for j in users filter j.uid == fin.uid return j)[0]
-            let c = (for c in categories filter c.cid==i.cid return c)[0]
-
-            //let mvu = ((i.mvu and i.mv>2) ?(for u in users filter u.uid == i.mvu return u)[0]: null)
-        ''')
 
         querystring_complex += filter
         querystring_complex.append('''
             sort i.{sortby} {order}
             limit {start},{count}
-            let kk = unset(i,'content')
-            return merge(i, {{user:user, last:unset(fin,'content'), lastuser:ufin, cname:c.name, count:count}})
              '''.format(
                     sortby = sortby,
                     order = order,
@@ -450,6 +452,11 @@ class Paginator:
                     count = count,
             )
         )
+
+        querystring_complex.append('''
+            // let kk = unset(i,'content')
+            return merge(i, {user:user, last:unset(fin,'content'), lastuser:ufin, cname:c.name, count:count})
+        ''')
 
         qss = querystring_simple = \
             QueryString('return length(for i in threads')\
@@ -1173,12 +1180,16 @@ def userthreads(uid):
 def get_thread_full(tid, selfuid=-1):
     thobj = aql('''
     for t in threads filter t.tid==@tid
-    let u = (for u in users filter u.uid==t.uid return u)[0]
 
-    let self_voted = length(for v in votes filter v.uid==@selfuid and v.id==to_number(t.tid) and v.type=='thread' and v.vote==1 return v)
+    let user = (for u in users filter u.uid == t.uid return u)[0]
+    let count = t.nreplies
 
-    return merge(t, {user:u},{self_voted:self_voted})
-    ''', tid=tid, selfuid=selfuid, silent=True)
+    let favorited = length(for f in favorites filter f.uid==@uid and f.pointer==t._id return f)
+
+    let self_voted = length(for v in votes filter v.uid==@uid and v.id==to_number(t.tid) and v.type=='thread' and v.vote==1 return v)
+
+    return merge(t, {user, count, self_voted, favorited})
+    ''', tid=tid, uid=selfuid, silent=True)
 
     if len(thobj)<1:
         return False
@@ -1190,25 +1201,22 @@ def remove_duplicate_brief(postlist):
     # remove duplicate brief string within a page
     bd = dict()
     for p in postlist:
-        if 'user' in p:
+        if isinstance(p, dict) and 'user' in p:
             pu = p['user'] or {}
+
             if 'brief' in pu:
-                b = pu['brief']+pu['name']
-                if b in bd:
+                k = ('brief', pu['name'], pu['brief'])
+                if k in bd:
                     pu['brief']=''
                 else:
-                    bd[b] = 1
+                    bd[k] = 1
 
-    bd = dict()
-    for p in postlist:
-        if 'user' in p:
-            pu = p['user'] or {}
             if 'personal_title' in pu:
-                b = pu['personal_title']+pu['name']
-                if b in bd:
+                k = ('pt', pu['name'], pu['personal_title'])
+                if k in bd:
                     pu['personal_title']=''
                 else:
-                    bd[b] = 1
+                    bd[k] = 1
 
 # thread, list of posts
 @app.route('/t/<int:tid>')

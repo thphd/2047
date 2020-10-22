@@ -1382,3 +1382,24 @@ function delete_tag(tid, tagname){
   })
   .catch(alert)
 }
+
+function favorite(targ, del){
+  aa('favorite', {target:targ, delete:(del?true:null)})
+  .then(res=>{
+    display_notice(targ+(del?'已取消收藏':'已收藏'))
+
+    if(del){}else{
+      foreach(gebcn(document)('favorite'))(e=>{
+        if(e.href.includes(targ) && e.innerText.includes('收藏')){
+          e.innerText = '已收藏'
+          e.href = 'javascript:favorite("'+targ+'", true)'
+        }
+      })
+    }
+
+    setTimeout(()=>{
+      display_notice('')
+    }, 2000)
+  })
+  .catch(alert)
+}

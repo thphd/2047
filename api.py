@@ -823,6 +823,8 @@ def update_thread_votecount(tid):
     res = aql('''
 let t = (for i in threads filter i.tid==@_id return i)[0]
 
+let nfavs = length(for f in favorites filter f.pointer==t._id return f)
+
 let upv= length(for v in votes filter v.type=='thread' and v.id==t.tid and v.vote==1 return v)
 let nreplies = length(for p in posts filter p.tid==t.tid return p)
 let t_u = ((for p in posts filter p.tid==t.tid and p.delete==null sort p.t_c desc limit 1 return p)[0].t_c or t.t_c)
@@ -833,7 +835,7 @@ let mvp = (for p in posts filter p.tid==t.tid sort p.votes desc limit 1 return p
 update t with {
     votes:upv, nreplies, t_u,
     mvp:mvp._key, mv:mvp.votes or 0, mvu:mvp.uid,
-    amv: max([mvp.votes or 0, upv or 0])}
+    amv: max([mvp.votes or 0, upv or 0]), nfavs}
 in threads
 return NEW
     ''', _id=int(tid), silent=True)
@@ -844,8 +846,11 @@ return NEW
 def update_post_votecount(pid):
     res = aql('''
 let t = (for i in posts filter i._key==@_id return i)[0]
+
+let nfavs = length(for f in favorites filter f.pointer==t._id return f)
+
 let upv = length(for v in votes filter v.type=='post' and v.id==@_id2 and v.vote==1 return 1)
-update t with {votes:upv} in posts return NEW
+update t with {votes:upv, nfavs} in posts return NEW
     ''', _id=str(pid), _id2=int(pid), silent=True)
 
     return res[0]
@@ -863,6 +868,9 @@ def update_user_votecount(uid):
         nposts:length(for p in posts filter p.uid==u.uid return p),
         nlikes:length(for v in votes filter v.to_uid==u.uid and v.vote==1 return v),
         nliked:length(for v in votes filter v.uid==u.uid and v.vote==1 return v),
+
+        nfavs:length(for f in favorites filter f.uid==u.uid return f),
+        nfaveds:length(for f in favorites filter f.to_uid==u.uid return f),
 
         nfollowings:length(for f in followings filter f.uid==u.uid and f.follow==true return f),
         nfollowers:length(for f in followings filter f.to_uid==u.uid and f.follow==true return f),
@@ -1747,6 +1755,58 @@ def _():
 
 def obj2json(obj):
     return json.dumps(obj, ensure_ascii=False, sort_keys=True, indent=2)
+
+aqlc.create_collection('favorites')
+@register('favorite')
+def _():
+    must_be_logged_in()
+    target_type,_id = parse_target(es('target'))
+    delete = eb('delete')
+
+    if target_type=='thread' or target_type=='post':
+        if target_type=='thread':
+            # check existence of thread
+            ob = get_thread(_id)
+        else:
+            ob = get_post(_id)
+        assert ob
+
+        pointer = ob['_id']
+
+        if not delete:
+            k = dict(
+                type = target_type,
+                id = _id,
+                uid = g.selfuid,
+                to_uid = ob['uid'],
+                t_c = time_iso_now(),
+                pointer = pointer,
+            )
+
+            lk = dict(
+                uid = k['uid'],
+                pointer = k['pointer']
+            )
+
+            # upsert
+            aql('upsert @lk insert @k update @k into favorites', lk=lk, k=k)
+
+        else:
+            aql('for i in favorites filter i.uid==@uid and i.pointer==@ptr remove i in favorites',
+                ptr = pointer,
+                uid = g.selfuid,
+            )
+
+        if target_type=='thread':
+            update_thread_votecount(_id)
+        else:
+            update_post_votecount(_id)
+
+    else:
+        raise Exception('target not supported')
+
+    return {'error':False}
+
 
 # feedback regulated ping service
 # average 1 ping every 3 sec
