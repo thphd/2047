@@ -28,6 +28,7 @@ area shape coords href alt
 article
 aside
 audio autoplay controls loop preload src
+source src sizes type
 b
 bdi dir
 bdo dir
