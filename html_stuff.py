@@ -44,7 +44,7 @@ colgroup align valign span width
 dd
 del datetime
 details open
-div
+div data-id
 dl
 dt
 em
@@ -87,11 +87,14 @@ ul
 video autoplay controls loop preload src height width
 '''.split('\n').map(lambda i: i.strip())\
     .filter(lambda i: len(i)).map(lambda i: i.split(' '))\
-    .map(lambda i:(i[0], i[1:]+['style','background']))
+    .map(lambda i:(i[0], i[1:]+['style','background','class']))
 
 allowed_tags = dict((k, v) for k, v in allowed_tags)
 
 def sanitizeAttrValue(tag, name, value):
+    if isinstance(value, list): # quirkness
+        value = ' '.join(value)
+
     value = value.strip()
     vl = value.lower()
     vl = re.sub(r'\s*', '', vl)
@@ -508,7 +511,10 @@ def sanitize_html(soup, k=0):
                     del child.attrs[attr_name]
                 else:
                     child.attrs[attr_name] = sanitizeAttrValue(
-                        tag_name, attr_name, str(child.attrs[attr_name]))
+                        tag_name,
+                        attr_name,
+                        child.attrs[attr_name],
+                    )
 
             # recursive descent
             sanitize_html(child,k+1)
