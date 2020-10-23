@@ -328,8 +328,8 @@ body>#content {
 .post_content img {
     /* max-height: 4000px; */
     max-width: 100%;
-    border-style: none none none dashed;
-    border-color: #00000038;
+    /* border-style: none none none dashed; */
+    /* border-color: #00000038; */
 }
 
 span.floor_num {color: #652929;}
@@ -1557,7 +1557,7 @@ input[type="text"],input[type="password"] {
 }
 
 
-.post_content mark {
+.post_content .parody {
     position: relative;
     text-decoration-line: underline;
     text-decoration-style: dotted;
@@ -1565,7 +1565,7 @@ input[type="text"],input[type="password"] {
     cursor: help;
     background-color: rgba(255, 255, 255, 0);
     color: #666;
-    /* padding: .2em; */
+    padding: 0 .15em;
 }
 
 .post_content mark::after {
@@ -1927,4 +1927,8 @@ input#search_term {
 
 .adminstuff.favorite {
     color: purple;
+}
+
+span.marked {
+    background: yellow;
 }

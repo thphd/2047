@@ -14,6 +14,14 @@
   <button type="button" id='btn_search'>搜索</button>
 </div>
 
+{%macro post_or_thread(r)%}
+  {%if r.title%}
+    {{macros.post_postlist_header_kept(r)}}
+  {%else%}
+    {{macros.post_postlist_threadless(r)}}
+  {%endif%}
+{%endmacro%}
+
 <div class="threadlist">
 
   {%if users%}
@@ -27,21 +35,63 @@
   {%endif%}
 
   {%if results%}
-    <div class="seach_terms padded">
+    <div class="search_terms padded" >
       关键字搜索结果 (
       {%for term in terms%}
         {{term}}
       {%endfor%}
       )
-
     </div>
 
+    <meta id='search_terms' data-id="{%for term in terms
+      %}{{term}} {%
+        endfor%}">
+
+    <script type="text/javascript">
+      document.addEventListener('DOMContentLoaded',()=>{
+        var terms = geid('search_terms').dataset.id
+        terms = terms.split(' ').filter(s=>s.length)
+
+        var rescape = function(string) {
+          return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
+        };
+
+        var rexp = new RegExp('(' + terms.map(rescape).join('|') + ')')
+        print(rexp)
+
+        function replace_e(e){
+          var cn = Array.from(e.childNodes)
+          for (var i = 0; i<cn.length; i++){
+            var current = cn[i]
+            if (current.nodeName === '#text'){
+
+              var s = current.nodeValue
+              var replaced = s.replace(rexp, '<span class="marked">$1</span>')
+              if (replaced!=s){
+                var newnode = document.createElement('div')
+                s = replaced
+                newnode.innerHTML = s
+
+                var cnn = Array.from(newnode.childNodes)
+                for(var j=0; j<cnn.length;j++){
+                  current.parentNode.insertBefore(cnn[j], current)
+                }
+                current.parentNode.removeChild(current)
+              }
+            }else{
+              replace_e(current)
+            }
+          }
+        }
+
+        foreach(gebcn(document)('post_content'))(replace_e)
+        foreach(gebcn(document)('post_thread_title'))(replace_e)
+
+      })
+    </script>
+
     {%for r in results%}
-      {%if r.title%}
-        {{macros.post_postlist_header_kept(r)}}
-      {%else%}
-        {{macros.post_postlist_threadless(r)}}
-      {%endif%}
+      {{post_or_thread(r)}}
     {%endfor%}
   {%endif%}
 

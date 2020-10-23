@@ -238,7 +238,7 @@ def replace_ytb_f(match):
 
 def replace_pincong(s):
     def f(match):
-        return f'<mark>{match.group(1)}</mark>'
+        return f'<mark class="parody">{match.group(1)}</mark>'
     s = re.sub(r'((?:姨|桂|支|偽|伪|张献|張獻|韭|鹿)(?:葱|蔥)|(?:品|葱|蔥)韭)', f, s)
     return s
 
@@ -328,7 +328,7 @@ elif 1:
         try:
             soup = parse_html(out)
             sanitize_html(soup)
-            out = soup.prettify()
+            out = soup.decode()
         except Exception as e:
             print_err('failed to parse with bs4')
             out = '(parse failure: check your HTML)'
@@ -471,6 +471,7 @@ oplog /oplog 管理日志
 ''')
 
 friendly_links = linkify('''
+旧品葱 https://pincongbackup.github.io/ 品葱备份
 火光 https://2049post.wordpress.com/ 薪火相传光明不息
 英雄 https://nodebe4.github.io/hero/ 人民英雄永垂不朽
 BE4 https://nodebe4.github.io/ BE4的网络服务

@@ -1064,12 +1064,16 @@ function viewed(){
   },5*1000)
 }
 
-document.addEventListener("DOMContentLoaded", process_all_youtube_reference);
-document.addEventListener("DOMContentLoaded", browser_check);
-document.addEventListener("DOMContentLoaded", viewed);
+function ondomload(f){
+  document.addEventListener("DOMContentLoaded", f)
+}
+
+ondomload(process_all_youtube_reference);
+ondomload(browser_check);
+ondomload(viewed);
 
 // fold/expand
-document.addEventListener("DOMContentLoaded", ()=>{
+ondomload(()=>{
   var tlis = gebcn(document)('threadlistitem')
 
   foreach(tlis)(e=>{
