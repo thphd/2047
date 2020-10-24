@@ -1,5 +1,10 @@
-import shutil, os, tarfile
+import shutil, os, tarfile, argparse as ap
 from commons import *
+
+parser = ap.ArgumentParser()
+parser.add_argument('-u','--upload', action='store_true')
+args = parser.parse_args()
+
 
 dir = os.path.abspath('./dump/')
 
@@ -15,6 +20,9 @@ tar = tarfile.open(basename,"w")
 tar.add('dump')
 tar.close()
 print('written to', basename)
+
+if not args.upload:
+    exit()
 
 def accept(fn):
     nope = 'conversations histories messages logs passwords invitations exams answersheets operations notifications questions'.split(' ')
