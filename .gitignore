@@ -27,6 +27,7 @@ temp/
 templates/images/material
 prof/
 tbd.py
+recovery/
 
 templates/highlight/*.*
 !templates/highlight/*.js

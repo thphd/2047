@@ -392,7 +392,7 @@ user_thread_list_defaults = dict(
     pagenumber=1,
     pagesize=50,
     order='desc',
-    sortby='t_hn',
+    sortby='t_c',
 )
 
 post_list_defaults = dict(
