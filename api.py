@@ -789,7 +789,7 @@ sort t.t_hn_u asc
 
 let t_hn_iso = left(date_format(t_hn,'%z'), 19)
 
-limit 100
+limit 50
 
 update t with {{t_hn:t_hn_iso, t_hn_u:stampnow}} in threads return 1
 ''', now=time_iso_now(), silent=True, raise_error=False)
@@ -806,7 +806,8 @@ def update_forever():
         l = update_thread_hackernews_batch()
         print_info(f'updated hackernews: {l} itvl: {itvl:.2f}')
 
-        itvl *= max(0.9, 1+((50-l)*0.0005))
+        itvl *= max(0.9, 1+((25-l)*0.005))
+        itvl = max(1, itvl)
 
 dispatch(update_forever)
 
