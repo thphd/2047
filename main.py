@@ -1088,7 +1088,7 @@ def get_category_threads(cid):
     pagenumber = rai('page') or thread_list_defaults['pagenumber']
     pagesize = rai('pagesize') or thread_list_defaults['pagesize']
     order = ras('order') or thread_list_defaults['order']
-    sortby = ras('sortby') or thread_list_defaults['sortby']
+    sortby = ras('sortby') or (thread_list_defaults['sortby'] if cid!=4 else 't_u')
 
     rpath = request.path
     # print(request.args)
