@@ -60,13 +60,15 @@ for(var i=0;i<tabs.length;i++){k(i)}
 {%macro list_threads(wb) %}
 <div class="weekly_best">
   {%for i in wb%}
-  <div class="weekly_best_item">
-    <div class='weekly_best_votes'>{{i.amv or ''}}</div>
-    <div class='weekly_best_title'>
-      {%set url = ('/p/'~i.mvp) if i.mv> i.votes else ('/t/'~i.tid)%}
-      <a href="{{url}}">{{i.title}}</a>
-    </div>
-  </div>
+    {%if i.mv and i.votes and i.mvp%}
+      <div class="weekly_best_item">
+        <div class='weekly_best_votes'>{{i.amv or ''}}</div>
+        <div class='weekly_best_title'>
+          {%set url = ('/p/'~i.mvp) if i.mv> i.votes else ('/t/'~i.tid)%}
+          <a href="{{url}}">{{i.title}}</a>
+        </div>
+      </div>
+    {%endif%}
   {%endfor%}
 </div>
 {%endmacro%}

@@ -8,7 +8,7 @@ from colors import *
 from cachetools.func import *
 from cachy import stale_cache
 
-@stale_cache(ttr=1, ttl=30)
+# @stale_cache(ttr=1, ttl=30)
 def readfile(fn, mode='rb', *a, **kw):
     with open(fn, mode, *a, **kw) as f:
         return f.read()
@@ -186,7 +186,7 @@ username_regex_string = str(username_regex).replace('\\\\','\\')
 tagname_regex_long = username_regex_proto.replace('2,16','1,40')
 tagname_regex = username_regex_proto.replace('2,16','1,10')
 
-at_extractor_regex = fr'(^|[^{legal_chars}])@([{legal_chars}]{{2,16}}?)(?=[^{legal_chars}]|$)'
+at_extractor_regex = fr'(^|[^{legal_chars}<>])@([{legal_chars}]{{2,16}}?)(?=[^{legal_chars}]|$)'
 
 # @lru_cache(maxsize=4096)
 def extract_ats(s): # extract @usernames out of text

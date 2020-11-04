@@ -832,7 +832,8 @@ let t = (for i in threads filter i.tid==@_id return i)[0]
 
 let nfavs = length(for f in favorites filter f.pointer==t._id return f)
 
-let upv= length(for v in votes filter v.type=='thread' and v.id==t.tid and v.vote==1 return v)
+let rv = t.recovered_votes or 0
+let upv= length(for v in votes filter v.type=='thread' and v.id==t.tid and v.vote==1 return v) + rv
 let nreplies = length(for p in posts filter p.tid==t.tid return p)
 let t_u = ((for p in posts filter p.tid==t.tid and p.delete==null sort p.t_c desc limit 1 return p)[0].t_c or t.t_c)
 
@@ -856,8 +857,11 @@ let t = (for i in posts filter i._key==@_id return i)[0]
 
 let nfavs = length(for f in favorites filter f.pointer==t._id return f)
 
-let upv = length(for v in votes filter v.type=='post' and v.id==@_id2 and v.vote==1 return 1)
-update t with {votes:upv, nfavs} in posts return NEW
+let rv = t.recovered_votes or 0
+let upv = length(for v in votes filter v.type=='post' and v.id==@_id2 and v.vote==1 return 1) + rv
+
+update t with {votes:upv, nfavs} in posts
+return NEW
     ''', _id=str(pid), _id2=int(pid), silent=True)
 
     return res[0]

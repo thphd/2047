@@ -455,6 +455,13 @@
       <span>编辑 )</span>
     </div>
   {%endif%}
+
+  {%if p.recovered_google_timestamp%}
+    <div class="edited_by">
+      <span>( 恢复自谷歌快照 采集于香港时间 {{
+        format_time_datetime(p.recovered_google_timestamp)}} )</span>
+    </div>
+  {%endif%}
 {%endmacro%}
 
 {# one line of post, used in postlist #}
