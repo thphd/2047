@@ -803,7 +803,12 @@ def update_forever():
     itvl = 10
     while 1:
         time.sleep(itvl)
-        l = update_thread_hackernews_batch()
+        try:
+            l = update_thread_hackernews_batch()
+        except Exception as e:
+            print(e)
+            continue
+
         print_info(f'updated hackernews: {l} itvl: {itvl:.2f}')
 
         itvl *= max(0.9, 1+((25-l)*0.005))
@@ -858,11 +863,11 @@ let t = (for i in posts filter i._key==@_id return i)[0]
 let nfavs = length(for f in favorites filter f.pointer==t._id return f)
 
 let rv = t.recovered_votes or 0
-let upv = length(for v in votes filter v.type=='post' and v.id==@_id2 and v.vote==1 return 1) + rv
+let upv = length(for v in votes filter v.type=='post' and v.id==to_number(t._key) and v.vote==1 return 1) + rv
 
 update t with {votes:upv, nfavs} in posts
 return NEW
-    ''', _id=str(pid), _id2=int(pid), silent=True)
+    ''', _id=str(pid), silent=True)
 
     return res[0]
 

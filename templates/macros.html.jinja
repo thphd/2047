@@ -445,7 +445,7 @@
 {%macro edit_status(p)%}
   {# if object has been edited #}
   {%if p.editor and p.t_c and p.t_e and
-    (dfshk(p.t_e) - dfshk(p.t_c) > dttd(seconds=2*60))%}
+    (dfshk(p.t_e) - dfshk(p.t_c) > dttd(seconds=5*60))%}
 
     <div class='edited_by'>
       <span>( 由</span>
