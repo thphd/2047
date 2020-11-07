@@ -3,14 +3,17 @@ from colors import *
 import requests as r
 import time
 
+# rs = r.Session()
+basic_auth = r.auth.HTTPBasicAuth('root','')
+
 # interface with arangodb.
 class AQLController:
     def request(self, method, endp, raise_error=True, **kw):
         while 1:
-            resp = r.request(
+            resp = self.session.request(
                 method,
                 self.dburl + endp,
-                auth = r.auth.HTTPBasicAuth('root',''),
+                auth = basic_auth,
                 json = kw,
                 timeout = 12,
                 proxies = {},
@@ -36,6 +39,8 @@ class AQLController:
         self.dbname = dbname
         self.collections = collections
         self.prepared = False
+
+        self.session = r.Session()
 
     def prepare(self):
         if not self.prepared:
