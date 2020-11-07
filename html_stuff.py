@@ -507,7 +507,7 @@ def sanitize_html(soup, k=0):
             # remove unwanted attributes
             attrs = child.attrs.copy()
             for attr_name in attrs:
-                if attr_name not in allowed_tags[tag_name]:
+                if attr_name not in allowed_tags[tag_name] and not attr_name.startswith('data'):
                     del child.attrs[attr_name]
                 else:
                     child.attrs[attr_name] = sanitizeAttrValue(

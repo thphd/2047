@@ -234,7 +234,20 @@ combined_youtube_extractor_regex = \
 # @lru_cache(maxsize=4096)
 def replace_ytb_f(match):
     vid = match.group(1) or match.group(2)
-    return f'<div class="youtube-player-unprocessed" data-id="{vid}"></div><a href="https://youtu.be/{vid}">去YouTube上播放</a>'.format(vid)
+
+    ts = None
+    if vid==match.group(1):
+        url = match.group(0)
+        # print('urlmatch', url)
+        timestamp_found = re.search(r'\?t=([0-9]{1,})', url)
+        if timestamp_found:
+            ts = timestamp_found.group(1)
+            ts = int(ts)
+    # print('timestamp', ts)
+
+    ts = ('?t='+str(ts)) if ts else ''
+
+    return f'''<div class="youtube-player-unprocessed" data-id="{vid}" data-ts="{ts}"></div><a href="https://youtu.be/{vid}{ts}">去YouTube上播放</a>'''.format(vid)
 
 def replace_pincong(s):
     def f(match):

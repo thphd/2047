@@ -1017,13 +1017,18 @@ function process_all_youtube_reference(){
     print(e)
 
     var did = e.dataset.id
+    var dts = e.dataset.ts
+
     var div = document.createElement('div')
     div.setAttribute("data-id", did);
+    div.setAttribute("data-ts", dts);
     div.innerHTML = labnolThumb(did);
+
+    var timestamp_attr = dts?dts.replace('?t=', '&start='):''
 
     div.onclick = ()=>{
 
-      var iframet = `<iframe src="https://www.youtube.com/embed/${did}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
+      var iframet = `<iframe src="https://www.youtube.com/embed/${did}?autoplay=1${timestamp_attr}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
 
       var template = document.createElement('template')
       template.innerHTML = iframet
