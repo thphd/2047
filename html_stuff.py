@@ -118,6 +118,10 @@ def sanitizeAttrValue(tag, name, value):
             0
         ):
             return ''
+
+        # replace domain names pointing at self
+        value = re.sub(r'^(?:http|https)://(?:2047.name|pincong.org|terminusnemheqvy.onion)/(.+)', '/\g<1>', value)
+
     elif name=='background':
         if vl.startswith('javascript'): return ''
     elif name=='style':
