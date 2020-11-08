@@ -716,7 +716,7 @@ class UAFilter:
 
         # print_err(self.d[ua])
         if self.d[ua]>25:
-            self.d[ua]+=3*weight
+            # self.d[ua]+=3*weight
 
             if self.d[ua]>75 and (ua not in self.blacklist):
                 # self.blacklist+=ua
@@ -764,6 +764,7 @@ def before_request():
     # request figerprinting
     acceptstr = request.headers['Accept'] if 'Accept' in request.headers else 'NoAccept'
     uas = str(request.user_agent) if request.user_agent else 'NoUA'
+    g.user_agent_string = uas
     ipstr = request.remote_addr
 
     is_local = ipstr[0:8]=='192.168.'
