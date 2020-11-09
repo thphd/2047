@@ -196,6 +196,9 @@ def extract_ats(s): # extract @usernames out of text
 
 # @lru_cache(maxsize=4096)
 def replace_ats(s): # replace occurence
+    if s.startswith('<p>'):
+        return s
+        
     def f(match):
         uname = match.group(2)
         return match.group(1) + f'[@{uname}](/member/{uname})'
@@ -252,7 +255,7 @@ def replace_ytb_f(match):
 def replace_pincong(s):
     def f(match):
         return f'<mark class="parody">{match.group(1)}</mark>'
-    s = re.sub(r'((?:姨|桂|支|偽|伪|张献|張獻|韭|鹿)(?:葱|蔥)|(?:品|葱|蔥)韭)', f, s)
+    s = re.sub(r'(?:[^>\s])((?:姨|桂|支|偽|伪|张献|張獻|韭|鹿)(?:葱|蔥)|(?:品|葱|蔥)韭)', f, s)
     return s
 
 # @lru_cache(maxsize=4096)

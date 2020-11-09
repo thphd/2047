@@ -122,6 +122,10 @@ def sanitizeAttrValue(tag, name, value):
         # replace domain names pointing at self
         value = re.sub(r'^(?:http|https)://(?:2047.name|pincong.org|terminusnemheqvy.onion)/(.+)', '/\g<1>', value)
 
+        # kill img src s with relative paths due to an error found on 20201109
+        if tag=='img' and re.match(r'^\./.*?_files/.*?$', value):
+            value = ''
+
     elif name=='background':
         if vl.startswith('javascript'): return ''
     elif name=='style':
