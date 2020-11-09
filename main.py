@@ -896,7 +896,7 @@ def before_request():
         # log_up(f'local [{uas}][{acceptstr}]')
         weight *= 5. # be more strict on the tor side
     if acceptstr=='NoAccept':
-        weight *= 5.
+        weight *= 1.
 
     '''
     你们这样不行的啊！！
