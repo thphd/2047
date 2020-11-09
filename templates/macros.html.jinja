@@ -46,6 +46,20 @@
   <span class='{{class}}'>{{u.brief and u.brief[:80]}}</span>
 {%endmacro%}
 
+
+{%macro mixed_content_list(l)%}
+  {%for t in l%}
+    {%if t._id.startswith('thread')%}
+      {{post_postlist_header_kept(t)}}
+
+    {%else%}
+      {{post_postlist_threadless(t)}}
+
+    {%endif%}
+  {%endfor%}
+{%endmacro%}
+
+
 {# one line of post #}
 {%macro post(p, metas, avatar_user=False, item_id=False, leftmost=False, left=True)%}
 

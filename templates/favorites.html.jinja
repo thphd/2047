@@ -1,0 +1,12 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+
+{{macros.paginate(pagination, class='padlr')}}
+
+<div class="threadlist">
+  {{macros.mixed_content_list(list_items)}}
+</div>
+
+{{macros.paginate(pagination, class='padlr')}}
+
+{%endblock%}

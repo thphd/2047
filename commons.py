@@ -442,6 +442,13 @@ inv_list_defaults = dict(
     sortby='t_c',
 )
 
+fav_list_defaults = dict(
+    pagenumber=1,
+    pagesize=25,
+    order='desc',
+    sortby='t_c',
+)
+
 if __name__ == '__main__':
     print(post_list_defaults['get_default_order']('t_c'))
     print(post_list_defaults['get_default_order']('votes'))

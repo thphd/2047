@@ -93,8 +93,24 @@
         <span>收到赞</span><span>{{u.stats.nlikes or 0}}</span>
       </div>
       <div class="userpage_name">
-        <span>送出赞</span>{{u.stats.nliked or 0}}</span>
+        <span>送出赞</span><span>{{u.stats.nliked or 0}}</span>
+        {%if u.stats.nliked%}
+          <a href="/u/{{u.uid}}/upvoted">(点击查看内容)</a>
+        {%endif%}
       </div>
+
+      <div class="userpage_name">
+        <span>收藏了</span><a href="/u/{{u.uid}}/favorites">{{u.nfavs or 0}} 条内容 {%if u.nfavs%}(点击查看){%endif%}</a>
+      </div>
+
+      <div class="userpage_name">
+        <span>被收藏</span><span>{{u.nfaveds or 0}} 次</span>
+        {%if u.nfaveds%}
+          <a href="/u/{{u.uid}}/t?sortby=nfavs">(文)</a>
+          <a href="/u/{{u.uid}}/p?sortby=nfavs">(评)</a>
+        {%endif%}
+      </div>
+
       <div class="userpage_name">
         <span>关注了</span><a href='/u/{{u.uid}}/fo'>{{u.nfollowings}} 人</a>
         {%for u in u.stats.followings[:5]%}{{
@@ -119,21 +135,13 @@
 
   {%endcall%}
 
-  {%for t in sc_ts%}
-    {%if t.type=='thread'%}
-      {{macros.post_postlist_header_kept(t)}}
+  {{macros.mixed_content_list(sc_ts)}}
 
-    {%else%}
-      {{macros.post_postlist_threadless(t)}}
-
-    {%endif%}
-  {%endfor%}
-
-{%if g.is_admin%}
-  <div class="padlr">
-    <span>invitation:</span> <a href='/invitation/{{u.invitation}}'>{{u.invitation}}</a>
-  </div>
-{%endif%}
+  {%if g.is_admin%}
+    <div class="padlr">
+      <span>invitation:</span> <a href='/invitation/{{u.invitation}}'>{{u.invitation}}</a>
+    </div>
+  {%endif%}
 </div>
 
 {%if user_is_self%}

@@ -68,6 +68,12 @@ class AQLController:
         return self.request('post', '/_db/'+self.dbname+'/_api/index?collection='+collection, raise_error=False, **kw)
 
     def aql(self, query, silent=False, raise_error=True, **kw):
+
+        if isinstance(query, QueryString):
+            kw.update(query.kw)
+            return self.aql(query.s,
+                silent=silent, raise_error=raise_error, **kw)
+
         self.prepare()
 
         if not silent: print_up('AQL >>',query,kw)

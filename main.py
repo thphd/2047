@@ -168,7 +168,7 @@ def create_all_necessary_indices():
 
     ci('posts', indexgen(
             [['tid'],['uid'],['tid','delete']],
-            ['t_c','vc','votes'],
+            ['t_c','vc','votes','nfavs'],
     ))
 
     ciut('categories', ['cid'])
@@ -292,7 +292,7 @@ class Paginator:
         assert is_integer(tid)
         assert is_integer(uid)
 
-        assert sortby in ['t_c','votes']
+        assert sortby in ['t_c','votes','nfavs']
         # sortby = 't_c'
         assert order in ['desc', 'asc']
 
@@ -383,7 +383,10 @@ class Paginator:
             return postlist
 
     @stale_cache(maxsize=128, ttr=3, ttl=30)
-    def get_thread_list(self,
+    def get_thread_list(self, *a, **k):
+        return self.get_thread_list_uncached(*a, **k)
+
+    def get_thread_list_uncached(self,
         by='category',
         category='all',
         tagname='yadda',
@@ -392,14 +395,15 @@ class Paginator:
         order='desc',
         pagesize=50,
         pagenumber=1,
-        path=''):
+        path='',
+        ids=[]):
 
         ts = time.time()
 
-        assert by in ['category', 'user', 'tag']
+        assert by in ['category', 'user', 'tag', 'ids']
         assert category=='all' or category=='deleted' or is_integer(category)
         assert is_integer(uid)
-        assert sortby in ['t_u', 't_c', 'nreplies', 'vc', 'votes','t_hn','amv']
+        assert sortby in ['t_u', 't_c', 'nreplies', 'vc', 'votes','t_hn','amv','nfavs']
         assert order in ['desc', 'asc']
 
         assert re.fullmatch(tagname_regex_long, tagname)
@@ -410,18 +414,8 @@ class Paginator:
         start = (pagenumber-1)*pagesize
         count = pagesize
 
-        querystring_complex = QueryString('''
+        qsc = querystring_complex = QueryString('''
             for i in threads
-
-            let user = (for u in users filter u.uid == i.uid return u)[0]
-            let count = i.nreplies
-
-            let fin = (for p in posts filter p.tid == i.tid sort p.t_c desc limit 1 return p)[0]
-            //let count = length(for p in posts filter p.tid==i.tid return p)
-            let ufin = (for j in users filter j.uid == fin.uid return j)[0]
-            let c = (for c in categories filter c.cid==i.cid return c)[0]
-
-            //let mvu = ((i.mvu and i.mv>2) ?(for u in users filter u.uid == i.mvu return u)[0]: null)
         ''')
 
         filter = QueryString()
@@ -441,8 +435,14 @@ class Paginator:
             filter.append('filter i.uid==@iuid', iuid=uid)
             mode='user_thread'
 
-        querystring_complex += filter
-        querystring_complex.append('''
+        elif by=='ids':
+            qsc = QueryString('''
+                for id in @ids let i = document(id)
+            ''', ids = ids)
+
+        qsc += filter
+
+        qsc.append('''
             sort i.{sortby} {order}
             limit {start},{count}
              '''.format(
@@ -453,35 +453,64 @@ class Paginator:
             )
         )
 
-        querystring_complex.append('''
-            // let kk = unset(i,'content')
-            return merge(i, {user:user, last:unset(fin,'content'), lastuser:ufin, cname:c.name, count:count})
+        qsc.append('''
+            let user = (for u in users filter u.uid == i.uid return u)[0]
+            let count = i.nreplies
+
+            let fin = (for p in posts filter p.tid == i.tid sort p.t_c desc limit 1 return p)[0]
+
+            let ufin = (for j in users filter j.uid == fin.uid return j)[0]
+            let c = (for c in categories filter c.cid==i.cid return c)[0]
+
+            //let mvu = ((i.mvu and i.mv>2) ?(for u in users filter u.uid == i.mvu return u)[0]: null)
+
         ''')
 
-        qss = querystring_simple = \
-            QueryString('return length(for i in threads')\
-            + filter\
-            + QueryString('return i)')
+        if by=='ids':
+            qsc.append('''
+                let favorited = length(for f in favorites
+                filter f.uid==@selfuid and f.pointer==i._id return f)
 
-        count = aql(qss.s, silent=True, **qss.kw)[0]
-        # print('done',time.time()-ts);ts=time.time()
+                let self_voted = length(for v in votes filter v.uid==@selfuid and v.id==to_number(i.tid) and v.type=='thread' and v.vote==1 return v)
+            ''', selfuid=g.selfuid)
 
-        qsc = querystring_complex
-        threadlist = aql(qsc.s, silent=True, **qsc.kw)
-        # print('done',time.time()-ts);ts=time.time()
+            qsc.append('''
+                return merge(i, {user:user, last:unset(fin,'content'), lastuser:ufin, cname:c.name, count:count,
+                favorited, self_voted})
+            ''')
 
-        pagination_obj = self.get_pagination_obj(count, pagenumber, pagesize, order, path, sortby, mode)
+            threadlist = aql(qsc.s, silent=True, **qsc.kw)
+            return threadlist
 
-        for t in threadlist:
-            if 'content' in t:
-                tc = t['content']
-                ytb_videos = extract_ytb(tc)
-                t['youtube'] = ytb_videos[0] if len(ytb_videos) else None
-                t['content'] = None
+        else:
+            qsc.append('''
+                return merge(i, {user:user, last:unset(fin,'content'), lastuser:ufin, cname:c.name, count:count})
+            ''')
 
-        remove_duplicate_brief(threadlist)
+            qss = querystring_simple = \
+                QueryString('return length(for i in threads')\
+                + filter\
+                + QueryString('return i)')
 
-        return threadlist, pagination_obj
+            count = aql(qss.s, silent=True, **qss.kw)[0]
+            # print('done',time.time()-ts);ts=time.time()
+
+            threadlist = aql(qsc.s, silent=True, **qsc.kw)
+            # print('done',time.time()-ts);ts=time.time()
+
+            pagination_obj = self.get_pagination_obj(count, pagenumber, pagesize, order, path, sortby, mode)
+
+            for t in threadlist:
+                if 'content' in t:
+                    tc = t['content']
+                    ytb_videos = extract_ytb(tc)
+                    t['youtube'] = ytb_videos[0] if len(ytb_videos) else None
+                    t['content'] = None
+
+            remove_duplicate_brief(threadlist)
+
+            return threadlist, pagination_obj
+
 
     @ttl_cache(maxsize=4096, ttl=120)
     def get_pagination_obj(self, count, pagenumber, pagesize, order, path, sortby, mode='thread', postfix=''):
@@ -536,6 +565,8 @@ class Paginator:
             defaults = user_list_defaults
         elif mode=='invitation':
             defaults = inv_list_defaults
+        elif mode=='fav':
+            defaults = fav_list_defaults
         else:
             raise Exception('unsupported mode')
 
@@ -2285,6 +2316,132 @@ def searchpm():
             page_title='维尼查 - '+flask.escape(q),
             **result,
         )
+
+@app.route('/u/<int:uid>/favorites')
+def user_favorites(uid):
+    upld = fav_list_defaults
+    pagenumber = rai('page') or upld['pagenumber']
+    pagesize = rai('pagesize') or upld['pagesize']
+    sortby = ras('sortby') or upld['sortby']
+    order = ras('order') or upld['order']
+
+    lq = QueryString('''
+        return length(for i in favorites
+        filter i.uid==@uid return i)
+    ''', uid=uid)
+
+    count = lenfav = aql(lq)[0]
+
+    pagination = pgnt.get_pagination_obj(
+        count, pagenumber, pagesize, order,
+        request.path, sortby, mode='fav')
+
+    start = (pagenumber-1) * pagesize
+
+    lpointers = aql(f'''
+        for i in favorites
+        filter i.uid==@uid
+        sort i.t_c desc
+        limit {start},{start+pagesize}
+        return i.pointer
+    ''', uid=uid, silent=True)
+
+    u = get_user_by_id(uid)
+    litems = resolve_mixed_content_pointers(lpointers)
+
+    return render_template_g(
+        'favorites.html.jinja',
+        page_title = u['name']+' 的收藏',
+        list_items = litems,
+        pagination = pagination,
+    )
+
+@app.route('/u/<int:uid>/upvoted')
+def user_upvoted_contents(uid):
+    upld = fav_list_defaults
+    pagenumber = rai('page') or upld['pagenumber']
+    pagesize = rai('pagesize') or upld['pagesize']
+    sortby = ras('sortby') or upld['sortby']
+    order = ras('order') or upld['order']
+
+    lq = QueryString('''
+        return length(for i in votes
+        filter i.uid==@uid and i.vote==1 return i)
+    ''', uid=uid)
+
+    count = lenfav = aql(lq)[0]
+
+    pagination = pgnt.get_pagination_obj(
+        count, pagenumber, pagesize, order,
+        request.path, sortby, mode='fav')
+
+    start = (pagenumber-1) * pagesize
+
+    lpointers = aql(f'''
+        for i in votes
+        filter i.uid==@uid and i.vote==1
+
+        sort i.t_c desc
+        limit {start},{start+pagesize}
+
+        let id = (i.type=='post')?
+            concat('posts/',to_string(i.id)):
+            (for t in threads filter t.tid==i.id return t)[0]._id
+
+        return id
+    ''', uid=uid, silent=True)
+
+    u = get_user_by_id(uid)
+    litems = resolve_mixed_content_pointers(lpointers)
+
+    return render_template_g(
+        'favorites.html.jinja',
+        page_title = u['name']+' 点赞过的内容',
+        list_items = litems,
+        pagination = pagination,
+    )
+
+    # return str(litems)
+
+def resolve_mixed_content_pointers(list_pointers):
+    lpointers = list_pointers
+
+    lp_posts = lpointers.filter(lambda p:p.startswith('posts'))
+    lp_threads = lpointers.filter(lambda p:p.startswith('threads'))
+
+    lp_posts = pgnt.get_post_list(by='ids', ids=lp_posts, apply_origin=True)
+    lp_threads = pgnt.get_thread_list_uncached(by='ids', ids=lp_threads)
+
+    dp = {item['_id']: item for item in lp_posts}
+    dt = {item['_id']: item for item in lp_threads}
+    dp.update(dt)
+
+    litems = lpointers.map(lambda s:dp[s])
+
+    return litems
+
+# @app.route('/u/<int:uid>/favorited')
+# def user_favorited(uid):
+#     lpointers = aql('''
+#     for i in favorites
+#     filter i.to_uid==@uid
+#     sort i.t_c desc
+#
+#     // let item = document(i.pointer)
+#     return i.pointer
+#
+#     // return merge(i, {item})
+#     ''', uid=uid, silent=True)
+#
+#     u = get_user_by_id(uid)
+#     litem = resolve_mixed_content_pointers(lpointers)
+#
+#     return render_template_g(
+#         'favorites.html.jinja',
+#         page_title = u['name']+' 被其他人收藏的内容',
+#         list_items = litems,
+#     )
+#     # return str(litems)
 
 @app.route('/404/<string:to_show>')
 def f404(to_show):

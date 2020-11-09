@@ -1825,6 +1825,9 @@ def _():
             update_thread_votecount(_id)
         else:
             update_post_votecount(_id)
+            
+        update_user_votecount(ob['uid'])
+        update_user_votecount(g.selfuid)
 
     else:
         raise Exception('target not supported')
