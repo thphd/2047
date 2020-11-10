@@ -1059,12 +1059,17 @@ function viewed(){
   setTimeout(function(){
     var target = geid('viewed_target').innerText
     if (target){
-      api({
-        action:'viewed_target',
-        target:target,
-      }, true)
-      .then(print)
-      .catch(console.error)
+      if (user_browser_active){
+        api({
+          action:'viewed_target',
+          target:target,
+        }, true)
+        .then(print)
+        .catch(console.error)
+      }else{
+        // print('no user interaction, wait some more...')
+        viewed()
+      }
     }
   },5*1000)
 }
@@ -1412,3 +1417,31 @@ function favorite(targ, del){
   })
   .catch(alert)
 }
+
+var user_browser_active = false
+
+function activityWatcher(){
+  var activity_counter = 0
+    //The function that will be called whenever a user is active
+    function activity(){
+      activity_counter++;
+      if(activity_counter>1){
+        user_browser_active = true
+      }
+    }
+
+  //An array of DOM events that should be interpreted as
+  //user activity.
+  var activityEvents = [
+    'mousedown', 'mousemove', 'keydown',
+    'scroll', 'touchstart'
+  ];
+
+  //add these events to the document.
+  //register the activity function as the listener parameter.
+  activityEvents.forEach(function(eventName) {
+    document.addEventListener(eventName, activity, true);
+  });
+}
+
+activityWatcher();

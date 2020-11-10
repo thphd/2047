@@ -1486,7 +1486,9 @@ def _():
 
     uasl = g.user_agent_string.lower()
 
-    if 'bot' in uasl or 'archiver' in uasl or 'noua' == uasl:
+    if 'bot' in uasl\
+        or 'archiver' in uasl\
+        or 'noua' == uasl:
         print_err('viewed_target request for', j['target'],
             'seems to be from a bot.', uasl)
         return {'error':False, 'info':'nicework'}
