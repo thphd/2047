@@ -6,6 +6,13 @@ import time
 # rs = r.Session()
 basic_auth = r.auth.HTTPBasicAuth('root','')
 
+def extract(key, d, default):
+    if key in d:
+        a = d[key]
+        del d[key]
+        return a
+    return default
+
 # interface with arangodb.
 class AQLController:
     def request(self, method, endp, raise_error=True, **kw):
@@ -67,12 +74,14 @@ class AQLController:
         self.prepare()
         return self.request('post', '/_db/'+self.dbname+'/_api/index?collection='+collection, raise_error=False, **kw)
 
-    def aql(self, query, silent=False, raise_error=True, **kw):
+    def aql(self, query, **kw):
 
         if isinstance(query, QueryString):
             kw.update(query.kw)
-            return self.aql(query.s,
-                silent=silent, raise_error=raise_error, **kw)
+            return self.aql(query.s, **kw)
+
+        silent = extract('silent', kw, False)
+        raise_error = extract('raise_error', kw, True)
 
         self.prepare()
 

@@ -1042,6 +1042,18 @@ def alluser():
 
     )
 
+from medals import get_medals
+@app.route('/medals')
+def usermedals():
+    medals = get_medals()
+    t = get_thread_full(9403)
+
+    return render_template_g('usermedals.html.jinja',
+        page_title = '勋章墙',
+        medals = medals,
+        t = t,
+    )
+
 @app.route('/p/<int:pid>')
 def getpost(pid):
     p = get_post(pid)
@@ -1210,23 +1222,12 @@ def userthreads(uid):
     )
 
 def get_thread_full(tid, selfuid=-1):
-    thobj = aql('''
-    for t in threads filter t.tid==@tid
-
-    let user = (for u in users filter u.uid == t.uid return u)[0]
-    let count = t.nreplies
-
-    let favorited = length(for f in favorites filter f.uid==@uid and f.pointer==t._id return f)
-
-    let self_voted = length(for v in votes filter v.uid==@uid and v.id==to_number(t.tid) and v.type=='thread' and v.vote==1 return v)
-
-    return merge(t, {user, count, self_voted, favorited})
-    ''', tid=tid, uid=selfuid, silent=True)
-
-    if len(thobj)<1:
+    docid = aql('for i in threads filter i.tid==@tid return i._id', tid=tid)
+    if len(docid)<1:
         return False
 
-    thobj = thobj[0]
+    docid = docid[0]
+    thobj = pgnt.get_thread_list_uncached(by='ids', ids=[docid])[0]
     return thobj
 
 def remove_duplicate_brief(postlist):

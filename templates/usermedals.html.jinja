@@ -1,0 +1,27 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+
+{%if t%}{# if there is a thread object #}
+<div class="threadlist">
+  {{macros.mixed_content(t)}}
+</div>
+{%endif%}
+
+{%for medal in medals%}
+<div style="text-align: center;" class=" padlr" >
+  <p><span style="font-size:26px;">{{medal.name}}</span></p>
+  <p>{{medal.brief}}</p>
+</div>
+
+<div class="threadlist">
+  {%for u in medal.listusers%}
+  {%if u%}
+    {{macros.post_userlist(u)}}
+  {%else%}
+
+  {%endif%}
+  {%endfor%}
+</div>
+
+{%endfor%}
+{%endblock%}
