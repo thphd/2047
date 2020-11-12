@@ -70,12 +70,19 @@
       {%endif%}
 
       {%if u.url %}
+        <div class="userpage_name">
+          <span>URL</span>
+          <a href="{{u.url}}" rel='noreferrer' title="本站不审查链接内容，点击链接造成的一切后果需用户自行承担">{{u.url}}</a>
+        </div>
+      {%endif%}
 
-      <div class="userpage_name">
-        <span>URL</span>
-        <a href="{{u.url}}" rel='noreferrer' title="本站不审查链接内容，点击链接造成的一切后果需用户自行承担">{{u.url}}</a>
-      </div>
-      {%else%}
+      {%if u.stats.medals %}
+        <div class="userpage_name">
+          <span>勋章</span>
+          {%for medal in u.stats.medals%}
+            <a href='/medals#{{medal}}'>{{medal}}</a>
+          {%endfor%}
+        </div>
       {%endif%}
 
     </div>

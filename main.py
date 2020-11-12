@@ -27,6 +27,7 @@ Identicon._crop_coner_round = lambda a,b:a # don't cut corners, please
 import mimetypes as mt
 
 from commons import *
+from medals import get_medals, get_user_medals
 
 from flask_cors import CORS
 
@@ -1042,7 +1043,6 @@ def alluser():
 
     )
 
-from medals import get_medals
 @app.route('/medals')
 def usermedals():
     medals = get_medals()
@@ -1573,6 +1573,7 @@ def _userpage(uid):
 
     stats['followers'] = get_followers(uid, limit=6)
     stats['followings'] = get_followers(uid, limit=6, followings=True)
+    stats['medals'] = get_user_medals(uid)
 
     uobj['public_key']=get_public_key_by_uid(uid)
     uobj['alias'] = get_alias_user_by_name(uobj['name'])

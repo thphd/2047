@@ -198,7 +198,7 @@ def extract_ats(s): # extract @usernames out of text
 def replace_ats(s): # replace occurence
     if s.startswith('<p>'):
         return s
-        
+
     def f(match):
         uname = match.group(2)
         return match.group(1) + f'[@{uname}](/member/{uname})'
@@ -481,6 +481,7 @@ common_links = linkify('''
 用户名录 /u/all 本站用户名册
 评论集合 /p/all 全站评论集合
 老用户 /t/7108 原2049用户取回账号方式
+勋章墙 /medals 荣光
 邀请码 /t/7109 获取邀请码
 删帖 /c/deleted 本站被删帖子
 数据备份 /t/7135 论坛数据库备份

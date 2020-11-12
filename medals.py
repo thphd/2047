@@ -1,6 +1,6 @@
 from commons import *
 
-@stale_cache(ttr=3, ttl=300)
+@stale_cache(ttr=3, ttl=1800)
 def get_medals():
     medals = QueryString('''
     let doc = document('counters/medals')
@@ -20,3 +20,16 @@ def get_medals():
     medals = aql(medals)
 
     return medals
+
+@stale_cache(ttr=3, ttl=1800)
+def get_user_medals(uid):
+    q = QueryString('''
+        let doc = document('counters/medals')
+        let username = (for i in users filter i.uid==@uid return i)[0].name
+
+        for medal in doc.medals
+        for name in medal.list
+        filter name==username
+        return medal.name
+    ''', uid=uid, silent=True)
+    return aql(q)
