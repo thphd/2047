@@ -230,13 +230,16 @@ youtube_extractor_regex = r'(?=\n|\r|^)(?:http|https|)(?::\/\/|)(?:www.|)(?:yout
 # match those from 2049bbs
 old_youtube_extractor_regex = r'<div class="videowrapper"><iframe src="https://www\.youtube\.com/embed/([\w\-]{11})" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>'
 
+youtube_extractor_regex_bugfix = r'<div class="youtube-player".*?data-id="(.*?)">.*?播放</a>'
+
 # combined together
 combined_youtube_extractor_regex = \
-'(?:'+youtube_extractor_regex+'|'+old_youtube_extractor_regex+')'
+'(?:'+youtube_extractor_regex+'|'+old_youtube_extractor_regex+'|'\
+    +youtube_extractor_regex_bugfix + ')'
 
 # @lru_cache(maxsize=4096)
 def replace_ytb_f(match):
-    vid = match.group(1) or match.group(2)
+    vid = match.group(1) or match.group(2) or match.group(3)
 
     ts = None
     if vid==match.group(1):
@@ -793,6 +796,22 @@ def get_user_best_threads(uid):
 
 def get_user_picked_threads(uid):
     ts = get_user_best_threads(uid)
+    ts = random.sample(ts,min(7, len(ts)))
+    ts = sorted(ts, key=lambda t:t['amv'] if 'amv' in t else 0, reverse=True)
+    return ts
+
+@stale_cache(ttr=600, ttl=1800)
+def get_best_threads():
+    return aql('''
+        for t in threads
+        filter t.delete==null
+        sort t.amv desc
+        limit 400
+        return t
+    ''', silent=True)
+
+def get_picked_threads():
+    ts = get_best_threads()
     ts = random.sample(ts,min(7, len(ts)))
     ts = sorted(ts, key=lambda t:t['amv'] if 'amv' in t else 0, reverse=True)
     return ts

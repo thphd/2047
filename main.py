@@ -1222,7 +1222,7 @@ def userthreads(uid):
     )
 
 def get_thread_full(tid, selfuid=-1):
-    docid = aql('for i in threads filter i.tid==@tid return i._id', tid=tid)
+    docid = aql('for i in threads filter i.tid==@tid return i._id', tid=tid, silent=True)
     if len(docid)<1:
         return False
 

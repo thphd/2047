@@ -76,6 +76,18 @@
     </div>
     {%endif%}
 
+    {%set pt = get_picked_threads()%}
+    {%if pt%}
+    <div class="box">
+      <div class="boxtitle">
+        随机推荐
+      </div>
+      <div class="navigator_quote">
+        {{list_threads(pt)}}
+      </div>
+    </div>
+    {%endif%}
+
   {%endif%}
 
 </div>
