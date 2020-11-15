@@ -764,7 +764,9 @@ hn_formula = QueryString('''
 let t_submitted = date_timestamp(t.t_c)
 let t_updated = date_timestamp(t.t_u)
 
-let t_man = date_timestamp(t.t_manual)
+let t_man = date_timestamp(t.t_manual) or 0
+
+let pinned = t_man > t_now or null
 
 let votes = t.amv or 0
 let points = max([(votes - 0.9), 0]) * 3 + 1 + t.nreplies * .2
@@ -778,18 +780,18 @@ let t_next_hn_update = t_now + max([max([0, t_now - t_hn]) / 86400000 * @interva
 
 let t_hn_iso = left(date_format(t_hn,'%z'), 19)
 limit 50
-update t with {t_hn:t_hn_iso, t_next_hn_update} in threads return 1
+update t with {t_hn:t_hn_iso, t_next_hn_update, pinned} in threads return 1
 ''')
 
 hn_formula_post = QueryString('''
 let t_submitted = date_timestamp(t.t_c)
 let t_updated = date_timestamp(t.t_u)
 
-let t_man = date_timestamp(t.t_manual)
+let t_man = date_timestamp(t.t_manual) or 0
 
 let votes = (t.votes or 0) + (t.nfavs or 0) //differ
 let points = max([(votes - 0.9), 0]) * 3 + 1 + t.nreplies * .2
-let t_offset = 3600*1000*2
+let t_offset = 3600*1000*0.1 //differ
 let t_hn = max([t_now + t_offset - (t_now - t_submitted + t_offset) / sqrt(points), t_man])
 
 //let min_interval = 5*60*1000
@@ -813,7 +815,7 @@ def update_thread_hackernews_batch():
     ''', now=time_iso_now())
 
     qr += hn_formula
-    qr.append(min_interval=10*60*1000, interval_multiplier=30*60*1000)
+    qr.append(min_interval=10*60*1000, interval_multiplier=60*60*1000)
 
     res = aql(qr, silent=True, raise_error=False)
     return len(res)
@@ -827,7 +829,7 @@ def update_thread_hackernews(tid):
     ''', now=time_iso_now(), tid=tid)
 
     qr += hn_formula
-    qr.append(min_interval=10*60*1000, interval_multiplier=30*60*1000)
+    qr.append(min_interval=10*60*1000, interval_multiplier=60*60*1000)
 
     aql(qr, silent=True, raise_error=False)
 
@@ -843,7 +845,7 @@ def update_post_hackernews_batch():
     ''', now=time_iso_now())
 
     qr += hn_formula_post
-    qr.append(min_interval=10*60*1000, interval_multiplier=120*60*1000)
+    qr.append(min_interval=10*60*1000, interval_multiplier=240*60*1000)
 
     res = aql(qr, silent=True, raise_error=False)
     return len(res)
@@ -871,7 +873,7 @@ def update_forever():
             continue
 
         print_info(f'updated hackernews(p): {l2} itvl: {itvl:.2f}')
-        
+
         l += l2
         itvl *= max(0.9, 1+((25-l)*0.005))
         itvl = max(0.3, itvl)

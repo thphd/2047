@@ -165,7 +165,7 @@ def create_all_necessary_indices():
             [['delete'],['uid'],['delete','cid'],['delete','tags[*]'],['tags[*]']],
             ['t_u','t_c','nreplies','vc','votes','t_hn','amv','nfavs'],
     ))
-    ci('threads', indexgen([[]], ['t_hn_u','t_next_hn_update','title']))
+    ci('threads', indexgen([[]], ['t_hn_u','t_next_hn_update','title','pinned']))
 
     ci('posts', indexgen(
             [['tid'],['uid'],['tid','delete']],
@@ -1151,6 +1151,21 @@ def get_category_threads(cid):
         order=order,
         pagenumber=pagenumber, pagesize=pagesize,
         path = rpath)
+
+    if pagenumber==1:
+        pinned = aql('''
+            for i in threads
+            filter i.cid==@cid and i.pinned==true
+            sort i.t_manual desc
+            return i''',
+        cid=cid)
+        if pinned:
+            tids = [p['tid'] for p in pinned]
+            pinned_threads = pgnt.get_thread_list_uncached(
+                by='ids',
+                ids=[p['_id'] for p in pinned])
+
+            threadlist = pinned_threads + [t for t in threadlist if t['tid']not in tids]
 
     return render_template_g('threadlist.html.jinja',
         page_title=catobj['name'],
