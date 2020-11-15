@@ -169,7 +169,7 @@ def create_all_necessary_indices():
 
     ci('posts', indexgen(
             [['tid'],['uid'],['tid','delete']],
-            ['t_c','vc','votes','nfavs'],
+            ['t_c','vc','votes','nfavs','t_hn'],
     ))
 
     ciut('categories', ['cid'])
@@ -293,7 +293,7 @@ class Paginator:
         assert is_integer(tid)
         assert is_integer(uid)
 
-        assert sortby in ['t_c','votes','nfavs']
+        assert sortby in ['t_c','votes','nfavs','t_hn']
         # sortby = 't_c'
         assert order in ['desc', 'asc']
 
@@ -639,11 +639,13 @@ class Paginator:
 
         if mode=='post' or mode=='post_q':
             sortbys3 = [
+                ('综合',querystring(pagenumber, pagesize, 'desc', 't_hn'), 't_hn'==sortby),
                 ('时间',querystring(pagenumber, pagesize, 'asc', 't_c'), 't_c'==sortby),
                 ('票数',querystring(pagenumber, pagesize, 'desc', 'votes'), 'votes'==sortby),
             ]
         elif mode=='user_post':
             sortbys3 = [
+                ('综合',querystring(pagenumber, pagesize, 'desc', 't_hn'), 't_hn'==sortby),
                 ('时间',querystring(pagenumber, pagesize, 'desc', 't_c'), 't_c'==sortby),
                 ('票数',querystring(pagenumber, pagesize, 'desc', 'votes'), 'votes'==sortby),
             ]
@@ -1391,7 +1393,7 @@ def ufollower(uid):
 
 @app.route('/p/all')
 def get_all_posts():
-    upld = user_post_list_defaults
+    upld = all_post_list_defaults
     pagenumber = rai('page') or upld['pagenumber']
     pagesize = rai('pagesize') or upld['pagesize']
     sortby = ras('sortby') or upld['sortby']

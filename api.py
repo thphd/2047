@@ -771,11 +771,35 @@ let points = max([(votes - 0.9), 0]) * 3 + 1 + t.nreplies * .2
 let t_offset = 3600*1000*2
 let t_hn = max([t_now + t_offset - (t_now - t_submitted + t_offset) / sqrt(points), t_man])
 
-let t_next_hn_update = t_now + max([max([0, t_now - t_hn]) / 86400000 * (20*60*1000), 5*60*1000])
+//let min_interval = 5*60*1000
+//let interval_multiplier = (20*60*1000)
+
+let t_next_hn_update = t_now + max([max([0, t_now - t_hn]) / 86400000 * @interval_multiplier, @min_interval])
 
 let t_hn_iso = left(date_format(t_hn,'%z'), 19)
 limit 50
 update t with {t_hn:t_hn_iso, t_next_hn_update} in threads return 1
+''')
+
+hn_formula_post = QueryString('''
+let t_submitted = date_timestamp(t.t_c)
+let t_updated = date_timestamp(t.t_u)
+
+let t_man = date_timestamp(t.t_manual)
+
+let votes = (t.votes or 0) + (t.nfavs or 0) //differ
+let points = max([(votes - 0.9), 0]) * 3 + 1 + t.nreplies * .2
+let t_offset = 3600*1000*2
+let t_hn = max([t_now + t_offset - (t_now - t_submitted + t_offset) / sqrt(points), t_man])
+
+//let min_interval = 5*60*1000
+//let interval_multiplier = (20*60*1000)
+
+let t_next_hn_update = t_now + max([max([0, t_now - t_hn]) / 86400000 * @interval_multiplier, @min_interval])
+
+let t_hn_iso = left(date_format(t_hn,'%z'), 19)
+limit 50
+update t with {t_hn:t_hn_iso, t_next_hn_update} in posts return 1 //differ
 ''')
 
 def update_thread_hackernews_batch():
@@ -789,6 +813,7 @@ def update_thread_hackernews_batch():
     ''', now=time_iso_now())
 
     qr += hn_formula
+    qr.append(min_interval=10*60*1000, interval_multiplier=30*60*1000)
 
     res = aql(qr, silent=True, raise_error=False)
     return len(res)
@@ -802,8 +827,26 @@ def update_thread_hackernews(tid):
     ''', now=time_iso_now(), tid=tid)
 
     qr += hn_formula
+    qr.append(min_interval=10*60*1000, interval_multiplier=30*60*1000)
 
     aql(qr, silent=True, raise_error=False)
+
+def update_post_hackernews_batch():
+    qr = QueryString('''
+        let t_now = date_timestamp(@now)
+
+        //for t in threads
+        for t in posts
+
+        filter t.t_next_hn_update < t_now
+        sort t.t_next_hn_update asc
+    ''', now=time_iso_now())
+
+    qr += hn_formula_post
+    qr.append(min_interval=10*60*1000, interval_multiplier=120*60*1000)
+
+    res = aql(qr, silent=True, raise_error=False)
+    return len(res)
 
 once = False
 def update_forever():
@@ -819,8 +862,17 @@ def update_forever():
             print(e)
             continue
 
-        print_info(f'updated hackernews: {l} itvl: {itvl:.2f}')
+        print_info(f'updated hackernews(t): {l} itvl: {itvl:.2f}')
 
+        try:
+            l2 = update_post_hackernews_batch()
+        except Exception as e:
+            print(e)
+            continue
+
+        print_info(f'updated hackernews(p): {l2} itvl: {itvl:.2f}')
+        
+        l += l2
         itvl *= max(0.9, 1+((25-l)*0.005))
         itvl = max(0.3, itvl)
 
