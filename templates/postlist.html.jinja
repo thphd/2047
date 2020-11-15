@@ -36,6 +36,12 @@
 
 {%if t and g.logged_in%}
   {{macros.post_postlist_editor(t)}}
+{%elif t%}
+  <div class="register_notice padlr threadlistitem">
+    {{convert_markdown('''
+欲参与讨论，请 [登录](/login) 或 [注册](/register)。
+''')|safe}}
+  </div>
 {%endif%}
 
 {%endblock%}

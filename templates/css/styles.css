@@ -1932,3 +1932,5 @@ input#search_term {
 span.marked {
     background: yellow;
 }
+
+.register_notice {justify-content: center;}
