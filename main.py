@@ -428,7 +428,7 @@ class Paginator:
                 filter.append('filter i.delete==true')
             else:
                 filter.append('filter i.cid == @category and i.delete==null', category=category)
-            mode='thread'
+            mode='thread' if category!=4 else 'thread_water'
         elif by=='tag':
             filter.append('filter @tagname in i.tags and i.delete==null', tagname=tagname)
             mode='tag_thread'
@@ -546,10 +546,14 @@ class Paginator:
             slots = []
 
         defaults = None
+
         # if a parameter is at its default value,
         # don't put it into url query params
         if mode=='thread':
             defaults = thread_list_defaults
+        elif mode=='thread_water':
+            defaults = thread_list_defaults_water
+
         elif mode=='post':
             defaults = post_list_defaults
         elif mode=='post_q':
@@ -667,7 +671,7 @@ class Paginator:
         # no need to sort if number of items < 2
         if count>3:
 
-            if mode=='thread' or mode=='user_thread' or mode=='tag_thread':
+            if mode=='thread' or mode=='user_thread' or mode=='tag_thread' or 'thread' in mode:
                 button_groups.append(sortbys)
 
             if mode=='user':
@@ -1131,10 +1135,12 @@ def get_category_threads(cid):
 
     catobj = catobj[0]
 
-    pagenumber = rai('page') or thread_list_defaults['pagenumber']
-    pagesize = rai('pagesize') or thread_list_defaults['pagesize']
-    order = ras('order') or thread_list_defaults['order']
-    sortby = ras('sortby') or (thread_list_defaults['sortby'] if cid!=4 else 't_u')
+    tlds = thread_list_defaults if cid!=4 else thread_list_defaults_water
+
+    pagenumber = rai('page') or tlds['pagenumber']
+    pagesize = rai('pagesize') or tlds['pagesize']
+    order = ras('order') or tlds['order']
+    sortby = ras('sortby') or tlds['sortby']
 
     rpath = request.path
     # print(request.args)
@@ -1160,10 +1166,12 @@ def get_category_threads(cid):
 @app.route('/tag/<string:tag>')
 def get_tag_threads(tag):
 
-    pagenumber = rai('page') or thread_list_defaults['pagenumber']
-    pagesize = rai('pagesize') or thread_list_defaults['pagesize']
-    order = ras('order') or thread_list_defaults['order']
-    sortby = ras('sortby') or thread_list_defaults['sortby']
+    tlds = thread_list_defaults
+
+    pagenumber = rai('page') or tlds['pagenumber']
+    pagesize = rai('pagesize') or tlds['pagesize']
+    order = ras('order') or tlds['order']
+    sortby = ras('sortby') or tlds['sortby']
 
     rpath = request.path
     # print(request.args)

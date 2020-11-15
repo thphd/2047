@@ -406,6 +406,8 @@ thread_list_defaults = dict(
     sortby='t_hn',
     # sortby='t_u',
 )
+thread_list_defaults_water = thread_list_defaults.copy()
+thread_list_defaults_water['sortby'] = 't_u'
 
 user_thread_list_defaults = dict(
     pagenumber=1,
