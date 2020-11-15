@@ -427,7 +427,7 @@ post_list_defaults_q = dict(
     pagenumber=1,
     pagesize=50,
     order='desc',
-    sortby='votes',
+    sortby='t_hn',
 
     get_default_order=lambda sortby:('asc' if sortby=='t_c' else 'desc'),
 )
