@@ -322,7 +322,7 @@ class Paginator:
 
         elif by=='all':
             filter.append('')
-            mode='user_post'
+            mode='all_post'
 
         elif by=='ids':
             qsc = QueryString('for id in @ids let i = document(id)', ids=ids)
@@ -564,6 +564,8 @@ class Paginator:
         elif mode=='tag_thread':
             defaults = thread_list_defaults
 
+        elif mode=='all_post':
+            defaults = all_post_list_defaults
         elif mode=='user_post':
             defaults = user_post_list_defaults
         elif mode=='user':
@@ -647,7 +649,7 @@ class Paginator:
                 ('时间',querystring(pagenumber, pagesize, 'asc', 't_c'), 't_c'==sortby),
                 ('票数',querystring(pagenumber, pagesize, 'desc', 'votes'), 'votes'==sortby),
             ]
-        elif mode=='user_post':
+        elif mode=='user_post' or mode=='all_post':
             sortbys3 = [
                 ('综合',querystring(pagenumber, pagesize, 'desc', 't_hn'), 't_hn'==sortby),
                 ('时间',querystring(pagenumber, pagesize, 'desc', 't_c'), 't_c'==sortby),
@@ -677,7 +679,7 @@ class Paginator:
             if mode=='user':
                 button_groups.append(sortbys2)
 
-            if mode=='post' or mode=='user_post' or mode=='post_q':
+            if mode=='post' or mode=='user_post' or mode=='post_q' or mode=='all_post':
                 button_groups.append(sortbys3)
 
             button_groups.append(orders)
