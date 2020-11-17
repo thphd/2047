@@ -1160,7 +1160,7 @@ def get_category_threads(cid):
             filter i.cid==@cid and i.pinned==true
             sort i.t_manual desc
             return i''',
-        cid=cid)
+        cid=cid, silent=True)
         if pinned:
             tids = [p['tid'] for p in pinned]
             pinned_threads = pgnt.get_thread_list_uncached(
