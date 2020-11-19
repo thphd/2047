@@ -1121,6 +1121,7 @@
   <div class="poll_choices">
     {%for choice in poll.choices_postprocessed%}
       <div class="poll_choice">
+
         {%if choice.self_voted%}
           <a class="poll_vote"
             href='javascript:add_poll_vote("{{poll._key}}","{{choice.text}}",true)'></a>
@@ -1130,6 +1131,14 @@
         {%endif%}
         <span>{{choice.text}}</span>
         <span class='poll_nvotes'>({{choice.nvotes or 0}})</span>
+
+        <div class="poll_bar">
+          <div class="poll_bar_inner" style="width:{{
+             (choice.nvotes or 0)/(poll.max_votes or 1) * 100
+            }}%;">
+          </div>
+        </div>
+
       </div>
     {%endfor%}
   </div>

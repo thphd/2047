@@ -1968,3 +1968,15 @@ span.marked {
     font-size: 110%;
     color: #ca0000;
 }
+
+.poll_bar {
+    height: 3px;
+    background: #0000000d;
+    margin: 3px auto 8px;
+    position: relative;
+}
+
+.poll_bar_inner {
+    background: #e8acac;
+    height: 100%;
+}

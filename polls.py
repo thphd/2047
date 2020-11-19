@@ -178,6 +178,7 @@ def poll_postprocess(poll):
     selfvotes = poll['selfvotes']
 
     d = {}
+    max_votes = 0
 
     for c in choices:
         if c not in d:
@@ -195,13 +196,17 @@ def poll_postprocess(poll):
         if vc in d:
             d[vc]['self_voted'] = True
 
+    for v in votes:
+        max_votes = max(max_votes, v['nvotes'])
+
     poll['choices_postprocessed'] = [d[k] for k in d]
+    poll['max_votes'] = max_votes
 
 def get_poll(id, selfuid):
     q = QueryString('''
     let poll = (for i in polls filter i._key==@k return i)[0]
     ''', k=id) + get_poll_q + QueryString(uid=g.selfuid)
-    
+
     ans = aql(q, silent=True)
     poll_postprocess(ans[0])
     return ans[0]
