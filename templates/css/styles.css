@@ -724,7 +724,8 @@ code .nf {
     display: flex;
     text-decoration: none;
     color: black;
-    font-size: 22px;
+    font-size: 19px;
+    font-weight: bold;
 }
 
 .header > .makepost {

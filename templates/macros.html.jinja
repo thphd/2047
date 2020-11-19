@@ -1060,9 +1060,9 @@
       {%endif%}
 
       <div class="header">
-        <a class="header_title" href="{{
+        <span class="header_title" href="{{
           (request.full_path[:-1] if request.full_path[-1]=='?' else request.full_path)
-        }}">{{page_title}}</a>
+        }}">{{page_title}}</span>
 
         {{category_bubble(t.category) if (t and t.category) else ''}}
 
