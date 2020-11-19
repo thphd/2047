@@ -847,6 +847,16 @@ def get_picked_threads():
     ts = sorted(ts, key=lambda t:t['amv'] if 'amv' in t else 0, reverse=True)
     return ts
 
+@stale_cache(ttr=3, ttl=1800)
+def get_water_threads():
+    wt = aql('for i in entities filter i.type=="water_thread" return i.doc',
+        silent=True)
+    return wt
+
+def is_water_thread(tid):
+    wt = get_water_threads()
+    return tid in wt
+
 if __name__ == '__main__':
     print('filtgen')
     print(indexgen([['cond1'],['cond2'],['cond1','cond2']], ['sort1','sort2']))

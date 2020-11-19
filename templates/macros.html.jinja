@@ -682,9 +682,11 @@
     leftmost=leftmost_vote(t))%}
 
   {%set tid = t.tid%}
+  {%set turl = '/t/' ~ tid ~
+    ('?order=desc' if is_water_thread(tid) else '') %}
   <div class='threadlist_titlecombo'>
 
-    <a href="/t/{{tid}}" class="threadlist_title">{{
+    <a href="{{turl}}" class="threadlist_title">{{
       '[已标记为删除] ' if t.delete else ''
     }}{{
       '↑' if t.t_manual and
@@ -736,7 +738,7 @@
     {{username(t.user)}}
 
     {# publish date #}
-    <a class="last_commented_date" href="/t/{{tid}}">
+    <a class="last_commented_date" href="{{turl}}">
       {{format_time_relative_fallback(t.t_c)}}
     </a>
 
@@ -755,7 +757,7 @@
         <!-- <span>{{'发表' if t.mode!='question' else '发布'}}于</span> -->
 
         {# publish date #}
-        <a class="last_commented_date" href="/t/{{tid}}">
+        <a class="last_commented_date" href="{{turl}}">
           {{format_time_relative_fallback(t.t_c)}}
         </a>
       {%endif%}
