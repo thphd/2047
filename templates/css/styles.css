@@ -1945,7 +1945,7 @@ span.marked {
 }
 
 .poll_choice {
-    margin: 5px auto;
+    margin: 7px auto;
 }
 
 .poll_not_voted {
@@ -1973,10 +1973,10 @@ span.marked {
     height: 3px;
     background: #0000000d;
     margin: 3px auto 8px;
-    position: relative;
+    width: 100%;
 }
 
 .poll_bar_inner {
-    background: #e8acac;
+    background: #e6b2b2;
     height: 100%;
 }
