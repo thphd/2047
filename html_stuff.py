@@ -44,6 +44,7 @@ colgroup align valign span width
 dd
 del datetime
 details open
+summary
 div data-id
 dl
 dt

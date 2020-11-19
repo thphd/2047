@@ -1963,3 +1963,8 @@ span.marked {
 }
 
 .poll {background: #00000008;border-color: #0000002e;padding: 5px;margin: 5px auto;border-style: solid;}
+
+.post_content details {
+    font-size: 110%;
+    color: #ca0000;
+}
