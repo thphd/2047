@@ -1125,7 +1125,7 @@
       <div class="poll_choice">
 
         {%if choice.self_voted%}
-          <a class="poll_vote"
+          <a class="poll_vote poll_voted"
             href='javascript:add_poll_vote("{{poll._key}}","{{choice.text}}",true)'></a>
         {%else%}
           <a class="poll_vote poll_not_voted"
@@ -1136,7 +1136,7 @@
 
         <div class="poll_bar">
           <div class="poll_bar_inner" style="width:{{
-             (choice.nvotes or 0)/(poll.max_votes or 1) * 100
+             (choice.nvotes or 0)/(poll.nvoters or 1 or poll.max_votes) * 100
             }}%;">
           </div>
         </div>
