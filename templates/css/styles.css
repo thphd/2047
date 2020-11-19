@@ -1934,3 +1934,32 @@ span.marked {
 }
 
 .register_notice {justify-content: center;}
+
+.poll_vote {
+    height: 1em;
+    width: 1em;
+    display: inline-block;
+    background: #a2dca2;
+    border-radius: .5em;
+    vertical-align: middle;
+}
+
+.poll_choice {
+    margin: 5px auto;
+}
+
+.poll_not_voted {
+    opacity: 0.3;
+}
+
+.poll_data {
+    color: gray;
+    font-size: 12px;
+}
+
+.poll-instance-code {
+    margin: 5px auto;
+    font-size: 12px;
+}
+
+.poll {background: #00000008;border-color: #0000002e;padding: 5px;margin: 5px auto;border-style: solid;}

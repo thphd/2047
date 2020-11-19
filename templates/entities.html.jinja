@@ -15,6 +15,8 @@
   </div>
   <hr>
 
+  {{macros.paginate(pagination, class='')}}
+
   <div class="qboxes">
 
     {%for q in entities%}
@@ -44,6 +46,9 @@
 
 
   </div>
+  
+  {{macros.paginate(pagination, class='')}}
+
 
 </div>
 

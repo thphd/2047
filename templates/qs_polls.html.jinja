@@ -1,0 +1,57 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+
+<div class="threadlist padded">
+  <div class="post_content" style='color:red;'>
+    若在创建投票之后修改选项的名称，原选项所得票数不会计入修改后的新选项。
+  </div>
+
+  <div class="post_content">
+      <textarea name="name" rows="8" cols="30" id="add_question_text"style="max-width:100%;" placeholder="在这里输入投票文字，格式请参考下面已经写好的"></textarea>
+    <a href="javascript:add_poll()">添加新投票</a>
+  </div>
+  <hr>
+
+  <div class="qboxes">
+
+    {%for q in polls %}
+
+      {%set poll=q.pollobj%}
+
+      <div class="qbox">
+        <div class="qtitle">
+          # {{q._key}}
+          {%if q.uid%}
+            创建者：<a href="/u/{{q.uid}}">{{q.user.name}}</a>
+          {%endif%}
+        </div>
+
+        <textarea name="name" rows="8" cols="30" id="{{q._key}}">{{p2str(q)}}</textarea>
+
+        <div class="qtitle">
+          {%if q.uid==g.logged_in.uid or g.logged_in.uid==5108%}
+            <a href="javascript:modify_poll('{{q._key}}')">应用修改</a>
+          {%endif%}
+          <span class='qmeta'>{{format_time_dateifnottoday(q.t_c)}}</span>
+        </div>
+
+        <div class="poll-instance-code">
+          代码：#poll{{poll._key}}
+        </div>
+        {#
+        {{macros.render_poll(poll)}}
+        #}
+        <div class="">
+          <div class='poll-instance-unprocessed' data-id="{{poll._key}}"></div>
+        </div>
+
+      </div>
+
+
+    {%endfor%}
+
+
+  </div>
+
+</div>
+{%endblock%}

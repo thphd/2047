@@ -211,6 +211,8 @@ def create_all_necessary_indices():
     ci('operations',indexgen([['target'],[]], ['t_c']))
     ci('followings', indexgen([['uid','follow'],['to_uid','follow']],['t_c']))
     ci('favorites', indexgen([['uid']], ['t_c','pointer']))
+    ci('polls', [['t_c']])
+    ci('poll_votes', [['pollid', 'uid'],['pollid', 'choice']])
 
 is_integer = lambda i:isinstance(i, int)
 class Paginator:
@@ -574,6 +576,9 @@ class Paginator:
             defaults = inv_list_defaults
         elif mode=='fav':
             defaults = fav_list_defaults
+        elif mode=='simple':
+            defaults = simple_defaults
+            pass
         else:
             raise Exception('unsupported mode')
 
@@ -682,7 +687,11 @@ class Paginator:
             if mode=='post' or mode=='user_post' or mode=='post_q' or mode=='all_post':
                 button_groups.append(sortbys3)
 
-            button_groups.append(orders)
+            if mode=='simple':
+                pass
+            else:
+                button_groups.append(orders)
+
             button_groups.append([('共 {:d}'.format(count), '')])
 
         return {
@@ -691,12 +700,6 @@ class Paginator:
         }
 
 pgnt = Paginator()
-
-def key(d, k):
-    if k in d:
-        return d[k]
-    else:
-        return None
 
 # return requests.args[k] as int or 0
 def rai(k):
@@ -1983,7 +1986,9 @@ def apir():
     # thread-local access to json body
     g.j = j
 
-    if action not in ('ping','viewed_target','browser_check'):
+    printback = action not in 'ping viewed_target browser_check render_poll'.split(' ')
+
+    if printback:
         print_up('API >>', j)
 
     # perform action
@@ -2000,7 +2005,7 @@ def apir():
     # send the response back
     response = make_response(answer)
 
-    if action not in ('ping','viewed_target','browser_check'):
+    if printback:
         print_down('API <<', answer)
 
     # set cookies accordingly
@@ -2130,6 +2135,56 @@ def list_questions():
         questions = qs,
 
     )
+
+@app.route('/polls')
+def list_polls():
+    # must_be_admin()
+
+    q = (QueryString('''
+    for i in polls sort i.t_c desc
+    let user = (for u in users filter u.uid==i.uid return u)[0]
+    let pollobj = (let poll = i
+    ''')
+    + get_poll_q +
+    QueryString('''
+    )[0]
+    return merge(i,{user, pollobj})
+    ''')
+    )
+
+    qs = aql(q, uid=g.selfuid, silent=True)
+    qs.map(lambda i:poll_postprocess(i['pollobj']))
+
+    return render_template_g(
+        'qs_polls.html.jinja',
+        page_title='投票',
+        # questions = qs,
+        polls = qs,
+    )
+
+@app.route('/polls/<string:pollid>')
+def one_poll(pollid):
+    poll = get_poll(pollid, g.selfuid)
+    return render_template_g(
+        'poll_one.html.jinja',
+        poll = poll,
+    )
+@app.route('/polls/<string:pollid>/votes')
+def one_poll_votes(pollid):
+    votes = aql('''
+    for i in poll_votes
+    filter i.pollid==@pollid
+    sort i.t_c desc
+    let user = (for u in users filter u.uid==i.uid return u)[0]
+    return merge(i, {user})
+    ''', pollid=pollid, silent=True)
+
+    s = ''
+    for v in votes:
+        s+= f"{v['t_c']} {v['user']['name']} {v['choice']} \n"
+
+    return doc2resp(s)
+
 @app.route('/questions/preview')
 def list_q_preview():
     must_be_admin()
@@ -2167,14 +2222,36 @@ aqlc.create_collection('entities')
 @app.route('/entities')
 @app.route('/e')
 def entpage():
+    sd = simple_defaults
+    pagenumber = rai('page') or sd['pagenumber']
+    pagesize = sd['pagesize']
+    sortby = sd['sortby']
+    order = sd['order']
+
+    start = (pagenumber-1) * pagesize
+
+    count = aql('return length(for i in entities return i)',silent=True)[0]
+
     ents = aql('''
         for i in entities sort i.t_c desc
         let user = (for u in users filter u.uid==i.uid return u)[0]
+        '''
+        + f'limit {start},{pagesize}' +
+        '''
         return merge(i, {user})
     ''', silent=True)
+
+    pagination = pgnt.get_pagination_obj(
+        path=request.path,
+        order=order,sortby=sortby,
+        count=count, pagenumber=pagenumber, pagesize=pagesize,
+        mode='simple',
+    )
+
     return render_template_g('entities.html.jinja',
         page_title='entities',
         entities = ents,
+        pagination = pagination,
     )
 
 @app.route('/e/<string:key>')

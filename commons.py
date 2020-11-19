@@ -39,6 +39,12 @@ def init_directory(d):
     else:
         print_info('directory {} created.'.format(d))
 
+def key(d, k):
+    if k in d:
+        return d[k]
+    else:
+        return None
+
 # everything time related
 
 import datetime
@@ -224,6 +230,13 @@ def replace_tal(s):
 
     return re.sub(thread_autolink_regex, f, s, flags=re.MULTILINE)
 
+def replace_polls(s):
+    def f(match):
+        pollid = match.group(1)
+        return f'<div class="poll-instance-unprocessed" data-id="{pollid}"></div>'
+
+    return re.sub(r'^#poll(\d{1,16})(?:\t|$)', f, s, flags=re.MULTILINE)
+
 # match only youtube links that occupy a single line
 youtube_extractor_regex = r'(?=\n|\r|^)(?:http|https|)(?::\/\/|)(?:www.|)(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/ytscreeningroom\?v=|\/feeds\/api\/videos\/|\/user\S*[^\w\-\s]|\S*[^\w\-\s]))([\w\-]{11})[A-Za-z0-9;:@#?&%=+\/\$_.-]*(?=\n|$)'
 
@@ -336,11 +349,12 @@ elif 1:
         s = replace_ats(s)
         s = replace_pincong(s)
         s = replace_ytb(s)
+        s = replace_polls(s)
         html = mistletoe.markdown(s)
 
         return html
 
-    @lru_cache(maxsize=8192)
+    @lru_cache(maxsize=2048)
     def convert_markdown(s):
         out = just_markdown(s)
 
@@ -459,6 +473,13 @@ inv_list_defaults = dict(
 )
 
 fav_list_defaults = dict(
+    pagenumber=1,
+    pagesize=25,
+    order='desc',
+    sortby='t_c',
+)
+
+simple_defaults = dict(
     pagenumber=1,
     pagesize=25,
     order='desc',

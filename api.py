@@ -1676,6 +1676,47 @@ def _():
     modify_question(qid, qv)
     return {'error':False}
 
+from polls import *
+@register('add_poll')
+def _():
+    must_be_logged_in()
+    j = g.j
+    qs = j['question']
+    add_poll(qs)
+    return {'error':False}
+
+@register('modify_poll')
+def _():
+    must_be_logged_in()
+    qv = g.j['question']
+    qid = g.j['qid']
+    modify_poll(qid, qv)
+    return {'error':False}
+
+@register('add_poll_vote')
+def _():
+    must_be_logged_in()
+    j = g.j
+    id = j['pollid']
+    choice = j['choice']
+    delete = j['delete'] if 'delete' in j else False
+    add_poll_vote(id, choice, delete=delete)
+    return {'error':False}
+
+@register('render_poll')
+def _():
+    j = g.j
+    pollid=j['pollid']
+    poll = get_poll(pollid, g.selfuid)
+
+    from flask import render_template
+
+    html = render_template(
+        'poll_one.html.jinja',
+        poll = poll,
+    )
+    return {'error':False, 'html':html}
+
 @register('change_time')
 def _():
     must_be_admin()

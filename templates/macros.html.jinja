@@ -1110,3 +1110,33 @@
   </div>
 {%endif%}
 {%endmacro%}
+
+{# poll #}
+{%macro render_poll(poll)%}
+<div class='poll'>
+  <div class="poll_question">
+    {{poll.question}}
+  </div>
+
+  <div class="poll_choices">
+    {%for choice in poll.choices_postprocessed%}
+      <div class="poll_choice">
+        {%if choice.self_voted%}
+          <a class="poll_vote"
+            href='javascript:add_poll_vote("{{poll._key}}","{{choice.text}}",true)'></a>
+        {%else%}
+          <a class="poll_vote poll_not_voted"
+            href='javascript:add_poll_vote("{{poll._key}}","{{choice.text}}",false)'></a>
+        {%endif%}
+        <span>{{choice.text}}</span>
+        <span class='poll_nvotes'>({{choice.nvotes or 0}})</span>
+      </div>
+    {%endfor%}
+  </div>
+
+  <div class="poll_data">
+    （{{poll.nvoters}}人参与）{%if poll.nvoters%}<a href="/polls/{{poll._key}}/votes">查看记录</a>{%endif%}
+  </div>
+
+</div>
+{%endmacro%}

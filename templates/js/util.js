@@ -1040,6 +1040,25 @@ function process_all_youtube_reference(){
     e.className='youtube-player'
     e.appendChild(div)
   })
+
+  var votes = gebcn(document)('poll-instance-unprocessed')
+
+  foreach(votes)(e=>{
+    print(e)
+
+    var did = e.dataset.id
+    e.className = 'poll-instance'
+
+    api({
+      action:'render_poll',
+      pollid:did,
+    })
+    .then(res=>{
+      e.innerHTML = res.html
+    })
+    .catch(print)
+
+  })
 }
 
 function browser_check(){
@@ -1200,12 +1219,62 @@ function add_question(){
     alert('请输入题目内容')
   }
 }
+function add_poll(){
+  // var qs = prompt('请输入题目（格式请参考其他人的题目格式）')
+  var qs = geid('add_question_text').value
+  if(qs){
+    api({
+      action:'add_poll',
+      question:qs,
+    })
+    .then(res=>{
+      window.location.reload()
+    })
+    .catch(alert)
+  }else{
+    alert('请输入投票内容')
+  }
+}
+
+function add_poll_vote(id, choice, del){
+  api({
+    action:'add_poll_vote', pollid:id, choice:choice,
+    delete:del?true:false,
+  })
+  .then(res=>{
+    // window.location.reload()
+    var polls = gebcn(document)('poll-instance')
+    foreach(polls)(e=>{
+      var did = e.dataset.id
+      if (did==id){
+        // e.innerHTML = ''
+        e.className = 'poll-instance-unprocessed'
+
+        process_all_youtube_reference()
+      }
+    })
+  })
+  .catch(alert)
+}
 
 function modify_question(k){
   var qv = geid(k).value
   print(qv)
   api({
     action:'modify_question',
+    question:qv,
+    qid:k,
+  })
+  .then(res=>{
+    window.location.reload()
+  })
+  .catch(alert)
+}
+function modify_poll(k){
+  var qv = geid(k).value
+  print(qv)
+  api({
+    action:'modify_poll',
     question:qv,
     qid:k,
   })
