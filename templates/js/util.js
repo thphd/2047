@@ -632,6 +632,11 @@ function generate_invitation_code(){
 }
 
 function mark_delete(targ){
+  if (!targ.startsWith('u')){
+    if (!confirm('确定删除？')){
+      return
+    }
+  }
   api({
     action:'mark_delete',
     target:targ,
