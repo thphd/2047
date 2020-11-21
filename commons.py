@@ -271,7 +271,7 @@ def replace_ytb_f(match):
 def replace_pincong(s):
     def f(match):
         return f'<mark class="parody">{match.group(1)}</mark>'
-    s = re.sub(r'(?:[^>\s])((?:姨|桂|支|偽|伪|张献|張獻|韭|鹿)(?:葱|蔥)|(?:品|葱|蔥)韭)', f, s)
+    s = re.sub(r'(?<!>)((?:姨|桂|支|偽|伪|张献|張獻|韭|鹿)(?:葱|蔥)|(?:品|葱|蔥)韭)', f, s)
     return s
 
 # @lru_cache(maxsize=4096)
