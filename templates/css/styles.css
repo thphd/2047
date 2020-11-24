@@ -1908,7 +1908,7 @@ input#search_term {
 }
 
 .tag {
-    background-color: #4c7150;
+    background-color: #4c7150a1;
     color: white;
     padding: 2px 3px;
     font-size: 12px;
@@ -1917,7 +1917,7 @@ input#search_term {
 }
 
 .taglist {
-    margin-bottom: 8px;
+    margin-bottom: 9px;
     font-size: 12px;
 }
 
