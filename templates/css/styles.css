@@ -758,7 +758,7 @@ code .nf {
 
 .outerbox {
     display: block;
-    margin: 15px auto 20px auto;
+    margin: 40px auto 20px auto;
     max-width: 960px;
     background-color: white;
     border-radius: 4px;
@@ -1783,7 +1783,7 @@ img.headerbtn{
     padding: 0 7px;
 }
 .outerbox{
-    margin: 8px 0;
+    margin: 48px 0 8px;
 }
   .lr{
     /* padding: 0 8px; */
@@ -1806,6 +1806,10 @@ span.personal_title{
 .header_bkgnd {
     background: #555;
     box-shadow: 0 0 6px #0000000b;
+    position: fixed;
+    z-index: 99;
+    width: 100%;
+    top: 0;
 }
 
 a.threadlist_title:hover, a.threadlist_title:active, a.threadlist_title:focus {
