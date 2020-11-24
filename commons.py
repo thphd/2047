@@ -192,7 +192,7 @@ username_regex_string = str(username_regex).replace('\\\\','\\')
 tagname_regex_long = username_regex_proto.replace('2,16','1,40')
 tagname_regex = username_regex_proto.replace('2,16','1,10')
 
-at_extractor_regex = fr'(^|[^{legal_chars}<>])@([{legal_chars}]{{2,16}}?)(?=[^{legal_chars}]|$)'
+at_extractor_regex = fr'(^|[^{legal_chars}<>])@([{legal_chars}]{{2,16}}?)(?=[^{legal_chars}(),。，]|$)'
 
 # @lru_cache(maxsize=4096)
 def extract_ats(s): # extract @usernames out of text
@@ -266,7 +266,7 @@ def replace_ytb_f(match):
 
     ts = ('?t='+str(ts)) if ts else ''
 
-    return f'''<div class="youtube-player-unprocessed" data-id="{vid}" data-ts="{ts}"></div><a href="https://youtu.be/{vid}{ts}">去YouTube上播放</a>'''.format(vid)
+    return f'''<div class="youtube-player-unprocessed" data-id="{vid}" data-ts="{ts}"></div><a target="_blank" href="https://youtu.be/{vid}{ts}">去YouTube上播放</a>'''.format(vid)
 
 def replace_pincong(s):
     def f(match):
