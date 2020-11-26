@@ -2,9 +2,11 @@
 {%block content%}
 
 <div class="threadlist padded">
+  {%if pagenumber and pagenumber==1%}
   <div class="post_content">
     {{entity_info|safe}}
   </div>
+  {%endif%}
 
   <div class="ent_add">
       <input type="text" id="ent_type" value="" placeholder="type (类型，必填)">
@@ -46,7 +48,7 @@
 
 
   </div>
-  
+
   {{macros.paginate(pagination, class='')}}
 
 

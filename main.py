@@ -516,7 +516,10 @@ class Paginator:
 
 
     @ttl_cache(maxsize=4096, ttl=120)
-    def get_pagination_obj(self, count, pagenumber, pagesize, order, path, sortby, mode='thread', postfix=''):
+    def get_pagination_obj(self,
+        count, pagenumber, pagesize, order, path, sortby,
+        mode='thread', postfix='', default_pagesize=None):
+
         # total number of pages
         total_pages = max(1, (count-1) // pagesize +1)
 
@@ -577,7 +580,8 @@ class Paginator:
         elif mode=='fav':
             defaults = fav_list_defaults
         elif mode=='simple':
-            defaults = simple_defaults
+            defaults = simple_defaults.copy()
+            defaults['pagesize'] = default_pagesize or defaults['pagesize']
             pass
         else:
             raise Exception('unsupported mode')
@@ -2139,6 +2143,10 @@ def list_questions():
 @app.route('/polls')
 def list_polls():
     # must_be_admin()
+    start, pagesize, pagenumber, eat_count = generate_simple_pagination(pagesize=10)
+
+    count = aql('return length(for i in polls return i)')[0]
+    pagination = eat_count(count)
 
     q = (QueryString('''
     for i in polls sort i.t_c desc
@@ -2148,6 +2156,7 @@ def list_polls():
     + get_poll_q +
     QueryString('''
     )[0]
+    '''+ f'limit {start}, {pagesize}' +'''
     return merge(i,{user, pollobj})
     ''')
     )
@@ -2160,6 +2169,7 @@ def list_polls():
         page_title='投票',
         # questions = qs,
         polls = qs,
+        pagination = pagination,
     )
 
 @app.route('/polls/<string:pollid>')
@@ -2218,19 +2228,43 @@ def heropage():
     height=2500,
     )
 
-aqlc.create_collection('entities')
-@app.route('/entities')
-@app.route('/e')
-def entpage():
+def generate_simple_pagination(pagesize=None):
     sd = simple_defaults
     pagenumber = rai('page') or sd['pagenumber']
-    pagesize = sd['pagesize']
+    pagesize = pagesize or sd['pagesize']
     sortby = sd['sortby']
     order = sd['order']
 
     start = (pagenumber-1) * pagesize
 
+    def eat_count(count):
+        pagination = pgnt.get_pagination_obj(
+            path=request.path,
+            order=order,sortby=sortby,
+            count=count, pagenumber=pagenumber, pagesize=pagesize,
+            mode='simple',
+            default_pagesize=pagesize,
+        )
+        return pagination
+
+    return start, pagesize, pagenumber, eat_count
+
+aqlc.create_collection('entities')
+@app.route('/entities')
+@app.route('/e')
+def entpage():
+    start, pagesize, pagenumber, eat_count = generate_simple_pagination()
+    #
+    # sd = simple_defaults
+    # pagenumber = rai('page') or sd['pagenumber']
+    # pagesize = sd['pagesize']
+    # sortby = sd['sortby']
+    # order = sd['order']
+    #
+    # start = (pagenumber-1) * pagesize
+
     count = aql('return length(for i in entities return i)',silent=True)[0]
+    pagination = eat_count(count)
 
     ents = aql('''
         for i in entities sort i.t_c desc
@@ -2241,17 +2275,18 @@ def entpage():
         return merge(i, {user})
     ''', silent=True)
 
-    pagination = pgnt.get_pagination_obj(
-        path=request.path,
-        order=order,sortby=sortby,
-        count=count, pagenumber=pagenumber, pagesize=pagesize,
-        mode='simple',
-    )
+    # pagination = pgnt.get_pagination_obj(
+    #     path=request.path,
+    #     order=order,sortby=sortby,
+    #     count=count, pagenumber=pagenumber, pagesize=pagesize,
+    #     mode='simple',
+    # )
 
     return render_template_g('entities.html.jinja',
         page_title='entities',
         entities = ents,
         pagination = pagination,
+        pagenumber = pagenumber,
     )
 
 @app.route('/e/<string:key>')

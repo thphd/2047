@@ -12,6 +12,9 @@
   </div>
   <hr>
 
+
+  {{macros.paginate(pagination, class='')}}
+
   <div class="qboxes">
 
     {%for q in polls %}
@@ -42,7 +45,12 @@
         {{macros.render_poll(poll)}}
         #}
         <div class="">
+          {#
           <div class='poll-instance-unprocessed' data-id="{{poll._key}}"></div>
+          #}
+
+          {{macros.render_poll(poll)}}
+
         </div>
 
       </div>
@@ -52,6 +60,9 @@
 
 
   </div>
+
+  {{macros.paginate(pagination, class='')}}
+
 
 </div>
 {%endblock%}
