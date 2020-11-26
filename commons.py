@@ -523,6 +523,7 @@ common_links = linkify('''
 服务条款 /t/7110 违者封号
 题库 /questions 考试题目编撰
 实体编辑 /entities 公钥上传/其他杂项数据
+创建投票 /t/9564 应用户强烈要求
 语录 /quotes 你不是一个人在战斗
 oplog /oplog 管理日志
 英雄 /hero BE4的实验性项目
