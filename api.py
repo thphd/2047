@@ -582,6 +582,8 @@ def _():
         timenow = time_iso_now()
 
         newthread = dict(
+            _key = str(tid),
+
             uid = uid,
             t_c = timenow,
             t_u = timenow,
@@ -1093,6 +1095,7 @@ def _():
 
     if target_type=='thread':
         thread = get_thread(_id)
+        pointer = thread['_id']
 
         if not can_do_to(g.current_user, 'vote', thread['uid']):
             raise Exception('insufficient priviledge')
@@ -1116,6 +1119,8 @@ def _():
                 vote=vote_number,
                 t_c=timenow,
                 t_u=timenow,
+
+                pointer=pointer,
             )
             # put in db
             n = aql('insert @i into votes return NEW',i=vobj,silent=True)[0]
@@ -1143,6 +1148,7 @@ def _():
 
     elif target_type=='post':
         post = get_post(_id)
+        pointer = post['_id']
 
         if not can_do_to(g.current_user, 'vote', post['uid']):
             raise Exception('insufficient priviledge')
@@ -1165,6 +1171,8 @@ def _():
                 id=_id,
                 vote=vote_number,
                 t_c=timenow,
+
+                pointer=pointer,
             )
             # put in db
             n = aql('insert @i into votes return NEW',i=vobj,silent=True)[0]
