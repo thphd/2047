@@ -845,7 +845,7 @@ def before_request():
     else:
         g.using_browser = True
 
-    salt = g.session['salt'] if 'salt' in g.session else '==nosalt=='
+    salt = get_current_salt()
 
     # ----
 

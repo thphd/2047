@@ -143,6 +143,10 @@ def get_categories_info():
         return merge(co, {count:cnt})
     ''', silent=True)
 
+def get_current_salt():
+    salt = g.session['salt'] if 'salt' in g.session else '==nosalt=='
+    return salt
+
 # json apis sharing a common endpoint
 
 api_registry = {}
@@ -1614,6 +1618,8 @@ def _():
     answers = g.j['answers']
     now = time_iso_now()
 
+    min_pass_score = 4
+
     exam = aql('for e in exams filter e._key==@eid return e', eid=eid)[0]
     if 'submitted' in exam and exam['submitted']:
         raise Exception('please do not re-submit to the same exam.')
@@ -1646,7 +1652,17 @@ def _():
             score+=1
 
     print_err('score:', score)
-    if score<4:
+    if score < min_pass_score:
+
+        aql('insert @k into answersheets',k=dict(
+            # invitaiton=code,
+            examid=eid,
+            answers=answers,
+            t_c = now,
+            passed = False,
+            salt = get_current_salt(),
+            score = score,
+        ))
         raise Exception('your score is too low. please try again')
 
     # obtain an invitation code
@@ -1657,6 +1673,9 @@ def _():
         examid=eid,
         answers=answers,
         t_c = now,
+        passed = True,
+        salt = get_current_salt(),
+        score = score,
     ))
 
     return {'url':'/register?code='+code, 'code':code}
