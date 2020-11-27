@@ -719,7 +719,7 @@ code .nf {
     margin-bottom: 10px;
 }
 
-.header > .header_title {
+.header_title {
     margin-right: 10px;
     display: flex;
     text-decoration: none;
@@ -1994,4 +1994,30 @@ span.marked {
 
 .poll_nvotes {
     opacity: .5;
+}
+
+.linkuploader {
+    display: inline-block;
+    font-size: 12px;
+    opacity: .4;
+}
+
+.linkbox {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 6px 0 6px 12px;
+}
+
+.link_category {
+    margin-bottom: 10px;
+    /* color: #868686; */
+    margin-top: 18px;
+}
+
+.link_brief {
+    color: gray;
+    font-size: 80%;
 }

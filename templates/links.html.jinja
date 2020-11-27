@@ -1,0 +1,37 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+
+{%import 'base.html.jinja' as base with context%}
+
+<div class="threadlist">
+  <div class="padlr">
+    欲向此处添加更多链接，请访问 <a href="/entities">Entities</a>
+  </div>
+
+  <hr>
+
+  <div class="links padlr">
+    {% for category in links%}
+    <div class="link_category header_title" id="{{category}}">
+      {{category}}
+    </div>
+
+    {% for link in links[category] %}
+    <div class='linkbox'>
+      <div class="linkbox_left">
+        <span>{{link.name}}</span>
+        <a href="{{link.url}}">{{link.url}}</a>
+        <span class="link_brief">{{link.brief}}</span>
+      </div>
+
+      <div class='linkuploader'>由  {{macros.username(link.user)}} 上传于 {{format_time_dateifnottoday(link.t_u or link.t_c)}}</div>
+
+    </div>
+
+    {% endfor %}
+
+    {% endfor %}
+
+  </div>
+</div>
+{%endblock%}

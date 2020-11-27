@@ -2364,6 +2364,13 @@ def show_quotes():
         page_title="语录",
     )
 
+@app.route('/links')
+def show_links():
+    return render_template_g('links.html.jinja',
+        page_title='链接',
+        links = get_links(),
+    )
+
 @stale_cache(maxsize=512, ttr=3, ttl=1800)
 def get_oplog(target=None, raw=False):
     query = f'''

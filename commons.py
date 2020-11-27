@@ -524,6 +524,7 @@ common_links = linkify('''
 题库 /questions 考试题目编撰
 实体编辑 /entities 公钥上传/其他杂项数据
 创建投票 /t/9564 应用户强烈要求
+链接 /links 2047网址导航
 语录 /quotes 你不是一个人在战斗
 oplog /oplog 管理日志
 英雄 /hero BE4的实验性项目
@@ -784,6 +785,67 @@ return merge(i, {user})
 def get_quote():
     quotes = get_quotes()
     return random.choice(quotes)
+
+@stale_cache(ttr=10, ttl=900)
+def get_links():
+    links = aql('''
+    for i in entities
+    filter i.type=='links'
+    sort i.t_c desc
+    let user = (for u in users filter u.uid==i.uid return u)[0]
+    return merge(i, {user})
+    ''', silent=False)
+
+    def issomething(typ):
+        def k(s):
+            return isinstance(s, typ)
+        return k
+
+    isstr = issomething(str)
+    islist = issomething(list)
+    isdict = issomething(dict)
+
+    fin = []
+    din = {}
+
+    for link in links:
+        if not islist(link['doc']): continue
+        linklist = link['doc']
+
+        default_category = '未分类'
+
+        for obj in linklist:
+            hasstr = lambda s: (s in obj) and isstr(obj[s])
+            if not isdict(obj): continue
+            if not hasstr('name') or not hasstr('url'): continue
+
+            dl = {}
+            dl['name'] = obj['name']
+            dl['url'] = obj['url']
+
+            if not dl['url'].startswith('http://') and not dl['url'].startswith('https://'):
+                dl['url'] = 'https://' + dl['url']
+
+            dl['user'] = link['user']
+            dl['t_c'] = link['t_c']
+
+            if hasstr('brief'):
+                dl['brief'] = obj['brief']
+
+            if hasstr('category'):
+                dl['category'] = obj['category']
+                default_category = obj['category']
+            else:
+                dl['category'] = default_category
+
+            fin.append(dl)
+            dlc = dl['category']
+            if dlc not in din:
+                din[dlc] = []
+            din[dlc].append(dl)
+
+    return din
+
 
 @stale_cache(ttr=20, ttl=1800)
 def get_weekly_best(start=7, stop=14, n=10):
