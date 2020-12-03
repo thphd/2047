@@ -22,8 +22,9 @@ import zlib
 
 import requests as r
 
-import Identicon
-Identicon._crop_coner_round = lambda a,b:a # don't cut corners, please
+# import Identicon
+# Identicon._crop_coner_round = lambda a,b:a # don't cut corners, please
+
 import mimetypes as mt
 
 from commons import *
