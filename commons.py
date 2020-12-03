@@ -2,6 +2,7 @@
 
 import os, hashlib, binascii as ba
 import base64, re
+import time
 from colors import *
 # from functools import lru_cache
 
@@ -411,6 +412,24 @@ from aql import AQLController, QueryString
 dbaddr = get_environ('dbaddr') or 'http://127.0.0.1:8529'
 aqlc = AQLController(dbaddr, 'db2047')
 aql = aqlc.aql
+
+def wait_for_database_online():
+    print('waiting for database online...')
+    i = 1
+    while 1:
+        try:
+            one = aql('return 1')[0]
+        except Exception as e:
+            print(e)
+            print('fail #' + str(i) + '\n')
+            i+=1
+            time.sleep(1)
+        else:
+            if one==1:return
+        continue
+    print('database online.')
+
+wait_for_database_online()
 
 # site pagination defaults
 
