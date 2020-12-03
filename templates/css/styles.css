@@ -882,7 +882,7 @@ body {
     /* border-width: 1px 0; */
 }
 
-.self_voted {background-color: #0baf0036;}
+.self_voted {background-color: #0baf0036;border-radius: 2px;}
 
 .self_voted {}
 
