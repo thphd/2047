@@ -83,6 +83,7 @@ def calculate_etag(bin):
     chksum_encoded = base64.b64encode(checksum.to_bytes(4,'big')).decode('ascii')
     return chksum_encoded
 
+import glob
 # hash all resource files see if they change
 def hash_these(path_arr, pattern='*.*'):
     resource_files_contents = b''
@@ -2047,6 +2048,8 @@ def apir():
 
     return response
 
+from imgproc import avatar_pipeline
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if request.method != 'POST':
@@ -2055,8 +2058,6 @@ def upload_file():
 
     data = request.data # binary
     # print(len(data))
-
-    from imgproc import avatar_pipeline
 
     png = avatar_pipeline(data)
     etag = calculate_etag(png)
@@ -2081,6 +2082,8 @@ def etag304(resp):
     resp.set_etag(etag)
     return resp
 
+import qrcode, io
+
 @app.route('/qr/<path:to_encode>')
 def qr(to_encode):
 
@@ -2088,7 +2091,6 @@ def qr(to_encode):
     if to_encode[-1]=='?':
         to_encode = to_encode[:-1]
 
-    import qrcode
     qr = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -2098,7 +2100,6 @@ def qr(to_encode):
     qr.add_data(to_encode)
     qr.make(fit=True)
     img = qr.make_image()
-    import io
     out = io.BytesIO()
     img.save(out, format='PNG')
 
@@ -2119,11 +2120,12 @@ aqlc.create_collection('exams')
 aqlc.create_collection('answersheets')
 aqlc.create_collection('questions')
 
+from questions import make_exam
+
 @app.route('/exam')
 def get_exam():
     ipstr = request.remote_addr
     timenow = time_iso_now()[:15] # every 10 min
-    from questions import make_exam
     exam_questions = make_exam(ipstr+timenow, 5)
     exam = {}
     exam['questions'] = exam_questions

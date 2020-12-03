@@ -1734,13 +1734,12 @@ def _():
     add_poll_vote(id, choice, delete=delete)
     return {'error':False}
 
+from flask import render_template
 @register('render_poll')
 def _():
     j = g.j
     pollid=j['pollid']
     poll = get_poll(pollid, g.selfuid)
-
-    from flask import render_template
 
     html = render_template(
         'poll_one.html.jinja',

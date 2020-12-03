@@ -26,8 +26,9 @@ def removefile(fn):
     else:
         return
 
+import threading
+
 def dispatch(f):
-    import threading
     t = threading.Thread(target=f, daemon=True)
     t.start()
 

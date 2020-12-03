@@ -655,8 +655,8 @@ X<x style=`behavior:url(#default#time2)` onbegin=`javascript:alert(1)` >
 <IMG SRC=`javascript:javascript:alert(1)`>
 '''
 
+import mistletoe as mt
 def just_markdown(s):
-    import mistletoe as mt
     return mt.markdown(s)
 
 # h = just_markdown(xss_cheatsheet)
