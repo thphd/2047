@@ -642,9 +642,7 @@ a.threadlist_title {
 .boxtitle {
     padding: 10px 0 10px;
     display: flex;
-    align-items: flex-start;
-    flex-flow: column;
-    justify-content: flex-start;
+    align-items: center;
     font-size: 15px;
 }
 
@@ -2008,7 +2006,8 @@ span.marked {
     justify-content: space-between;
     flex-wrap: wrap;
     align-items: center;
-    margin: 6px 0 6px 12px;
+    margin: 0 0 0 12px;
+    line-height: 1.5;
 }
 
 .link_category {
@@ -2020,4 +2019,17 @@ span.marked {
 .link_brief {
     color: gray;
     font-size: 80%;
+}
+
+.boxlink {
+    font-size: 80%;
+}
+
+.linkbox_left > * {
+    display: inline-block;
+}
+
+a.after_linkbox {
+    font-size: 80%;
+    margin-left: 10px;
 }

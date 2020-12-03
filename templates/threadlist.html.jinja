@@ -112,14 +112,27 @@ for(var i=0;i<tabs.length;i++){k(i)}
 
   {%endif%}
 
+  {%import 'base.html.jinja' as base with context%}
+
   <div class="box">
     <div class="boxtitle">
-      语录
+      语录 <a class="after_linkbox" href="/quotes">查看更多</a>
     </div>
     <div class="navigator_quote">
-      {%import 'base.html.jinja' as base with context%}
-
       {{base.quote_section(get_quote())}}
+    </div>
+  </div>
+
+  {%import 'links.html.jinja' as linkshtml with context%}
+
+  {%set link = get_link_one()%}
+  <div class="box">
+    <div class="boxtitle">
+      {{link.category}} <a class="after_linkbox" href="/links">查看更多</a>
+    </div>
+
+    <div class="boxlink">
+      {{linkshtml.linkbox(link, show_uploader=False)}}
     </div>
   </div>
 

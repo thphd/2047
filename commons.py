@@ -794,7 +794,7 @@ def get_links():
     sort i.t_c desc
     let user = (for u in users filter u.uid==i.uid return u)[0]
     return merge(i, {user})
-    ''', silent=False)
+    ''', silent=True)
 
     def issomething(typ):
         def k(s):
@@ -844,8 +844,11 @@ def get_links():
                 din[dlc] = []
             din[dlc].append(dl)
 
-    return din
+    return din, fin
 
+def get_link_one():
+    linksd, linksl = get_links()
+    return random.choice(linksl)
 
 @stale_cache(ttr=20, ttl=1800)
 def get_weekly_best(start=7, stop=14, n=10):

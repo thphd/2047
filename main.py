@@ -2366,9 +2366,10 @@ def show_quotes():
 
 @app.route('/links')
 def show_links():
+    linksd, linksl = get_links()
     return render_template_g('links.html.jinja',
         page_title='链接',
-        links = get_links(),
+        links = linksd,
     )
 
 @stale_cache(maxsize=512, ttr=3, ttl=1800)
