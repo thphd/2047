@@ -2027,6 +2027,7 @@ span.marked {
 
 .linkbox_left > * {
     display: inline-block;
+    overflow-wrap: anywhere;
 }
 
 a.after_linkbox {

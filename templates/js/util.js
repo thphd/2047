@@ -177,7 +177,11 @@ function api(j, display){
 }
 
 function aa(action, j, display){
-  j.action = action
+  if(j){
+    j.action = action
+  }else{
+    j = {action}
+  }
   return api(j, display)
 }
 

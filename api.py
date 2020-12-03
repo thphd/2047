@@ -464,6 +464,10 @@ def _():
 
         timenow = time_iso_now()
 
+        tu = thread['uid']
+        if im_in_blacklist_of(tu):
+            raise Exception('you are in the blacklist of the thread owner')
+
         while 1:
             new_pid = str(obtain_new_id('pid'))
             exists = aql('for p in posts filter p._key==@pid return p', silent=False, pid=new_pid)
@@ -1953,6 +1957,60 @@ def _():
 
     return {'error':False}
 
+error_false = {'error':False}
+
+aqlc.create_collection('blacklist')
+@register('blacklist')
+def _():
+    must_be_logged_in()
+    uid = ei('uid')
+    delete = eb('delete')
+
+    enabled = False if delete else True
+
+    # check existence of uid
+    u = get_user_by_id(uid)
+
+    if not u:
+        raise Exception('no such user')
+
+    now = time_iso_now()
+
+    aql('upsert @lk insert @ik update @uk into blacklist',
+        lk = dict(uid=g.selfuid, to_uid=uid),
+        ik = dict(uid=g.selfuid, to_uid=uid,
+            t_c = now,
+            t_u = now,
+            enabled = enabled,
+        ),
+        uk = dict(uid=g.selfuid, to_uid=uid,
+            t_u = now,
+            enabled = enabled,
+        ),
+    )
+
+    return error_false
+
+@register('get_blacklist')
+def _():
+    must_be_logged_in()
+    list = aql('''for i in blacklist filter i.uid==@uid
+    let user = (for u in users filter u.uid==i.to_uid return u)[0]
+    return merge(i, {user})''', uid=g.selfuid, silent=True)
+    return {'blacklist':[(l['user']['name'],l['to_uid']) for l in list]}
+
+def im_in_blacklist_of(uid):
+    su = g.selfuid
+    tu = uid
+
+    res = aql('''for i in blacklist
+    filter i.uid==@tu and i.to_uid==@su and i.enabled==true
+    return i
+    ''', tu=tu, su=su)
+
+    if res:
+        return True
+    return False
 
 # feedback regulated ping service
 # average 1 ping every 3 sec
