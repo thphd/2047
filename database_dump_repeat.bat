@@ -1,3 +1,5 @@
+rem dump repeatedly 
+
 :loop
 
 timeout /t 600
