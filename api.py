@@ -1968,6 +1968,12 @@ def _():
 
     enabled = False if delete else True
 
+    curr = get_blacklist()
+
+    mbs = max_blacklist_size = 5
+    if len(curr)>=mbs and enabled == True:
+        raise Exception(f'you cannot blacklist more than {mbs} user(s)')
+
     # check existence of uid
     u = get_user_by_id(uid)
 
@@ -1991,12 +1997,16 @@ def _():
 
     return error_false
 
-@register('get_blacklist')
-def _():
-    must_be_logged_in()
+def get_blacklist():
     list = aql('''for i in blacklist filter i.uid==@uid
     let user = (for u in users filter u.uid==i.to_uid return u)[0]
     return merge(i, {user})''', uid=g.selfuid, silent=True)
+    return list
+
+@register('get_blacklist')
+def _():
+    must_be_logged_in()
+    list = get_blacklist()
     return {'blacklist':[(l['user']['name'],l['to_uid']) for l in list]}
 
 def im_in_blacklist_of(uid):

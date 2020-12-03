@@ -72,7 +72,7 @@
 
 {% set _ids = (item_id or _ide or _idt or _idp) %}
 
-<div class="threadlistitem padded{{ ' deleted' if (p.delete and t) else ''}} {{'conv_delete' if p.delete and 'conversation' in metas else ''}} {{'thread_header' if 'thread_header' in metas else ''}} {{'unread' if p.unread else ''}}" id="{{_ids}}">
+<div class="threadlistitem padded{{ ' deleted' if ((p.delete or p.blacklist) and t) else ''}} {{'conv_delete' if p.delete and 'conversation' in metas else ''}} {{'thread_header' if 'thread_header' in metas else ''}} {{'unread' if p.unread else ''}}" id="{{_ids}}">
 
     {%if 'thread_votes' in metas%}
     <div class="leftmost">
@@ -533,11 +533,14 @@
 
 {%macro contentify(p, foldable=False)%}
   <div class="post_content {{'foldable' if foldable else ''}}">
-    {%if not p.delete%}
-      {{(convert_markdown(p.content or '')|safe)}}
-    {%else%}
+    {%if p.delete%}
       <s>标记为删除</s>
+    {%elif p.blacklist%}
+      <s>此人被你黑名单</s>
+    {%else%}
+      {{(convert_markdown(p.content or '')|safe)}}
     {%endif%}
+
   </div>
 
   {%if foldable%}

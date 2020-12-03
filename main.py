@@ -373,6 +373,7 @@ class Paginator:
             pagination_obj = self.get_pagination_obj(count, pagenumber, pagesize, order, path, sortby, mode=mode)
 
             remove_duplicate_brief(postlist)
+            mark_blacklisted(postlist)
 
             return postlist, pagination_obj
 
@@ -1341,6 +1342,16 @@ def get_thread(tid):
         viewed_target='thread/'+str(tid) if not user_is_self else '',
 
     )
+
+def mark_blacklisted(postlist):
+    bl = get_blacklist().map(lambda k:k['to_uid'])
+    if 0 == len(bl):
+        return
+
+    for idx, i in enumerate(postlist):
+        if i['uid'] in bl:
+            print(i)
+            postlist[idx]['blacklist'] = True
 
 # list of user posts.
 @app.route('/u/<int:uid>/p')
