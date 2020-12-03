@@ -1,0 +1,26 @@
+# workhorse
+
+flask
+requests
+cachetools
+
+# util
+
+flask_cors
+qrcode
+pillow
+githubrelease
+
+# logging
+
+termcolor
+colorama
+
+# html/markdown
+
+mistletoe
+beautifulsoup4
+
+# monkeypatching
+
+forbiddenfruit (requires VS build tools on Windows
