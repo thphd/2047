@@ -800,8 +800,8 @@ let t_updated = date_timestamp(t.t_u)
 let t_man = date_timestamp(t.t_manual) or 0
 
 let votes = (t.votes or 0) + (t.nfavs or 0) //differ
-let points = max([(votes - 0.9), 0]) * 3 + 1 + t.nreplies * .2
-let t_offset = 3600*1000*0.1 //differ
+let points = max([(votes - 0.9), 0]) * 3 + 1 //differ
+let t_offset = 3600*1000*1 //differ
 let t_hn = max([t_now + t_offset - (t_now - t_submitted + t_offset) / sqrt(points), t_man])
 
 //let min_interval = 5*60*1000
