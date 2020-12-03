@@ -1998,7 +1998,7 @@ def _():
     return error_false
 
 def get_blacklist():
-    list = aql('''for i in blacklist filter i.uid==@uid
+    list = aql('''for i in blacklist filter i.uid==@uid and i.enabled == true
     let user = (for u in users filter u.uid==i.to_uid return u)[0]
     return merge(i, {user})''', uid=g.selfuid, silent=True)
     return list

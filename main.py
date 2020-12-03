@@ -214,6 +214,8 @@ def create_all_necessary_indices():
     ci('polls', [['t_c']])
     ci('poll_votes', [['pollid', 'uid'],['pollid', 'choice']])
 
+    ci('blacklist',[['uid','to_uid'],['uid','enabled']])
+
 is_integer = lambda i:isinstance(i, int)
 class Paginator:
     def __init__(self,):
