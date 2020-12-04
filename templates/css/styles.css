@@ -945,10 +945,12 @@ span.votenumber {}
     /* cursor: pointer; */ /* Add a pointer on hover */
     pointer-events: none;
     opacity: 0;
-    transition: opacity 5s;
+    transition: opacity 0.1s linear 0s;
 }
 
-#overlay text {}
+#overlay.display_enable {
+  transition: opacity 1s linear 1.5s;
+}
 
 #overlay_text {
     position: absolute;

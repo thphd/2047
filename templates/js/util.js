@@ -740,13 +740,16 @@ foreach(upvote_buttons)(e=>{
 })
 
 function display_notice(str){
+  var ol = geid('overlay')
   if(str){
     var ot = geid('overlay_text')
     if(!ot){return}
     geid('overlay_text_body').innerText = str
-    geid('overlay').style.opacity=1.
+    ol.classList.add('display_enable')
+    ol.style.opacity=1.
   }else{
-    geid('overlay').style.opacity=0.
+    ol.classList.remove('display_enable')
+    ol.style.opacity=0.
   }
 }
 
