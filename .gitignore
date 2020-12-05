@@ -35,3 +35,6 @@ templates/highlight/*.*
 
 templates/highlight/styles/*.*
 !templates/highlight/styles/atom-one-light.css
+
+takeoff/root_path.py
+takeoff/testfile.py

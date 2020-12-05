@@ -66,21 +66,23 @@
 {%endif%}
 
 {%for i in result%}
-<div class="pmsresult padlr">
-  <div class="pmspair">
-
+  <div class="pmsresult padlr">
     {%for k in i%}
-      <span class='pmskeyname'>{{k}}</span>
+      {%if i[k]%}
+      <div class="pmspair">
 
-      {%if g.logged_in or k=='source'%}
-        <span class='pmsvalue'>{{i[k] | string}}</span>
-      {%else%}
-        <span class='pmsvalue'>{{redact(i[k] | string)}}</span>
+        <span class='pmskeyname'>{{k}}</span>
+
+          {%if g.logged_in or k=='source'%}
+            <span class='pmsvalue'>{{i[k] | string}}</span>
+          {%else%}
+            <span class='pmsvalue'>{{redact(i[k] | string)}}</span>
+          {%endif%}
+
+      </div>
       {%endif%}
-
     {%endfor%}
-
-</div>
+  </div>
 {%endfor%}
 
 </div>
