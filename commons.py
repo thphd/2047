@@ -423,7 +423,7 @@ def wait_for_database_online():
             print(e)
             print('fail #' + str(i) + '\n')
             i+=1
-            time.sleep(1)
+            time.sleep(0.3)
         else:
             if one==1:return
         continue
@@ -548,7 +548,8 @@ common_links = linkify('''
 语录 /quotes 你不是一个人在战斗
 oplog /oplog 管理日志
 英雄 /hero BE4的实验性项目
-维尼查 /t/7830 鱼和熊掌不可兼得
+维尼查 /ccpfinder 镰和锤子不可兼得
+云上贵州 /guizhou 年轻人不讲武德
 ''')
 
 friendly_links = linkify('''

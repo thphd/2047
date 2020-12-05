@@ -1448,6 +1448,10 @@ if(btn_searchpm){
       return
     }
 
+    if(window.location.href.includes('/guizhou')){
+      window.location.href = '/guizhou?q='+term
+      return
+    }
     window.location.href = '/ccpfinder?q='+term
   }
 

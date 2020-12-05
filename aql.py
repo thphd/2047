@@ -22,7 +22,7 @@ class AQLController:
                 self.dburl + endp,
                 auth = basic_auth,
                 json = kw,
-                timeout = 12,
+                timeout = self.timeout,
                 proxies = {},
             ).json()
 
@@ -41,13 +41,14 @@ class AQLController:
                     else:
                         raise Exception(str(resp))
 
-    def __init__(self, dburl, dbname, collections=[]):
+    def __init__(self, dburl, dbname, collections=[], timeout=12):
         self.dburl = dburl
         self.dbname = dbname
         self.collections = collections
         self.prepared = False
 
         self.session = r.Session()
+        self.timeout = timeout
 
     def prepare(self):
         if not self.prepared:

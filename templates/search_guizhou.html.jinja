@@ -1,0 +1,87 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+
+{%if not query%}
+<div class="search_section">
+  <h1>云上贵州</h1>
+</div>
+
+<div class="post_content padlr" style="max-width:563px; margin:-1em auto 1em;">
+{{convert_markdown('''
+## 法律声明
+
+- 数据来自网络
+- 搜索结果不包含完整身份信息，仅可用于验证个人隐私是否被互联网公司出卖，不构成隐私侵犯。
+- 若您认为搜索结果包含的信息对你构成不利影响，请立即联系我们，我们的通信地址在页面下方。
+- [讨论区](/t/9849)
+
+北京市五道口计算机技术有限公司
+
+''')|safe}}
+
+<ul style="opacity:.5;">
+  {%for i in sources or []%}
+  <li>{{i}}</li>
+  {%endfor%}
+</ul>
+
+</div>
+
+  <div class="search_section">
+  <img src="/images/pooh.jpg" alt="jiangle">
+  </div>
+{%else%}
+<br>
+{%endif%}
+
+<div class="search_section padlr">
+  <input type="text" value="{{query}}" id='search_term' placeholder="手机、Q、微博UID、邮箱或姓名">
+  <button type="button" id='btn_searchpm'>贵州</button>
+</div>
+
+<div class="threadlist">
+
+
+{%macro pair(i, keyname, display)%}
+  {%if i[keyname] and i[keyname]!='null'%}
+  <div class="pmspair">
+    <span class='pmskeyname'>{{display}}</span>
+    {%if g.logged_in or keyname=='id'%}
+      <span class='pmsvalue'>{{i[keyname]}}</span>
+    {%else%}
+      <span class='pmsvalue'>{{redact(i[keyname])}}</span>
+    {%endif%}
+  </div>
+  {%endif%}
+{%endmacro%}
+
+
+{%if query%}
+<div class="seach_terms padded">
+  搜索结果 (
+  {{query}}
+  )
+
+</div>
+{%endif%}
+
+{%for i in result%}
+<div class="pmsresult padlr">
+  <div class="pmspair">
+
+    {%for k in i%}
+      <span class='pmskeyname'>{{k}}</span>
+
+      {%if g.logged_in or k=='source'%}
+        <span class='pmsvalue'>{{i[k] | string}}</span>
+      {%else%}
+        <span class='pmsvalue'>{{redact(i[k] | string)}}</span>
+      {%endif%}
+
+    {%endfor%}
+
+</div>
+{%endfor%}
+
+</div>
+{%endblock%}

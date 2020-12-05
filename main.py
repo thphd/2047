@@ -2482,6 +2482,32 @@ def searchpm():
             **result,
         )
 
+import sys
+sys.path.append('./takeoff/')
+from takeoff_search import Search
+tks = Search()
+@app.route('/guizhou')
+def tksearch():
+    q = ras('q').strip()
+    if not q:
+        return render_template_g(
+            'search_guizhou.html.jinja',
+            hide_title=True,
+            page_title='云上贵州',
+            sources = tks.get_sources()
+        )
+    else:
+        # result = pm_search_term(q)
+        result = tks.search(q)
+        return render_template_g(
+            'search_guizhou.html.jinja',
+            query=q,
+            hide_title=True,
+            page_title='云上贵州 - '+flask.escape(q),
+            # **result,
+            result=result,
+        )
+
 @app.route('/u/<int:uid>/favorites')
 def user_favorites(uid):
     upld = fav_list_defaults
