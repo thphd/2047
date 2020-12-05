@@ -42,20 +42,6 @@
 <div class="threadlist">
 
 
-{%macro pair(i, keyname, display)%}
-  {%if i[keyname] and i[keyname]!='null'%}
-  <div class="pmspair">
-    <span class='pmskeyname'>{{display}}</span>
-    {%if g.logged_in or keyname=='id'%}
-      <span class='pmsvalue'>{{i[keyname]}}</span>
-    {%else%}
-      <span class='pmsvalue'>{{redact(i[keyname])}}</span>
-    {%endif%}
-  </div>
-  {%endif%}
-{%endmacro%}
-
-
 {%if query%}
 <div class="seach_terms padded">
   搜索结果 (
@@ -68,7 +54,7 @@
 {%for i in result%}
   <div class="pmsresult padlr">
     {%for k in i%}
-      {%if i[k]%}
+      {%if i[k] and (i[k]!='\\n')%}
       <div class="pmspair">
 
         <span class='pmskeyname'>{{k}}</span>

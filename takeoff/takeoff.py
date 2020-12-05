@@ -300,7 +300,7 @@ class SF(Weibo):
 
     def find(self, k):
         res = self.q(f'select * from {self.name} where mobile=? or name=? limit 20', (k, k))
-        return [dict(sf_mobile=i[0], sf_name=i[1], sf_addr=i[2],
+        return [dict(sf_name=i[0], sf_mobile=i[1], sf_addr=i[2],
         source=self.path,
         ) for i in res]
 
