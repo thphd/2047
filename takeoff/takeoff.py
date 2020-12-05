@@ -15,7 +15,7 @@ class Weibo:
     def init_sqlite(self):
         print('fullpath is', self.fullpath)
         print('trying to connect to', self.dbpath)
-        self.conn = sqlite3.connect(self.dbpath)
+        self.conn = sqlite3.connect(self.dbpath, check_same_thread=False)
         self.q('PRAGMA synchronous = OFF')
         self.q('PRAGMA journal_mode = MEMORY')
         self.q('PRAGMA cache_size = 1000000')
@@ -198,7 +198,7 @@ class QQ(Weibo):
 
     def find(self, num):
         res = self.q(f'select * from {self.name} where mobile=? or uid=? limit 10', (num, num))
-        return [dict(qq_mobile=i[0], qq_uid=i[1],
+        return [dict(qq_mobile=i[0], qq_number=i[1],
             source=self.path,
         ) for i in res]
 

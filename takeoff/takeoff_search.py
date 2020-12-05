@@ -9,8 +9,9 @@ class Search:
         return [i.path for i in self.g1] + [i.path for i in self.g2]
 
     def search(self, s):
-        g1 = [i() for i in (Weibo,QQ)]
-        g2 = [i() for i in (JD, SF, Pingan)]
+        # g1 = [i() for i in (Weibo,QQ)]
+        # g2 = [i() for i in (JD, SF, Pingan)]
+        g1,g2 = self.g1, self.g2
 
         s = s.strip().split(' ')[0]
 
