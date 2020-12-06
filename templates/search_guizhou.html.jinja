@@ -6,6 +6,10 @@
   <h1>云上贵州</h1>
 </div>
 
+<div class="search_section">
+  <img src="https://i.imgur.com/zPGSL2A.png" alt="jiangle">
+</div>
+
 <div class="post_content padlr" style="max-width:563px; margin:-1em auto 1em;">
 {{convert_markdown('''
 ## 法律声明
@@ -19,6 +23,8 @@
 
 ''')|safe}}
 
+
+
 <ul style="opacity:.5;">
   {%for i in sources or []%}
   <li>{{i}}</li>
@@ -27,9 +33,6 @@
 
 </div>
 
-  <div class="search_section">
-  <img src="https://i.imgur.com/zPGSL2A.png" alt="jiangle">
-  </div>
 {%else%}
 <br>
 {%endif%}
