@@ -4,28 +4,41 @@
 <div class="padded">
 
   <form class="register">
+    <div class="formline">
+      <label>用户名</label>
+      <input type="text" id="username" value="{{username}}">
+    </div>
 
-    <label>用户名</label>
-    <input type="text" id="username" value="{{username}}">
+    <div class="formline">
+      <label>密码</label>
+      <input type="password" id="password" value="">
+    </div>
+
+    <div class="formline">
+      <button type="button" id="login">登录</button>
+      <a href="/t/7388">忘记密码</a>
+      <a href="/register">注册新账号</a>
+
+    </div>
+
     <br>
-    <label>密码</label>
-    <input type="password" id="password" value="">
-    <br>
-    <label></label>
-    <button type="button" id="login">登录</button>
-    <a style="margin-left:1em;" href="/t/7388">忘记密码</a>
-    <a style="margin-left:2em;" href="/register">注册新账号</a>
+    <!-- <label></label> -->
+
   </form>
   <br>
 
   <div class="post_content">
     <h3>用PGP签名登陆（说明书在<a href="/t/7506">这里</a>）</h3>
-    <textarea id='gpg_commands' rows='1' cols='60'></textarea>
+    <div class="">
+      <textarea id='gpg_commands' rows='1' cols='60'></textarea>
+    </div>
     <!-- <pre><code id='gpg_commands'></code></pre> -->
     <br>
     <a href="#" onclick="copy_clipboard()">将命令拷贝到剪贴板 (copy to clipboard)</a>
     <br>
-    <textarea id="login_pgp_message" rows="10" cols="40" placeholder="请先在上面输入用户名，然后运行黄色框中的命令，把运行结果黏贴到这个文本框中，再点“用PGP签名登录”，失败了可以多试几次"></textarea>
+    <div class="">
+      <textarea id="login_pgp_message" rows="10" cols="40" placeholder="请先在上面输入用户名，然后运行黄色框中的命令，把运行结果黏贴到这个文本框中，再点“用PGP签名登录”，失败了可以多试几次"></textarea>
+    </div>
     <br>
     <button type="button" id="pgp_login">用PGP签名登录</button>
     <br>

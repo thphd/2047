@@ -285,6 +285,7 @@ span.last_commented_date {
     flex-flow: column;
     flex-grow: 1;
     /* max-width: 690px; */
+    max-width: 100%;
 }
 
 body>#content {
@@ -369,7 +370,8 @@ span.floor_num {color: #652929;}
 .register label {
     min-width: 80px;
     display: inline-block;
-    margin: 10px;
+    margin-right: 0.4em;
+    vertical-align: top;
 }
 
 img.headerbtn {
@@ -1484,6 +1486,8 @@ span.quoting {
 textarea {
     font-family: monospace;
     padding: 5px;
+    max-width: 100%;
+    max-width: -webkit-fill-available;
 }
 
 .threadlist_title_youtube {
@@ -1517,6 +1521,7 @@ textarea {
 input[type="text"],input[type="password"] {
     padding: 4px;
     border-radius: 2px;
+    max-width: 100%;
 }
 
 #gpg_commands {
@@ -1524,6 +1529,7 @@ input[type="text"],input[type="password"] {
     background: #e6e6c3;
     padding: 10px;
     font-family: monospace;
+    /* max-width: -webkit-fill-available; */
 }
 
 .post_thread_title {
@@ -2042,4 +2048,16 @@ a.after_linkbox {
     font-weight: bold;
     background: yellow;
     color: red;
+}
+
+.formline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    margin: 3px;
+    line-height: 1.5;
+}
+
+.formline>a {
+    margin-left: 1em;
 }
