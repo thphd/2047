@@ -2036,3 +2036,10 @@ a.after_linkbox {
     font-size: 80%;
     margin-left: 10px;
 }
+
+
+.pmsvalue.hit {
+    font-weight: bold;
+    background: yellow;
+    color: red;
+}

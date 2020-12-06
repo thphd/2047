@@ -2,31 +2,16 @@ from takeoff import Weibo, QQ, JD, SF, Pingan
 
 class Search:
     def __init__(self):
-        self.g1 = [i() for i in (Weibo,QQ)]
-        self.g2 = [i() for i in (JD, SF, Pingan)]
+        self.g = [i() for i in (Weibo,QQ, JD, SF, Pingan)]
 
     def get_sources(self):
-        return [i.path for i in self.g1] + [i.path for i in self.g2]
+        return [i.path for i in self.g]
 
     def search(self, s):
-        # g1 = [i() for i in (Weibo,QQ)]
-        # g2 = [i() for i in (JD, SF, Pingan)]
-        g1,g2 = self.g1, self.g2
-
         s = s.strip().split(' ')[0]
-
         res = []
 
-        try:
-            si = int(s)
-        except:
-            pass
-        else:
-            for i in g1:
-                r = i.find(si)
-                res += r
-
-        for i in g2:
+        for i in self.g:
             r = i.find(s)
             res += r
 

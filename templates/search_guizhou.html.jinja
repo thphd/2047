@@ -28,7 +28,7 @@
 </div>
 
   <div class="search_section">
-  <img src="/images/pooh.jpg" alt="jiangle">
+  <img src="https://i.imgur.com/zPGSL2A.png" alt="jiangle">
   </div>
 {%else%}
 <br>
@@ -53,18 +53,20 @@
 
 {%for i in result%}
   <div class="pmsresult padlr">
+    {%set hit = i.hit or ''%}
     {%for k in i%}
-      {%if i[k] and (i[k]!='\\n')%}
+      {%if i[k] and i[k]!='\\n' and k!='hit' %}
       <div class="pmspair">
 
         <span class='pmskeyname'>{{k}}</span>
 
-          {%if g.logged_in or k=='source'%}
-            <span class='pmsvalue'>{{i[k] | string}}</span>
-          {%else%}
-            <span class='pmsvalue'>{{redact(i[k] | string)}}</span>
-          {%endif%}
-
+            <span class='pmsvalue {{'hit' if k==hit else ''}}'>
+              {%if g.logged_in or k=='source'%}
+                {{i[k] | string}}
+              {%else%}
+                {{redact(i[k] | string)}}
+              {%endif%}
+            </span>
       </div>
       {%endif%}
     {%endfor%}

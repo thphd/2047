@@ -109,11 +109,52 @@ class Weibo:
 
             flush()
 
+    def get_variants(self,s):
+        if not isinstance(s, str):
+            return [s]
+        if len(s)<7: return [s]
+        vs = [s]
+        if s[0]=='0': vs.append(s[1:])
+        if s[0:2]=='00': vs.append(s[2:])
+        vs.append('0'+s)
+        return vs
+
+    def auto_bracketing(self, num, propnames):
+        res = []
+
+        variants = self.get_variants(num)
+
+        for v in variants:
+            for n in propnames:
+                res += self.q(f'''select * from {self.name}
+                where {n}=?1 limit 10''', (v,))
+
+        if not len(res): # if no hit in previous searches
+            for n in propnames:
+                res += self.q(
+                    f'select * from {self.name} where {n}>=?1 order by {n} asc limit 1', (num,))
+                res += self.q(
+                    f'select * from {self.name} where {n}<=?1 order by {n} desc limit 1', (num,))
+        return res
+
+    def resultgen(self, q, l, name_map):
+        d = {}
+        for n, v in zip(name_map, l):
+            d[n] = v
+            if v in self.get_variants(q):
+                d['hit'] = n
+        d['source'] = self.path
+        return d
+
     def find(self, num):
-        res = self.q(f'select * from {self.name} where mobile=? or uid=? limit 10', (num, num))
-        return [dict(weibo_mobile=i[0], weibo_uid=i[1],
-            source=self.path,
-        ) for i in res]
+        try:
+            num = int(num)
+        except:
+            return []
+
+        res = self.auto_bracketing(num, ['mobile', 'uid'])
+        name_map = 'weibo_mobile,weibo_uid'.split(',')
+        return [self.resultgen(num, item, name_map) for item in res]
 
 class QQ(Weibo):
     def __init__(self):
@@ -197,17 +238,13 @@ class QQ(Weibo):
             flush()
 
     def find(self, num):
-        res = self.q(f'select * from {self.name} where mobile=? or uid=? limit 10', (num, num))
-        return [dict(qq_mobile=i[0], qq_number=i[1],
-            source=self.path,
-        ) for i in res]
-
-    # def init_table(self):
-    #     self.q(f'create table {self.name} (mobile integer, uid integer)')
-    #
-    # def create_index(self):
-    #     self.q(f'''create index if not exists mobile_index on {self.name} (mobile)''')
-    #     self.q(f'''create index if not exists uid_index on {self.name} (uid)''')
+        try:
+            num = int(num)
+        except:
+            return []
+        res = self.auto_bracketing(num, ['mobile', 'uid'])
+        name_map = 'qq_mobile,qq_number'.split(',')
+        return [self.resultgen(num, item, name_map) for item in res]
 
 class SF(Weibo):
     def __init__(self):
@@ -298,22 +335,16 @@ class SF(Weibo):
 
             flush()
 
-    def find(self, k):
-        res = self.q(f'select * from {self.name} where mobile=? or name=? limit 20', (k, k))
-        return [dict(sf_name=i[0], sf_mobile=i[1], sf_addr=i[2],
-        source=self.path,
-        ) for i in res]
+    def find(self, num):
+        res = self.auto_bracketing(num, ['mobile', 'name'])
+        name_map = 'sf_name,sf_mobile,sf_addr'.split(',')
+        return [self.resultgen(num, item, name_map) for item in res]
 
 class JD(Weibo):
-    def find(self, k):
-        res = self.q(f'select * from {self.name} where \
-        name=?1 or username=?1 or email=?1 or mobile=?1 or mobile2=?1 limit 20', (k,))
-
-        return [dict(
-            jd_name=i[0], jd_username=i[1], jd_email=i[2],
-            jd_sfz=i[3], jd_mobile=i[4], jd_mobile2=i[5],
-            source=self.path,
-            ) for i in res]
+    def find(self, num):
+        res = self.auto_bracketing(num, ['mobile', 'name','username','email','mobile2'])
+        name_map = 'jd_name,jd_username,jd_email,jd_sfz,jd_mobile,jd_mobile2'.split(',')
+        return [self.resultgen(num, item, name_map) for item in res]
 
     def __init__(self):
         root, dest = self.get_root()
@@ -390,18 +421,11 @@ class JD(Weibo):
             flush()
 
 class Pingan(Weibo):
-    def find(self, k):
-        res = self.q(f'select * from {self.name} where \
-        name=?1 or email=?1 or mobile=?1 limit 20', (k,))
 
-        return [dict(
-            pingan_name=i[0],
-            pingan_sfz=i[1],
-            pingan_mobile=i[2],
-            pingan_email=i[3],
-            source=self.path,
-
-            ) for i in res]
+    def find(self, num):
+        res = self.auto_bracketing(num, ['mobile', 'name', 'email'])
+        name_map = 'pingan_name,pingan_sfz,pingan_mobile,pingan_email'.split(',')
+        return [self.resultgen(num, item, name_map) for item in res]
 
     def __init__(self):
         root, dest = self.get_root()
