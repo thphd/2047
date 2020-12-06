@@ -857,13 +857,20 @@ def get_links():
                 dl['category'] = obj['category']
                 default_category = obj['category']
             else:
-                dl['category'] = default_category
+                if hasstr('cat'):
+                    dl['category'] = obj['cat']
+                    default_category = obj['cat']
+                else:
+                    dl['category'] = default_category
 
             fin.append(dl)
             dlc = dl['category']
             if dlc not in din:
                 din[dlc] = []
             din[dlc].append(dl)
+
+    for key in din:
+        din[key] = sorted(din[key], key=lambda k:k['name'].lower())
 
     return din, fin
 

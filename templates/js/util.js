@@ -1359,7 +1359,8 @@ function modify_entity(key){
     })
   })
   .then(res=>{
-    window.location.reload()
+    alert('修改成功')
+    // window.location.reload()
   })
   .catch(alert)
 }
