@@ -113,6 +113,20 @@ class AQLController:
         self.prepare()
         return self.aql('for i in {} filter {} return i'.format(_from, _filter), **kw)
 
+    def wait_for_online(self):
+        i = 1
+        while 1:
+            try:
+                one = self.aql('return 1')[0]
+            except Exception as e:
+                print(e)
+                print('fail #' + str(i) + '\n')
+                i+=1
+                time.sleep(1)
+            else:
+                if one==1:
+                    return
+
 class QueryString:
     def __init__(self, s='', **kw):
         self.s = s

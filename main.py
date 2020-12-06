@@ -28,6 +28,8 @@ import requests as r
 import mimetypes as mt
 
 from commons import *
+wait_for_database_online()
+
 from medals import get_medals, get_user_medals
 
 from flask_cors import CORS

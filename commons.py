@@ -415,21 +415,8 @@ aql = aqlc.aql
 
 def wait_for_database_online():
     print('waiting for database online...')
-    i = 1
-    while 1:
-        try:
-            one = aql('return 1')[0]
-        except Exception as e:
-            print(e)
-            print('fail #' + str(i) + '\n')
-            i+=1
-            time.sleep(0.3)
-        else:
-            if one==1:return
-        continue
+    aqlc.wait_for_online()
     print('database online.')
-
-wait_for_database_online()
 
 # site pagination defaults
 
