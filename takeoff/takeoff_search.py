@@ -15,6 +15,8 @@ class Search:
             r = i.find(s)
             res += r
 
+        res = sorted(res, key=lambda a:1 if 'hit' in a else 2)
+
         return res
 
 if __name__ == '__main__':
