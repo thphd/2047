@@ -57,8 +57,10 @@
   <div class="pmsresult padlr">
     {%set hit = i.hit or ''%}
     {%for k in i%}
-      {%if i[k] and i[k]!='\\n' and k!='hit' %}
-      <div class="pmspair">
+      {%if i[k] and i[k]!='\\n' and (k not in ['hit', 'maxscore']) %}
+      <div class="pmspair" style="opacity:{{
+        1 if i.hit else (((0.3,i.maxscore)|max) or 0.6)
+        }};">
 
         <span class='pmskeyname'>{{k}}</span>
 

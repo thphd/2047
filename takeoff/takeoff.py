@@ -127,7 +127,7 @@ class Weibo:
         vs.append('0'+s)
         return vs
 
-    def auto_bracketing(self, num, propnames):
+    def auto_bracketed_search(self, num, propnames):
         res = []
 
         variants = self.get_variants(num)
@@ -147,10 +147,16 @@ class Weibo:
 
     def resultgen(self, q, l, name_map):
         d = {}
+        d['maxscore'] = 0
         for n, v in zip(name_map, l):
             d[n] = v
-            if v in self.get_variants(q):
+            variants = self.get_variants(q)
+            if v in variants:
                 d['hit'] = n
+            else:
+                score = mssim(v, q)
+                d['maxscore'] = max(d['maxscore'], score)
+
         d['source'] = self.path
         return d
 
@@ -160,9 +166,32 @@ class Weibo:
         except:
             return []
 
-        res = self.auto_bracketing(num, ['mobile', 'uid'])
+        res = self.auto_bracketed_search(num, ['mobile', 'uid'])
         name_map = 'weibo_mobile,weibo_uid'.split(',')
         return [self.resultgen(num, item, name_map) for item in res]
+
+def ssim(s1, s2):
+    tot = 0
+    score = 0
+    for i in range(min(len(s1), len(s2))):
+        if s1[i] == s2[i]:
+            score+=1
+        tot+=1
+    if tot==0: return 0
+    return score/tot
+
+def mssim(s1, s2):
+    s1, s2 = str(s1), str(s2)
+    if min(len(s1), len(s2))<1:
+        return 0
+
+    return max(
+        ssim(s1, s2),
+        ssim(s1[1:], s2),
+        ssim(s1[2:], s2),
+        ssim(s1, s2[1:]),
+        ssim(s1, s2[2:]),
+    )
 
 class QQ(Weibo):
     def set_paths(self):
@@ -242,7 +271,7 @@ class QQ(Weibo):
             num = int(num)
         except:
             return []
-        res = self.auto_bracketing(num, ['mobile', 'uid'])
+        res = self.auto_bracketed_search(num, ['mobile', 'uid'])
         name_map = 'qq_mobile,qq_number'.split(',')
         return [self.resultgen(num, item, name_map) for item in res]
 
@@ -326,13 +355,13 @@ class SF(Weibo):
             flush()
 
     def find(self, num):
-        res = self.auto_bracketing(num, ['mobile', 'name'])
+        res = self.auto_bracketed_search(num, ['mobile', 'name'])
         name_map = 'sf_name,sf_mobile,sf_addr'.split(',')
         return [self.resultgen(num, item, name_map) for item in res]
 
 class JD(Weibo):
     def find(self, num):
-        res = self.auto_bracketing(num, ['mobile', 'name','username','email','mobile2'])
+        res = self.auto_bracketed_search(num, ['mobile', 'name','username','email','mobile2'])
         name_map = 'jd_name,jd_username,jd_email,jd_sfz,jd_mobile,jd_mobile2'.split(',')
         return [self.resultgen(num, item, name_map) for item in res]
 
@@ -403,13 +432,15 @@ class JD(Weibo):
 class Pingan(Weibo):
 
     def find(self, num):
-        res = self.auto_bracketing(num, ['mobile', 'name', 'email'])
-        name_map = 'pingan_name,pingan_sfz,pingan_mobile,pingan_email'.split(',')
+        res = self.auto_bracketed_search(num, ['mobile', 'name', 'email'])
+        name_map = 'name,sfz,mobile,email'.split(',')
+        name_map = [self.abbr+"_"+k for k in name_map]
         return [self.resultgen(num, item, name_map) for item in res]
 
     def set_paths(self):
         self.path = '1/平安保险2020年-10w.csv'
         self.name = 'pinganleak'
+        self.abbr = 'pingan'
 
     def init_table(self):
         self.q(f'create table {self.name} \
@@ -471,6 +502,66 @@ class Pingan(Weibo):
 
             flush()
 
+class CarOwner20(Pingan):
+    def set_paths(self):
+        self.path = '1/全国车主76万2020年.csv'
+        self.name = 'co20leak'
+        self.abbr = 'carowner20'
+
+    def init_table(self):
+        self.q(f'create table {self.name} \
+        (name text, sfz text, mobile text, email text, addr text)')
+
+    def parse(self):
+        flushevery = 10000
+
+        dl = []
+        def flush():
+            nonlocal dl
+            print('got', len(dl))
+            self.qmany(f'insert into {self.name} values (?,?,?,?,?)', dl)
+            self.commit()
+
+            dl = []
+
+        # with open(self.fullpath, 'r', encoding='utf-8') as f:
+        with open(self.fullpath, 'rb') as f:
+            count = 0
+            countlines = 0
+            while 1:
+                k = f.readline()
+
+                if len(k)<1:
+                    break
+
+                k = k.decode('gb2312', errors='ignore')
+                k = k.strip()
+
+                countlines+=1
+
+                cols = k.split(',')
+                assert len(cols)==22
+
+                c = cols
+
+                name, sfz, mobile, email, addr = tpl = c[1], c[2], c[4], c[5], c[8]
+                # print(cols[3])
+
+                tpl = tuple((i.lower().strip() for i in tpl))
+                # print(tpl)
+
+                dl.append(tpl)
+
+                # if count==3560: break
+
+                if len(dl)>=flushevery:
+                    count+=len(dl)
+                    flush()
+                    print(tpl)
+                    print('count:', count, 'lines:', countlines)
+
+            flush()
+
 def emp(k):
     k.init_table()
     k.parse()
@@ -508,3 +599,6 @@ if __name__ == '__main__':
 
     print(pingan.find('陈希'))
     print(pingan.find('13079804169'))
+
+    co20 = CarOwner20()
+    emp(co20)

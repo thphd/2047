@@ -1,9 +1,11 @@
-from takeoff import Weibo, QQ, JD, SF, Pingan
+from takeoff import *
 import time
 
 class Search:
     def __init__(self):
-        self.g = [i() for i in (Weibo,QQ, JD, SF, Pingan)]
+        self.g = [i() for i in (
+            Weibo,QQ, JD, SF, Pingan, CarOwner20
+        )]
 
     def get_sources(self):
         return [dict(
@@ -22,7 +24,10 @@ class Search:
             r = i.find(s)
             res += r
 
-        res = sorted(res, key=lambda a:1 if 'hit' in a else 2)
+        res = reversed(
+            sorted(res, key=lambda a:
+            1 if 'hit' in a else (a['maxscore'] if 'maxscore' in a else 0))
+        )
 
         t1 = time.time()-t0
 
