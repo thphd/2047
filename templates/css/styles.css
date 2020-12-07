@@ -2005,7 +2005,7 @@ span.marked {
 .linkuploader {
     display: inline-block;
     font-size: 12px;
-    opacity: .4;
+    opacity: .3;
 }
 
 .linkbox {
@@ -2014,7 +2014,7 @@ span.marked {
     justify-content: space-between;
     flex-wrap: wrap;
     align-items: center;
-    margin: 0 0 0 12px;
+    margin: .4em 0 .4em .8em;
     line-height: 1.5;
 }
 
@@ -2025,7 +2025,7 @@ span.marked {
 }
 
 .link_brief {
-    color: gray;
+    color: #a2a2a2;
     font-size: 80%;
 }
 
