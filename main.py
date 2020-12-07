@@ -2500,7 +2500,7 @@ def tksearch():
         )
     else:
         # result = pm_search_term(q)
-        result = tks.search(q)
+        result,t1 = tks.search(q)
         return render_template_g(
             'search_guizhou.html.jinja',
             query=q,
@@ -2508,6 +2508,7 @@ def tksearch():
             page_title='云上贵州 - '+flask.escape(q),
             # **result,
             result=result,
+            t1=t1,
         )
 
 @app.route('/u/<int:uid>/favorites')

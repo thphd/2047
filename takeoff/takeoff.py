@@ -1,5 +1,9 @@
-import sys, time
+import sys, time, os, re
 sys.path.append('../')
+
+def filesize(f):
+    if not os.path.exists(f): return 0
+    return os.path.getsize(f)
 
 # import monkeypatch
 # from commons import *
@@ -20,14 +24,18 @@ class Weibo:
         self.q('PRAGMA journal_mode = MEMORY')
         self.q('PRAGMA cache_size = 1000000')
 
+    def set_paths(self):
+        self.path = '微博五亿2019.txt'
+        self.name = 'weibo_500m'
+
     def __init__(self):
         root, dest = self.get_root()
-
-        self.path = '微博五亿2019.txt'
+        self.set_paths()
         self.fullpath = root + self.path
-
-        self.name = 'weibo_500m'
         self.dbpath = dest + self.name + '.db'
+
+        self.origsize = filesize(self.fullpath)
+        self.dbsize = filesize(self.dbpath)
 
         self.init_sqlite()
 
@@ -157,17 +165,9 @@ class Weibo:
         return [self.resultgen(num, item, name_map) for item in res]
 
 class QQ(Weibo):
-    def __init__(self):
-        root, dest = self.get_root()
-
-        # self.path = 'q绑.rar'
+    def set_paths(self):
         self.path = '6.9更新总库(qq).txt'
-        self.fullpath = root + self.path
-
         self.name = 'qqleak'
-        self.dbpath = dest + self.name + '.db'
-
-        self.init_sqlite()
 
     def parse(self):
         flushevery = 100000
@@ -247,18 +247,9 @@ class QQ(Weibo):
         return [self.resultgen(num, item, name_map) for item in res]
 
 class SF(Weibo):
-    def __init__(self):
-        root, dest = self.get_root()
-
+    def set_paths(self):
         self.path = '1/shunfeng_script.sql'
-        self.fullpath = root + self.path
-
         self.name = 'sfleak'
-        self.dbpath = dest + self.name + '.db'
-
-        self.init_sqlite()
-
-        # self.conn.text_factory = lambda b:b.decode('utf-16')
 
     def init_table(self):
         self.q(f'create table {self.name} (mobile text, name text, addr text)')
@@ -280,7 +271,6 @@ class SF(Weibo):
             dl = []
 
         with open(self.fullpath, 'r', encoding='utf-16') as f:
-            import re
             count = 0
             countlines = 0
             while 1:
@@ -346,18 +336,9 @@ class JD(Weibo):
         name_map = 'jd_name,jd_username,jd_email,jd_sfz,jd_mobile,jd_mobile2'.split(',')
         return [self.resultgen(num, item, name_map) for item in res]
 
-    def __init__(self):
-        root, dest = self.get_root()
-
+    def set_paths(self):
         self.path = '1/www_jd_com_12g.txt'
-        self.fullpath = root + self.path
-
         self.name = 'jdleak'
-        self.dbpath = dest + self.name + '.db'
-
-        self.init_sqlite()
-
-        # self.conn.text_factory = lambda b:b.decode('utf-16')
 
     def init_table(self):
         self.q(f'create table {self.name} (name text, username text, email text, sfz text, mobile text, mobile2 text)')
@@ -381,7 +362,6 @@ class JD(Weibo):
             dl = []
 
         with open(self.fullpath, 'r', encoding='utf-8') as f:
-            import re
             count = 0
             countlines = 0
             while 1:
@@ -427,16 +407,9 @@ class Pingan(Weibo):
         name_map = 'pingan_name,pingan_sfz,pingan_mobile,pingan_email'.split(',')
         return [self.resultgen(num, item, name_map) for item in res]
 
-    def __init__(self):
-        root, dest = self.get_root()
-
+    def set_paths(self):
         self.path = '1/平安保险2020年-10w.csv'
-        self.fullpath = root + self.path
-
         self.name = 'pinganleak'
-        self.dbpath = dest + self.name + '.db'
-
-        self.init_sqlite()
 
     def init_table(self):
         self.q(f'create table {self.name} \
@@ -462,7 +435,6 @@ class Pingan(Weibo):
 
         # with open(self.fullpath, 'r', encoding='utf-8') as f:
         with open(self.fullpath, 'rb') as f:
-            import re
             count = 0
             countlines = 0
             while 1:
@@ -499,58 +471,40 @@ class Pingan(Weibo):
 
             flush()
 
+def emp(k):
+    k.init_table()
+    k.parse()
+    k.test()
+    k.create_index()
+    k.test()
+
 if __name__ == '__main__':
     weibo = Weibo()
-
-    # weibo.init_table()
-    # weibo.parse()
-    # weibo.test()
-    # weibo.create_index()
-    # weibo.test()
+    # emp(weibo)
 
     print(weibo.find('15890981333'))
     print(weibo.find('3798002017'))
 
     qq = QQ()
-
-    # qq.init_table()
-    # qq.parse()
-    # qq.test()
-    # qq.create_index()
-    # qq.test()
+    # emp(qq)
 
     print(qq.find('13550121037'))
 
     sf = SF()
-
-    # sf.init_table()
-    # sf.parse()
-    # sf.test()
-    # sf.create_index()
-    # sf.test()
+    # emp(sf)
 
     print(sf.find('黄小姐'))
     print(sf.find('13662168290'))
 
     jd = JD()
-
-    # jd.init_table()
-    # jd.parse()
-    # jd.test()
-    # jd.create_index()
-    # jd.test()
+    # emp(jd)
 
     print(jd.find('刘庆宁'))
     print(jd.find('OGVTK28'))
     print(jd.find('13165993135'))
 
     pingan = Pingan()
-
-    # pingan.init_table()
-    # pingan.parse()
-    # pingan.test()
-    # pingan.create_index()
-    # pingan.test()
+    # emp(pingan)
 
     print(pingan.find('陈希'))
     print(pingan.find('13079804169'))

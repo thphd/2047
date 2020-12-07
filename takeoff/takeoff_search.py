@@ -1,13 +1,20 @@
 from takeoff import Weibo, QQ, JD, SF, Pingan
+import time
 
 class Search:
     def __init__(self):
         self.g = [i() for i in (Weibo,QQ, JD, SF, Pingan)]
 
     def get_sources(self):
-        return [i.path for i in self.g]
+        return [dict(
+            path = i.path,
+            origsize = i.origsize,
+            dbsize = i.dbsize,
+        ) for i in self.g]
 
     def search(self, s):
+        t0 = time.time()
+
         s = s.strip().split(' ')[0]
         res = []
 
@@ -17,7 +24,9 @@ class Search:
 
         res = sorted(res, key=lambda a:1 if 'hit' in a else 2)
 
-        return res
+        t1 = time.time()-t0
+
+        return res, t1
 
 if __name__ == '__main__':
     s = Search()
