@@ -4,7 +4,7 @@ import time
 class Search:
     def __init__(self):
         self.g = [i() for i in (
-            Weibo,QQ, JD, SF, Pingan, CarOwner20
+            Weibo,QQ, JD, SF, Pingan, CarOwner20, Telegram40,
         )]
 
     def get_sources(self):
@@ -12,6 +12,7 @@ class Search:
             path = i.path,
             origsize = i.origsize,
             dbsize = i.dbsize,
+            abbr = i.abbr,
         ) for i in self.g]
 
     def search(self, s):

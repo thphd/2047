@@ -24,9 +24,9 @@
 ''')|safe}}
 
 <h2>数据源</h2>
-<ul style="opacity:.5;">
+<ul style="opacity:.8;">
   {%for i in sources or []%}
-  <li>{{i.path}} ({{(i.origsize//(1024*1024))}} MB) </li>
+  <li>[ {{i.abbr}} ] {{i.path}} ({{(i.origsize//(1024*1024))}} MB into {{(i.dbsize//(1024*1024))}} MB) </li>
   {%endfor%}
 </ul>
 

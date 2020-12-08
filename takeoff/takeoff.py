@@ -27,6 +27,7 @@ class Weibo:
     def set_paths(self):
         self.path = '微博五亿2019.txt'
         self.name = 'weibo_500m'
+        self.abbr = 'weibo'
 
     def __init__(self):
         root, dest = self.get_root()
@@ -36,6 +37,10 @@ class Weibo:
 
         self.origsize = filesize(self.fullpath)
         self.dbsize = filesize(self.dbpath)
+
+        if self.dbsize<50000 and self.dbsize!=0:
+            print('delete', self.dbpath)
+            os.remove(self.dbpath)
 
         self.init_sqlite()
 
@@ -63,7 +68,6 @@ class Weibo:
     def create_index(self):
         self.q(f'''create index if not exists mobile_index on {self.name} (mobile)''')
         self.q(f'''create index if not exists uid_index on {self.name} (uid)''')
-
 
     def parse(self):
         flushevery = 100000
@@ -119,12 +123,18 @@ class Weibo:
 
     def get_variants(self,s):
         if not isinstance(s, str):
-            return [s]
-        if len(s)<7: return [s]
-        vs = [s]
-        if s[0]=='0': vs.append(s[1:])
-        if s[0:2]=='00': vs.append(s[2:])
-        vs.append('0'+s)
+            vs = [s]
+            # int
+            if s > 100_0000_0000 and s < 200_0000_0000:
+                vs.append(s+86_000_0000_0000)
+        else:
+            if len(s)<7: return [s]
+            vs = [s]
+            if s[0]=='0': vs.append(s[1:])
+            if s[0:2]=='00': vs.append(s[2:])
+            vs.append('0'+s)
+            vs.append('86'+s)
+
         return vs
 
     def auto_bracketed_search(self, num, propnames):
@@ -146,6 +156,8 @@ class Weibo:
         return res
 
     def resultgen(self, q, l, name_map):
+        name_map = [self.abbr+"_"+k for k in name_map]
+
         d = {}
         d['maxscore'] = 0
         for n, v in zip(name_map, l):
@@ -167,7 +179,7 @@ class Weibo:
             return []
 
         res = self.auto_bracketed_search(num, ['mobile', 'uid'])
-        name_map = 'weibo_mobile,weibo_uid'.split(',')
+        name_map = 'mobile,uid'.split(',')
         return [self.resultgen(num, item, name_map) for item in res]
 
 def ssim(s1, s2):
@@ -197,6 +209,7 @@ class QQ(Weibo):
     def set_paths(self):
         self.path = '6.9更新总库(qq).txt'
         self.name = 'qqleak'
+        self.abbr = 'qq'
 
     def parse(self):
         flushevery = 100000
@@ -272,13 +285,14 @@ class QQ(Weibo):
         except:
             return []
         res = self.auto_bracketed_search(num, ['mobile', 'uid'])
-        name_map = 'qq_mobile,qq_number'.split(',')
+        name_map = 'mobile,number'.split(',')
         return [self.resultgen(num, item, name_map) for item in res]
 
 class SF(Weibo):
     def set_paths(self):
         self.path = '1/shunfeng_script.sql'
         self.name = 'sfleak'
+        self.abbr = 'sf'
 
     def init_table(self):
         self.q(f'create table {self.name} (mobile text, name text, addr text)')
@@ -356,18 +370,19 @@ class SF(Weibo):
 
     def find(self, num):
         res = self.auto_bracketed_search(num, ['mobile', 'name'])
-        name_map = 'sf_name,sf_mobile,sf_addr'.split(',')
+        name_map = 'name,mobile,addr'.split(',')
         return [self.resultgen(num, item, name_map) for item in res]
 
 class JD(Weibo):
     def find(self, num):
         res = self.auto_bracketed_search(num, ['mobile', 'name','username','email','mobile2'])
-        name_map = 'jd_name,jd_username,jd_email,jd_sfz,jd_mobile,jd_mobile2'.split(',')
+        name_map = 'name,username,email,sfz,mobile,mobile2'.split(',')
         return [self.resultgen(num, item, name_map) for item in res]
 
     def set_paths(self):
         self.path = '1/www_jd_com_12g.txt'
         self.name = 'jdleak'
+        self.abbr = 'jd'
 
     def init_table(self):
         self.q(f'create table {self.name} (name text, username text, email text, sfz text, mobile text, mobile2 text)')
@@ -434,7 +449,6 @@ class Pingan(Weibo):
     def find(self, num):
         res = self.auto_bracketed_search(num, ['mobile', 'name', 'email'])
         name_map = 'name,sfz,mobile,email'.split(',')
-        name_map = [self.abbr+"_"+k for k in name_map]
         return [self.resultgen(num, item, name_map) for item in res]
 
     def set_paths(self):
@@ -502,6 +516,80 @@ class Pingan(Weibo):
 
             flush()
 
+class Telegram40(Weibo):
+    def set_paths(self):
+        self.path = 'telegram_40M.txt'
+        self.name = 'telegram40M'
+        self.abbr = 'tg40M'
+
+    def parse(self):
+        flushevery = 100000
+
+        dl = []
+        def flush():
+            nonlocal dl
+            print('got', len(dl))
+            self.qmany(f'insert into {self.name} values (?,?)', dl)
+            self.commit()
+
+            dl = []
+
+        # with open(self.fullpath, 'r', encoding='utf-8') as f:
+        with open(self.fullpath, 'rb') as f:
+            count = 0
+            countlines = 0
+            while 1:
+                k = f.readline()
+
+                if len(k)<1:
+                    break
+
+                k = k.decode('utf-8', errors='ignore')
+                k = k.strip()
+
+                countlines+=1
+
+                cols = k.split('|')
+                # print(len(cols))
+                assert len(cols)>=9
+
+                c = cols
+
+                def p(ix=4):
+                    return cols[ix], cols[ix+1]
+                mobile, uid =tpl= p(4)
+                # print(cols[3])
+
+                success = False
+                for i in range(30):
+                    try:
+                        mobile, uid =tpl= p(4+i)
+                        tpl = tuple((int(i.lower().strip()) for i in tpl))
+                    # print(tpl)
+                    except Exception as e:
+                        # print(e)
+                        continue
+                    else:
+                        success=True
+                        break
+
+                if success==False:
+                    print('gave up on', k)
+                    continue
+
+                dl.append(tpl)
+
+                # if count==3560: break
+
+                if len(dl)>=flushevery:
+                    count+=len(dl)
+                    flush()
+                    print(tpl)
+                    print('count:', count, 'lines:', countlines)
+
+            flush()
+
+
 class CarOwner20(Pingan):
     def set_paths(self):
         self.path = '1/全国车主76万2020年.csv'
@@ -563,6 +651,10 @@ class CarOwner20(Pingan):
             flush()
 
 def emp(k):
+    if filesize(k.dbpath)>10000:
+        print(k.dbpath, 'exists, skip..')
+        return
+        
     k.init_table()
     k.parse()
     k.test()
@@ -571,34 +663,37 @@ def emp(k):
 
 if __name__ == '__main__':
     weibo = Weibo()
-    # emp(weibo)
+    emp(weibo)
 
     print(weibo.find('15890981333'))
     print(weibo.find('3798002017'))
 
     qq = QQ()
-    # emp(qq)
+    emp(qq)
 
     print(qq.find('13550121037'))
 
     sf = SF()
-    # emp(sf)
+    emp(sf)
 
     print(sf.find('黄小姐'))
     print(sf.find('13662168290'))
 
     jd = JD()
-    # emp(jd)
+    emp(jd)
 
     print(jd.find('刘庆宁'))
     print(jd.find('OGVTK28'))
     print(jd.find('13165993135'))
 
     pingan = Pingan()
-    # emp(pingan)
+    emp(pingan)
 
     print(pingan.find('陈希'))
     print(pingan.find('13079804169'))
 
     co20 = CarOwner20()
     emp(co20)
+
+    tg40 = Telegram40()
+    emp(tg40)
