@@ -1,9 +1,21 @@
 import sys, time, os, re
 sys.path.append('../')
 
+def ensure_filelist(p):
+    try:
+        files = os.listdir(p)
+        files = [p +'/'+ f for f in files]
+    except NotADirectoryError as e:
+        files = [p]
+    return files
+
 def filesize(f):
     if not os.path.exists(f): return 0
-    return os.path.getsize(f)
+    fl = ensure_filelist(f)
+    tot = 0
+    for i in fl:
+        tot += os.path.getsize(i)
+    return tot
 
 # import monkeypatch
 # from commons import *
@@ -145,7 +157,7 @@ class Weibo:
         for v in variants:
             for n in propnames:
                 res += self.q(f'''select * from {self.name}
-                where {n}=?1 limit 10''', (v,))
+                where {n}=?1 limit 30''', (v,))
 
         if not len(res): # if no hit in previous searches
             for n in propnames:
@@ -165,6 +177,7 @@ class Weibo:
             variants = self.get_variants(q)
             if v in variants:
                 d['hit'] = n
+                d['maxscore'] = 1
             else:
                 score = mssim(v, q)
                 d['maxscore'] = max(d['maxscore'], score)
@@ -182,13 +195,140 @@ class Weibo:
         name_map = 'mobile,uid'.split(',')
         return [self.resultgen(num, item, name_map) for item in res]
 
+class Hotel2013(Weibo):
+    def set_paths(self):
+        self.path = '2000W开房-2013'
+        self.name = 'hotel2013'
+        self.abbr = 'hotel13'
+
+        self.attrs = 'name,sfz,mobile,email,addr'.split(',')
+        self.idxes = 'name,mobile,email'.split(',')
+
+    def init_table(self):
+        self.q(f'create table {self.name} ('+
+        ','.join([i for i in self.attrs])
+        +')')
+
+    def create_index(self):
+        def ci(name):
+            self.q(f'''create index if not exists {name}_index on {self.name} ({name})''')
+
+        [ci(k) for k in self.idxes]
+
+    def find(self, num):
+        res = self.auto_bracketed_search(num, self.idxes)
+        name_map = self.attrs
+        return [self.resultgen(num, item, name_map) for item in res]
+
+
+    def parse(self):
+
+        flushevery = 100000
+        count = 0
+
+        dl = []
+        def flush():
+            nonlocal dl
+            print('got', len(dl))
+            self.qmany(f'insert into {self.name} values (?,?,?,?,?)', dl)
+            self.commit()
+            dl = []
+
+        def eat(tpl):
+            nonlocal count
+
+            dl.append(tpl)
+
+            if len(dl)>=flushevery:
+                count+=len(dl)
+                flush()
+                print(tpl)
+                print('count:', count)
+
+
+        files = ensure_filelist(self.fullpath)
+        print(files)
+        # exit()
+
+        for path in files:
+            import csv
+            with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+                # reader = csv.reader(f, )
+
+                print('opened', path)
+
+                colnames = []
+                colidx = {}
+
+                import re
+                fcount = 0
+                while 1:
+                    k = f.readline()
+                    if k=='':
+                        break
+
+                    cols = k.split(',')
+
+                    if len(cols)<33:
+                        if len(cols)<3:
+                            print('shortcol', cols)
+                            continue
+                        else:
+                            nc = f.readline().split(',')
+
+                            if len(nc)<3:
+                                print('shortcol(nc)', nc)
+                                continue
+                            else:
+
+                                cols[-1] = cols[-1].strip()+ nc[0].strip()
+                                cols += nc[1:]
+
+                                if len(cols)!=33:
+                                    print('failed',count, fcount, cols)
+                                    continue
+                                else:
+                                    print('joined', cols)
+
+                    cols = [c.strip().lower().replace(' ','') for c in cols]
+
+                    if fcount==0:
+                        colnames = cols
+                        for idx, i in enumerate(colnames):
+                            colidx[i] = idx
+                        colidx['name']=0
+
+                        print(colidx)
+                        fcount+=1
+                        continue
+
+                    # print(len(cols))
+                    assert len(cols) >= len(colnames)
+
+
+                    def ob(s): return cols[colidx[s]]
+
+                    name = ob('name')
+                    sfz = ob('ctfid')
+                    addr = ob('address')
+                    mobile = ob('mobile')
+                    tel = ob('tel')
+                    email = ob('email')
+
+                    mobile = mobile if len(mobile) > len(tel) else tel
+
+                    # print(name, sfz, mobile, email, addr)
+                    eat((name,sfz,mobile,email,addr))
+                    fcount+=1
+
+        flush()
+
 def ssim(s1, s2):
-    tot = 0
+    tot = max(len(s1), len(s2))
     score = 0
     for i in range(min(len(s1), len(s2))):
         if s1[i] == s2[i]:
             score+=1
-        tot+=1
     if tot==0: return 0
     return score/tot
 
@@ -425,11 +565,11 @@ class JD(Weibo):
                 # print(g[1], g[2], g[6])
 
                 name, username, email, sfz, mobile, mobile2 =\
-                    g[1], g[2], g[4].lower(), g[5], g[6], g[7]
+                    g[1], g[2], g[4], g[5], g[6], g[7]
 
 
                 tpl = (name, username, email, sfz, mobile, mobile2)
-                tpl = tuple(( k.strip().replace('\\N', '') for k in tpl))
+                tpl = tuple(( k.strip().lower().replace('\\n', '') for k in tpl))
                 # print(tpl)
 
                 dl.append(tpl)
@@ -520,7 +660,7 @@ class Telegram40(Weibo):
     def set_paths(self):
         self.path = 'telegram_40M.txt'
         self.name = 'telegram40M'
-        self.abbr = 'tg40M'
+        self.abbr = 'tg40m'
 
     def parse(self):
         flushevery = 100000
@@ -594,7 +734,7 @@ class CarOwner20(Pingan):
     def set_paths(self):
         self.path = '1/全国车主76万2020年.csv'
         self.name = 'co20leak'
-        self.abbr = 'carowner20'
+        self.abbr = 'co20'
 
     def init_table(self):
         self.q(f'create table {self.name} \
@@ -654,7 +794,7 @@ def emp(k):
     if filesize(k.dbpath)>10000:
         print(k.dbpath, 'exists, skip..')
         return
-        
+
     k.init_table()
     k.parse()
     k.test()
@@ -697,3 +837,6 @@ if __name__ == '__main__':
 
     tg40 = Telegram40()
     emp(tg40)
+
+    hotel2013 = Hotel2013()
+    emp(hotel2013)

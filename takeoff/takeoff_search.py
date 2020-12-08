@@ -4,7 +4,7 @@ import time
 class Search:
     def __init__(self):
         self.g = [i() for i in (
-            Weibo,QQ, JD, SF, Pingan, CarOwner20, Telegram40,
+            Weibo,QQ, JD, SF, Pingan, CarOwner20, Telegram40, Hotel2013,
         )]
 
     def get_sources(self):
@@ -26,9 +26,10 @@ class Search:
             res += r
 
         res = reversed(
-            sorted(res, key=lambda a:
-            1 if 'hit' in a else (a['maxscore'] if 'maxscore' in a else 0))
+            sorted(res, key=lambda a: a['maxscore'])
         )
+
+        res = [k for k in res if k['maxscore'] > 0.25]
 
         t1 = time.time()-t0
 
