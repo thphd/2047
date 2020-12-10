@@ -380,6 +380,7 @@ class Paginator:
 
             remove_duplicate_brief(postlist)
             mark_blacklisted(postlist)
+            postlist = sink_deleted(postlist)
 
             return postlist, pagination_obj
 
@@ -1358,6 +1359,18 @@ def mark_blacklisted(postlist):
         if i['uid'] in bl:
             print(i)
             postlist[idx]['blacklist'] = True
+
+def sink_deleted(postlist):
+    newlist = []
+    badapple = []
+    for i in postlist:
+        if 'blacklist' in i or 'delete' in i:
+            badapple.append(i)
+        else:
+            newlist.append(i)
+
+    newlist += badapple
+    return newlist
 
 # list of user posts.
 @app.route('/u/<int:uid>/p')

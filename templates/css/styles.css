@@ -1916,7 +1916,7 @@ input#search_term {
 .tag {
     background-color: #4c7150a1;
     color: white;
-    padding: 2px 3px;
+    padding: 4px 5px;
     font-size: 12px;
     border-radius: 3px;
     display: inline-block;

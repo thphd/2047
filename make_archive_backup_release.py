@@ -25,7 +25,7 @@ if not args.upload:
     exit()
 
 def accept(fn):
-    nope = 'conversations histories messages logs passwords invitations exams answersheets operations notifications questions'.split(' ')
+    nope = 'conversations histories messages logs passwords invitations exams answersheets operations notifications questions blacklist'.split(' ')
     # for obvious reasons
     for k in nope:
         if k in fn:

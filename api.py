@@ -781,7 +781,7 @@ let pinned = t_man > t_now or null
 let votes = t.amv or 0
 let points = max([(votes - 0.9), 0]) * 3 + 1 + t.nreplies * .2
 let t_ref = t_submitted * 0.4 + t_updated * 0.6
-let t_offset = 3600*1000*3
+let t_offset = 3600*1000*2
 let t_hn = max([t_now + t_offset - (t_now - t_ref + t_offset) / sqrt(points), t_man])
 
 //let min_interval = 5*60*1000
@@ -1970,7 +1970,7 @@ def _():
 
     curr = get_blacklist()
 
-    mbs = max_blacklist_size = 5
+    mbs = max_blacklist_size = 15
     if len(curr)>=mbs and enabled == True:
         raise Exception(f'you cannot blacklist more than {mbs} user(s)')
 
@@ -2021,6 +2021,16 @@ def im_in_blacklist_of(uid):
     if res:
         return True
     return False
+
+@register('get_blacklist_all')
+def _():
+    must_be_admin()
+    res = aql('''for i in blacklist filter i.enabled==true
+    let user = (for u in users filter u.uid==i.uid return u)[0]
+    let to_user = (for u in users filter u.uid==i.to_uid return u)[0]
+    return merge(i,{user, to_user})
+    ''')
+    return {'blacklist': [(l['user']['name'],'blacklisted',l['to_user']['name']) for l in res]}
 
 # feedback regulated ping service
 # average 1 ping every 3 sec
