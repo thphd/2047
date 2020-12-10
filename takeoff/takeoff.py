@@ -41,6 +41,9 @@ class Weibo:
         self.name = 'weibo_500m'
         self.abbr = 'weibo'
 
+        self.attrs = 'mobile,uid'.split(',')
+        self.idxes = 'mobile,uid'.split(',')
+
     def __init__(self):
         root, dest = self.get_root()
         self.set_paths()
@@ -78,8 +81,10 @@ class Weibo:
         self.q(f'create table {self.name} (mobile integer, uid integer)')
 
     def create_index(self):
-        self.q(f'''create index if not exists mobile_index on {self.name} (mobile)''')
-        self.q(f'''create index if not exists uid_index on {self.name} (uid)''')
+        def ci(name):
+            self.q(f'''create index if not exists {name}_index on {self.name} ({name})''')
+
+        [ci(k) for k in self.idxes]
 
     def parse(self):
         flushevery = 100000
@@ -191,9 +196,8 @@ class Weibo:
         except:
             return []
 
-        res = self.auto_bracketed_search(num, ['mobile', 'uid'])
-        name_map = 'mobile,uid'.split(',')
-        return [self.resultgen(num, item, name_map) for item in res]
+        res = self.auto_bracketed_search(num, self.idxes)
+        return [self.resultgen(num, item, self.attrs) for item in res]
 
 class Hotel2013(Weibo):
     def set_paths(self):
@@ -206,7 +210,7 @@ class Hotel2013(Weibo):
 
     def init_table(self):
         self.q(f'create table {self.name} ('+
-        ','.join([i for i in self.attrs])
+        ','.join([i+' text' for i in self.attrs])
         +')')
 
     def create_index(self):
@@ -351,6 +355,9 @@ class QQ(Weibo):
         self.name = 'qqleak'
         self.abbr = 'qq'
 
+        self.attrs = 'mobile,uid'.split(',')
+        self.idxes = 'mobile,uid'.split(',')
+
     def parse(self):
         flushevery = 100000
 
@@ -424,9 +431,85 @@ class QQ(Weibo):
             num = int(num)
         except:
             return []
-        res = self.auto_bracketed_search(num, ['mobile', 'uid'])
-        name_map = 'mobile,number'.split(',')
-        return [self.resultgen(num, item, name_map) for item in res]
+        res = self.auto_bracketed_search(num, self.idxes)
+        return [self.resultgen(num, item, self.attrs) for item in res]
+
+class Momo2015(Weibo):
+    def set_paths(self):
+        self.path = '3100W--陌陌-高.txt'
+        self.name = 'momo2015'
+        self.abbr = 'momo15'
+
+        self.attrs = 'f1,f2_pw'.split(',')
+        self.idxes = 'f1,f2_pw'.split(',')
+
+    def init_table(self):
+        self.q(f'create table {self.name} ('+
+        ','.join([i+' text' for i in self.attrs])
+        +')')
+
+        self.q(f'create table {self.name}_t ('+
+        ','.join([i+' text' for i in self.attrs])
+        +')')
+
+    def find(self, num):
+        res = self.auto_bracketed_search(num, self.idxes)
+        return [self.resultgen(num, item, self.attrs) for item in res]
+
+    def parse(self):
+        flushevery = 100000
+
+        dl = []
+        def flush():
+            nonlocal dl
+            print('got', len(dl))
+            self.qmany(f'insert into {self.name}_t values (?,?)', dl)
+            self.commit()
+
+            dl = []
+
+        with open(self.fullpath, 'r', encoding='utf-8', errors='ignore') as f:
+            count = 0
+
+            def eat(k):
+                nonlocal count
+                if len(k[0])>40 or len(k[1])> 40:
+                    print('toolong', k )
+                    return
+
+                # tpl = (tpl[1], tpl[0])
+                tpl = tuple((i.strip() for i in k))
+                dl.append(tpl)
+
+                if len(dl)>=flushevery:
+                    count+=len(dl)
+                    flush()
+                    print(tpl)
+                    print('count:', count)
+
+            while 1:
+                k = f.readline()
+                if k=='':
+                    break
+
+                # k = k.decode('ascii')
+                # print('rawline', k)
+                k = k.split('----')
+
+                if len(k)<2:
+                    print('knot2', k)
+                    continue
+
+                if len(k)>2:
+                    k = (k[0],'----'.join(k[1:]))
+
+                eat(k)
+
+            flush()
+
+        self.q(f'insert into {self.name} select distinct * from {self.name}_t')
+        self.q(f'drop table {self.name}_t')
+        self.commit()
 
 class SF(Weibo):
     def set_paths(self):
@@ -662,6 +745,8 @@ class Telegram40(Weibo):
         self.name = 'telegram40M'
         self.abbr = 'tg40m'
 
+        self.idxes = self.attrs = 'mobile,uid'.split(',')
+
     def parse(self):
         flushevery = 100000
 
@@ -840,3 +925,6 @@ if __name__ == '__main__':
 
     hotel2013 = Hotel2013()
     emp(hotel2013)
+
+    mo15 = Momo2015()
+    emp(mo15)

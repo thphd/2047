@@ -5,6 +5,7 @@ class Search:
     def __init__(self):
         self.g = [i() for i in (
             Weibo,QQ, JD, SF, Pingan, CarOwner20, Telegram40, Hotel2013,
+            Momo2015,
         )]
 
     def get_sources(self):
