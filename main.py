@@ -206,7 +206,7 @@ def create_all_necessary_indices():
         ['t_u'],
     ))
 
-    ci('messages',indexgen([['convid'],['to_uid']],['t_c']))
+    ci('messages',indexgen([['convid'],['to_uid'],[]],['t_c']))
 
     ci('notifications',indexgen([['to_uid'],['to_uid','from_uid','why','url']],['t_c']))
     ci('avatars',[['uid']])
