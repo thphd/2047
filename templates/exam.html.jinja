@@ -22,7 +22,7 @@
             {%set ci = loop.index0%}
             <div class="choice">
               <input type="radio" name="{{qi}}" value="{{ci}}">
-              <span>{{choice}}</span>
+              <span>{{choice|safe}}</span>
             </div>
             {%endfor%}
           </div>
