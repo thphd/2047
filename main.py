@@ -2619,11 +2619,12 @@ def resolve_mixed_content_pointers(list_pointers):
     lp_posts = pgnt.get_post_list(by='ids', ids=lp_posts, apply_origin=True)
     lp_threads = pgnt.get_thread_list_uncached(by='ids', ids=lp_threads)
 
-    dp = {item['_id']: item for item in lp_posts}
-    dt = {item['_id']: item for item in lp_threads}
+    dp = {item['_id']: item for item in lp_posts if item}
+    dt = {item['_id']: item for item in lp_threads if item}
     dp.update(dt)
 
-    litems = lpointers.map(lambda s:dp[s])
+    litems = lpointers.map(lambda s:dp[s] if s in dp else None)
+    litems = [i for i in litems if i]
 
     return litems
 
