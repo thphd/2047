@@ -1,6 +1,6 @@
 import re
 import time
-
+from app import app
 from commons import *
 
 from flask import g
