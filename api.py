@@ -764,7 +764,7 @@ let pinned = t_man > t_now or null
 
 let votes = t.amv or 0
 let points = max([(votes - 0.9), 0]) * 3 + 1 + t.nreplies * .2
-let t_ref = t_submitted * 0.4 + t_updated * 0.6
+let t_ref = t_submitted * 0.8 + t_updated * 0.2
 let t_offset = 3600*1000*2
 let t_hn = max([t_now + t_offset - (t_now - t_ref + t_offset) / sqrt(points), t_man])
 
@@ -876,8 +876,17 @@ def update_forever():
 dispatch(update_forever)
 
 def update_thread_votecount(tid):
+
     res = aql('''
 let t = (for i in threads filter i.tid==@_id return i)[0]
+
+let bigcats = (
+    let ccats = document('counters/bigcats').cats
+    let jj = t.cid
+    for ii in attributes(ccats)
+    filter position(ccats[ii], jj)
+    return ii
+)
 
 let nfavs = length(for f in favorites filter f.pointer==t._id return f)
 
@@ -892,7 +901,7 @@ let mvp = (for p in posts filter p.tid==t.tid sort p.votes desc limit 1 return p
 update t with {
     votes:upv, nreplies, t_u,
     mvp:mvp._key, mv:mvp.votes or 0, mvu:mvp.uid,
-    amv: max([mvp.votes or 0, upv or 0]), nfavs}
+    amv: max([mvp.votes or 0, upv or 0]), nfavs, bigcats}
 in threads
 return NEW
     ''', _id=int(tid), silent=True)

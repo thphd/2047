@@ -135,7 +135,7 @@ def create_all_necessary_indices():
 
     ciut('threads', ['tid'])
     ci('threads', indexgen(
-            [['delete'],['uid'],['delete','cid'],['delete','tags[*]'],['tags[*]']],
+            [['delete'],['uid'],['delete','cid'],['delete','bigcats[*]'],['delete','tags[*]'],['tags[*]']],
             ['t_u','t_c','nreplies','vc','votes','t_hn','amv','nfavs'],
     ))
     ci('threads', indexgen([[]], ['t_hn_u','t_next_hn_update','title','pinned']))
