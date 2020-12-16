@@ -26,47 +26,31 @@ aqlc.create_collection('notifications')
 #
 #     aql('insert @k into notifications', k=d, silent=True)
 
+def get_uidlist_by_namelist(names):
+    uids = aql('''
+    let uidlist = (
+        for n in @names
+        let user = (for i in users filter i.name==n return i)[0]
+        return user.uid
+    )
+    let uids = remove_value(uidlist, null)
+    return uids
+    ''', names=names, silent=True)[0]
+    return uids
+
 def make_notification_names(names, from_uid, why, url, **kw):
     # names is a list of usernames
-    d = dict(
-        # to_uid=to_uid,
-        from_uid=from_uid,
-        why=why,
-        url=url,
-        t_c=time_iso_now(),
-        **kw,
-    )
-    aql('''
-    let uidlist = (
-        for n in @names
-        let user = (for i in users filter i.name==n return i)[0]
-        return user.uid
-    )
-    let uids = remove_value(uidlist, null)
-
-    for i in uids
-    let d = merge({to_uid:i}, @k)
-    upsert {to_uid:d.to_uid, from_uid:d.from_uid, why:d.why, url:d.url}
-    insert d update {} into notifications
-    ''', names=names, k=d, silent=True)
-
-    aql('''
-    let uidlist = (
-        for n in @names
-        let user = (for i in users filter i.name==n return i)[0]
-        return user.uid
-    )
-    let uids = remove_value(uidlist, null)
-
-    for uid in uids
-    let user = (for u in users filter u.uid==uid return u)[0]
-
-    update user with {
-        nnotif: length(for n in notifications filter n.to_uid==user.uid and n.t_c>user.t_notif return n),
-    } in users
-    ''', names=names, silent=True)
+    uids = get_uidlist_by_namelist(names)
+    return make_notification_uids(uids, from_uid, why, url, **kw)
 
 def make_notification_uids(uids, from_uid, why, url, **kw):
+    if not len(uids): return
+
+    haters = get_reversed_blacklist()
+    haters = [i['uid'] for i in haters]
+
+    uids = [i for i in uids if i not in haters]
+
     # same as above but with uids
     d = dict(
         # to_uid=to_uid,
@@ -2000,6 +1984,12 @@ def _():
 def get_blacklist():
     list = aql('''for i in blacklist filter i.uid==@uid and i.enabled == true
     let user = (for u in users filter u.uid==i.to_uid return u)[0]
+    return merge(i, {user})''', uid=g.selfuid, silent=True)
+    return list
+
+def get_reversed_blacklist(): # who hates me
+    list = aql('''for i in blacklist filter i.to_uid==@uid and i.enabled == true
+    let user = (for u in users filter u.uid==i.uid return u)[0]
     return merge(i, {user})''', uid=g.selfuid, silent=True)
     return list
 
