@@ -1605,6 +1605,7 @@ def _():
         'cid':cid,
     })
 
+    update_thread_votecount(_id)
     return {'error':False}
 
 @register('become')
