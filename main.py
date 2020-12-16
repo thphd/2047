@@ -134,6 +134,8 @@ def create_all_necessary_indices():
             aqlc.create_index(coll, type='persistent', fields=[ai], unique=True, sparse=False)
 
     ciut('threads', ['tid'])
+    ciut('threads', ['bigcats','pinned'])
+    ciut('threads', ['cid','pinned'])
     ci('threads', indexgen(
             [['delete'],['uid'],['delete','cid'],['delete','bigcats[*]'],['delete','tags[*]'],['tags[*]']],
             ['t_u','t_c','nreplies','vc','votes','t_hn','amv','nfavs'],
@@ -190,6 +192,7 @@ def create_all_necessary_indices():
     ci('blacklist',[['uid','to_uid'],['uid','enabled'],['to_uid','enabled']])
 
 is_integer = lambda i:isinstance(i, int)
+is_string = lambda i:isinstance(i, str)
 class Paginator:
     def __init__(self,):
         pass
@@ -381,7 +384,7 @@ class Paginator:
         ts = time.time()
 
         assert by in ['category', 'user', 'tag', 'ids']
-        assert category=='all' or category=='deleted' or is_integer(category)
+        assert is_string(category) or is_integer(category)
         assert is_integer(uid)
         assert sortby in ['t_u', 't_c', 'nreplies', 'vc', 'votes','t_hn','amv','nfavs']
         assert order in ['desc', 'asc']
@@ -405,9 +408,17 @@ class Paginator:
                 filter.append('filter i.delete==null')
             elif category=='deleted':
                 filter.append('filter i.delete==true')
-            else:
+            elif is_integer(category):
                 filter.append('filter i.cid == @category and i.delete==null', category=category)
+            else:
+                # string bigcats
+                filter.append(
+                    'filter i.delete==null and @category in i.bigcats',
+                    category=category
+                )
+
             mode='thread' if category!=4 else 'thread_water'
+
         elif by=='tag':
             filter.append('filter @tagname in i.tags and i.delete==null', tagname=tagname)
             mode='tag_thread'
@@ -959,7 +970,7 @@ def visitor_error_if_hidden(cid):
         if not g.logged_in:
             raise Exception('you must log in to see whatever\'s inside')
 
-@app.route('/')
+# @app.route('/')
 @app.route('/c/all')
 def get_all_threads():
     pagenumber = rai('page') or thread_list_defaults['pagenumber']
@@ -1111,15 +1122,37 @@ def getthreadcode(tid):
     return make_text_response(p['content'])
 
 @app.route('/c/<int:cid>')
+@app.route('/c/<string:cid>')
+def _get_category_threads(cid):
+    return get_category_threads(cid)
+@app.route('/')
+def _get_main_threads():
+    return get_category_threads('main')
+
 def get_category_threads(cid):
-    catobj = aql('for c in categories filter c.cid==@cid return c',cid=cid, silent=True)
+    bigcatism = False
 
-    if len(catobj)!=1:
-        abort(404, 'category not exist')
+    if is_integer(cid):
+        catobj = aql('for c in categories filter c.cid==@cid return c',cid=cid, silent=True)
 
-    visitor_error_if_hidden(cid)
+        if len(catobj)<1:
+            abort(404, 'category not exist')
 
-    catobj = catobj[0]
+        visitor_error_if_hidden(cid)
+
+        catobj = catobj[0]
+
+    elif is_string(cid):
+        bigcats = aql('''
+        let c = document('counters/bigcats').briefs
+        return c
+        ''',silent=True)[0]
+
+        if cid in bigcats:
+            catobj = bigcats[cid]
+        else:
+            abort(404, 'bigcat not exist')
+        bigcatism = bigcats
 
     tlds = thread_list_defaults if cid!=4 else thread_list_defaults_water
 
@@ -1139,12 +1172,21 @@ def get_category_threads(cid):
         path = rpath)
 
     if pagenumber==1:
-        pinned = aql('''
-            for i in threads
-            filter i.cid==@cid and i.pinned==true
-            sort i.t_manual desc
-            return i''',
-        cid=cid, silent=True)
+        if is_integer(cid):
+            pinned = aql('''
+                for i in threads
+                filter i.cid==@cid and i.pinned==true
+                sort i.t_manual desc
+                return i''',
+            cid=cid, silent=True)
+        else:
+            pinned = aql('''
+                for i in threads
+                filter @cid in i.bigcats and i.pinned==true
+                sort i.t_manual desc
+                return i
+            ''', cid=cid, silent=True)
+
         if pinned:
             tids = [p['tid'] for p in pinned]
             pinned_threads = pgnt.get_thread_list_uncached(
@@ -1160,6 +1202,7 @@ def get_category_threads(cid):
         pagination=pagination,
         categories=get_categories_info(),
         category=catobj,
+        bigcatism = bigcatism,
         # threadcount=count,
 
     )

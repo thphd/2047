@@ -2060,4 +2060,7 @@ a.after_linkbox {
 
 .formline>a {
     margin-left: 1em;
+
+.header_title > a {
+    margin-left: .3em;
 }
