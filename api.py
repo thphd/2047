@@ -2026,7 +2026,7 @@ def get_blacklist_all():
     return aql('''for i in blacklist filter i.enabled==true
     let user = (for u in users filter u.uid==i.uid return u)[0]
     let to_user = (for u in users filter u.uid==i.to_uid return u)[0]
-    sort i.t_c 
+    sort i.t_c
     return merge(i,{user, to_user})
     ''', silent=True)
 
@@ -2040,10 +2040,10 @@ def _():
 def listbl():
     all = get_blacklist_all()
     r = all.map(lambda a:' '.join([
+        a['t_c'],
         a['user']['name'],
         'blacklisted',
         a['to_user']['name'],
-        a['t_c'],
     ]))
     r = '\n'.join(r)
     resp = make_response(r, 200)

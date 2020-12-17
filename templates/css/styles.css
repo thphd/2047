@@ -2060,7 +2060,38 @@ a.after_linkbox {
 
 .formline>a {
     margin-left: 1em;
+}
 
-.header_title > a {
+.comment_avatar {
+    width: 16px;
+    height: 16px;
+}
+
+.comment_section .post_content {
+    display: inline-block;
+    margin-bottom: 0;
+}
+
+.comment_user_section {
+    display: inline-block;
+    font-size: 12px;
+}
+
+.comment .user_name {
+    margin-left: 2px;
+}
+
+.comment_user_section>* {vertical-align: middle;}
+
+.comment {
+}
+
+.comment .date {
+    display: inline-block;
+    color: #b9b9b9;
+    font-size: 12px;
+}
+
+.header_title > *:not(:first-child) {
     margin-left: .6em;
 }

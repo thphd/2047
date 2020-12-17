@@ -534,6 +534,7 @@ common_links = linkify('''
 链接 /links 2047网址导航
 语录 /quotes 你不是一个人在战斗
 oplog /oplog 管理日志
+黑名单 /t/9807 真/言论自由
 英雄 /hero BE4的实验性项目
 维尼查 /ccpfinder 镰和锤子不可兼得
 云上贵州 /guizhou 年轻人不讲武德
