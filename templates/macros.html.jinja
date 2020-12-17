@@ -1078,11 +1078,11 @@
 
         {{category_bubble(t.category) if (t and t.category) else ''}}
 
-        {%if g.logged_in and category%}
+        {%if g.logged_in and category and not bigcatism%}
         <a class='makepost' href="/editor?target=category/{{category.cid}}">发新帖</a>
         {%endif%}
 
-        {%if g.logged_in and categories and not category%}
+        {%if g.logged_in and (categories and not category or bigcatism)%}
         <a class='makepost' href="javascript:alert('请在右边分类列表中选择一个分类（手机用户请翻到页面最下方）')">发新帖</a>
         {%endif%}
 
