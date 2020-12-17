@@ -191,6 +191,8 @@ def create_all_necessary_indices():
 
     ci('blacklist',[['uid','to_uid'],['uid','enabled'],['to_uid','enabled']])
 
+    ci('comments',indexgen([[],['parent'],['parent','deleted'],['uid']],['t_c']))
+
 is_integer = lambda i:isinstance(i, int)
 is_string = lambda i:isinstance(i, str)
 class Paginator:
@@ -312,11 +314,19 @@ class Paginator:
         qsc+=filter
 
         qsc+=QueryString('''
-            let u = (for u in users filter u.uid==i.uid return u)[0]
+            let user = (for u in users filter u.uid==i.uid return u)[0]
             let self_voted = length(for v in votes filter v.uid==@selfuid and v.id==to_number(i._key) and v.type=='post' and v.vote==1 return v)
 
             let favorited = length(for f in favorites
             filter f.uid==@selfuid and f.pointer==i._id return f)
+
+            let ncomments = length(for c in comments filter c.parent==i._id
+            return c)
+
+            let comments = (for c in comments filter c.parent==i._id
+            sort c.t_c desc
+            let uc = (for j in users filter j.uid==c.uid return j)[0]
+            limit 6 return merge(c, {user:uc}))
 
         ''', selfuid=selfuid)
 
@@ -332,7 +342,8 @@ class Paginator:
             qsc+=QueryString('''
                 sort i.{sortby} {order}
                 limit {start},{count}
-                return merge(i, {{user:u, self_voted, t, favorited}})
+                return merge(i, {{user, self_voted, t,
+                    favorited, ncomments, comments}})
                 '''.format(
                     sortby = sortby,order=order,start=start,count=count,
                 )
@@ -358,7 +369,7 @@ class Paginator:
 
         else:
             qsc+=QueryString('''
-            return merge(i, {user:u, self_voted, t, favorited})
+            return merge(i, {user, self_voted, t, favorited})
             ''')
 
             postlist = aql(qsc.s, silent=True, **qsc.kw)
@@ -1369,7 +1380,7 @@ def mark_blacklisted(postlist):
 
     for idx, i in enumerate(postlist):
         if i['uid'] in bl:
-            print(i)
+            # print('blacklisted', i)
             postlist[idx]['blacklist'] = True
 
 def sink_deleted(postlist):
@@ -2032,7 +2043,7 @@ def apir():
     # thread-local access to json body
     g.j = j
 
-    printback = action not in 'ping viewed_target browser_check render_poll'.split(' ')
+    printback = action not in 'ping viewed_target browser_check render_poll'.split(' ') and 'render' not in action.lower()
 
     if printback:
         print_up('API >>', j)

@@ -3,7 +3,7 @@ import time
 from app import app
 from commons import *
 
-from flask import g
+from flask import g, make_response
 
 aqlc.create_collection('admins')
 aqlc.create_collection('operations')
@@ -2022,15 +2022,40 @@ def im_in_blacklist_of(uid):
         return True
     return False
 
+def get_blacklist_all():
+    return aql('''for i in blacklist filter i.enabled==true
+    let user = (for u in users filter u.uid==i.uid return u)[0]
+    let to_user = (for u in users filter u.uid==i.to_uid return u)[0]
+    sort i.t_c 
+    return merge(i,{user, to_user})
+    ''', silent=True)
+
 @register('get_blacklist_all')
 def _():
     must_be_admin()
-    res = aql('''for i in blacklist filter i.enabled==true
-    let user = (for u in users filter u.uid==i.uid return u)[0]
-    let to_user = (for u in users filter u.uid==i.to_uid return u)[0]
-    return merge(i,{user, to_user})
-    ''')
+    res = get_blacklist_all()
     return {'blacklist': [(l['user']['name'],'blacklisted',l['to_user']['name']) for l in res]}
+
+@app.route('/blacklist')
+def listbl():
+    all = get_blacklist_all()
+    r = all.map(lambda a:' '.join([
+        a['user']['name'],
+        'blacklisted',
+        a['to_user']['name'],
+        a['t_c'],
+    ]))
+    r = '\n'.join(r)
+    resp = make_response(r, 200)
+    resp.headers['Content-type'] = 'text/plain; charset=utf-8'
+    return resp
+
+# @register('chat')
+# def _():
+#     must_be_logged_in()
+#     op = es('op')
+#     if op == ''
+
 
 # feedback regulated ping service
 # average 1 ping every 3 sec
