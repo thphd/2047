@@ -1065,15 +1065,19 @@
       <div class="header">
         <span class="header_title" href="{{
           (request.full_path[:-1] if request.full_path[-1]=='?' else request.full_path)
-        }}">{{page_title}}{%if bigcatism%}
-            {%macro bcl(name)%}
-              {{'/c/'~ name if name!='main' else '/'}}
-            {%endmacro%}
-          {%for key,c in bigcatism.items()%}
-            {%if page_title != c.name %}
-              <a class="opaque5" href="{{bcl(key)}}">{{c.name}}</a>
-            {%endif%}
-          {%endfor%}
+        }}">{%if not bigcatism%}
+              {{page_title}}
+            {%else%}
+              {%macro bcl(name)%}
+                {{'/c/'~ name if name!='main' else '/'}}
+              {%endmacro%}
+              {%for key,c in bigcatism.items()%}
+                {%if page_title != c.name %}
+                  <a class="opaque5" href="{{bcl(key)}}">{{c.name}}</a>
+                {%else%}
+                  <span>{{c.name}}</span>
+                {%endif%}
+              {%endfor%}
         {%endif%}</span>
 
         {{category_bubble(t.category) if (t and t.category) else ''}}
