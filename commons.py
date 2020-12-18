@@ -93,6 +93,13 @@ def format_time_dateifnottoday(s):
 
     return format_time_absolute_fallback(s)
 
+def days_since(ts):
+    then = dfshk(ts)
+    now = dtn(working_timezone)
+    dt = now - then
+    return dt.days
+
+
 def format_time_relative_fallback(s):
     dt = dfshk(s)
     now = dtn(working_timezone)
