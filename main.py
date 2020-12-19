@@ -164,6 +164,7 @@ def create_all_necessary_indices():
     ci('votes',indexgen(
         [
             ['type','id','vote','uid'],
+            ['type','id','uid'],
             ['type','id','vote'],
             ['uid','vote'],
             ['to_uid','vote'],

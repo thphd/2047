@@ -755,6 +755,14 @@ or, what exact time should we push the post to (time_passed_advanced)?
 '''
 
 hn_formula = QueryString('''
+let bigcats = (
+    let ccats = document('counters/bigcats').cats
+    let jj = t.cid
+    for ii in attributes(ccats)
+    filter position(ccats[ii], jj)
+    return ii
+)
+
 let t_submitted = date_timestamp(t.t_c)
 let t_updated = date_timestamp(t.t_u)
 
@@ -775,7 +783,7 @@ let t_next_hn_update = t_now + max([max([0, t_now - t_hn]) / 86400000 * @interva
 
 let t_hn_iso = left(date_format(t_hn,'%z'), 19)
 limit 50
-update t with {t_hn:t_hn_iso, t_next_hn_update, pinned} in threads return 1
+update t with {t_hn:t_hn_iso, t_next_hn_update, pinned, bigcats} in threads return 1
 ''')
 
 hn_formula_post = QueryString('''
