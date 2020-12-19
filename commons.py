@@ -9,6 +9,8 @@ from colors import *
 from cachetools.func import *
 from cachy import stale_cache
 
+def iif(a,b,c):return b if a else c
+
 # @stale_cache(ttr=1, ttl=30)
 def readfile(fn, mode='rb', *a, **kw):
     with open(fn, mode, *a, **kw) as f:
@@ -548,15 +550,13 @@ oplog /oplog 管理日志
 ''')
 
 friendly_links = linkify('''
-旧品葱 https://pincongbackup.github.io/ 品葱备份
+Tor上的2047 http://terminusnemheqvy.onion/ 特殊情况下使用
+旧品葱 https://pincongbackup.github.io/ pin-cong.com备份
 火光 https://2049post.wordpress.com/ 薪火相传光明不息
-英雄 https://nodebe4.github.io/hero/ 人民英雄永垂不朽
 BE4 https://nodebe4.github.io/ BE4的网络服务
 XsDen https://xsden.info/ 講粵語嘅討論區
-連登 https://lihkg.com/ 光復香港冷氣革命
-Tor上的2047 http://terminusnemheqvy.onion/ 特殊情况下使用
-膜乎 https://mohu.rocks/ 中南海皇家娱乐城
-新品葱 https://pincong.rocks/ 带关键词审查的墙外论坛
+英雄 https://nodebe4.github.io/hero/ 人民英雄永垂不朽
+新膜乎(品葱) https://mohu.rocks/ 品葱旗下的皇家娱乐城
 ''')
 
 site_name='2047论坛，自由人的精神角落'

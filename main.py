@@ -1166,7 +1166,11 @@ def get_category_threads(cid):
             abort(404, 'bigcat not exist')
         bigcatism = bigcats
 
-    tlds = thread_list_defaults if cid!=4 else thread_list_defaults_water
+    tlds = iif(
+        cid!=4 and cid!='water',
+        thread_list_defaults,
+        thread_list_defaults_water,
+    )
 
     pagenumber = rai('page') or tlds['pagenumber']
     pagesize = rai('pagesize') or tlds['pagesize']
