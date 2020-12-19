@@ -112,18 +112,6 @@ for(var i=0;i<tabs.length;i++){k(i)}
 
   {%endif%}
 
-  <div class="box">
-    <div class="boxtitle">
-      守望 <a class="after_linkbox" href="/t/9387">了解更多</a>
-    </div>
-    <div class="bigrednumber">
-      {{days_since('2020-04-19')}}
-    </div>
-    <div class="below_bigrednumber">
-      days since 2020-4-19
-    </div>
-  </div>
-
   {%import 'base.html.jinja' as base with context%}
 
   <div class="box">
@@ -190,6 +178,18 @@ for(var i=0;i<tabs.length;i++){k(i)}
         ['本月',list_users(get_weekly_best_user(7,30,n=20))],
         ['上月',list_users(get_weekly_best_user(30,60,n=20))],
         ], index=random.randint(0,5)%4)}}
+    </div>
+  </div>
+
+  <div class="box">
+    <div class="boxtitle">
+      守望 <a class="after_linkbox" href="/t/9387">了解更多</a>
+    </div>
+    <div class="bigrednumber">
+      {{days_since('2020-04-19')}}
+    </div>
+    <div class="below_bigrednumber">
+      days since 2020-4-19
     </div>
   </div>
 
