@@ -416,6 +416,28 @@ def get_environ(k):
     else:
         return None
 
+# render with globals
+from flask import render_template
+from template_globals import tgr
+def render_template_g(*a, **k):
+    k.update(tgr)
+    return render_template(*a, **k)
+
+def eat_rgb(s, raw=False):
+    s = s.split(',')
+    if len(s)!=3:
+        return False
+
+    try:
+        s = [int(i) for i in s]
+    except Exception as e:
+        return False
+
+    s = [max(0,min(255, i)) for i in  s]
+    if raw:
+        return s
+    return f'rgb({s[0]}, {s[1]}, {s[2]})'
+
 # database connection
 from aql import AQLController, QueryString
 dbaddr = get_environ('dbaddr') or 'http://127.0.0.1:8529'

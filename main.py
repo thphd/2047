@@ -2273,10 +2273,6 @@ def list_q_preview():
         exam=exam,
     )
 
-def render_template_g(*a, **k):
-    k.update(globals())
-    return render_template(*a, **k)
-
 @app.route('/hero')
 def heropage():
     return render_template_g(
@@ -2716,6 +2712,8 @@ def e5001(e):
         e500=True,
         err=err,
     ), 500
+
+from template_globals import tgr; tgr.update(globals())
 
 if __name__ == '__main__':
     dispatch(create_all_necessary_indices)
