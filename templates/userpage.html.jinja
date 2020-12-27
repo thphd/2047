@@ -196,6 +196,22 @@
       <button type="button" id="button_upload">上传</button>
     </div>
   </div>
+
+  <div class="invitations">
+    <div class="invitation_list_title">
+      黑名单（被你加入黑名单的人无法回复你的thread或者@你，你也看不到他们的post）
+    </div>
+    <div class="">
+      {%for i in get_blacklist()%}
+      {{macros.username(i.user)}}
+      {%endfor%}
+    </div>
+    <button onclick="javascript:add_to_blacklist()">添加用户到我的黑名单</button>
+    <br>
+    <button onclick="javascript:add_to_blacklist(true)">将用户从我的黑名单移除</button>
+    <br>
+    <a href="/blacklist">查看本站黑名单</a>
+  </div>
   {%endif%}
 
   {%if (invitations!=None)%}

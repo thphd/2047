@@ -1385,6 +1385,20 @@ function follow(uid, is_follow){
   .catch(alert)
 }
 
+function add_to_blacklist(del){
+  var un = (prompt('请输入对方的用户名')||'').trim()
+  if (un){
+    aa('blacklist',{
+      username:un,
+      'delete':del,
+    })
+    .then(res=>{
+      window.location.reload()
+    })
+    .catch(alert)
+  }
+}
+
 // function goto(s){
 //   var p = geid(s)
 //   if (p){

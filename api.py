@@ -986,21 +986,6 @@ updateable_personal_info = [
     ('hide_title', '隐藏头像上方的绿帽（yes即隐藏，留空即显示）'),
 ]
 
-def eat_rgb(s, raw=False):
-    s = s.split(',')
-    if len(s)!=3:
-        return False
-
-    try:
-        s = [int(i) for i in s]
-    except Exception as e:
-        return False
-
-    s = [max(0,min(255, i)) for i in  s]
-    if raw:
-        return s
-    return f'rgb({s[0]}, {s[1]}, {s[2]})'
-
 @register('update_personal_info')
 def _():
     must_be_logged_in()
@@ -1967,7 +1952,11 @@ aqlc.create_collection('blacklist')
 def _():
     must_be_logged_in()
     uid = ei('uid')
+    uname = es('username')
     delete = eb('delete')
+
+    if not uid:
+        uid = get_user_by_name(uname)['uid']
 
     enabled = False if delete else True
 
