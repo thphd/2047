@@ -1392,13 +1392,12 @@ def sink_deleted(postlist):
     newlist = []
     badapple = []
     for i in postlist:
-        if 'blacklist' in i or 'delete' in i:
+        if key(i, 'blacklist') or key(i, 'delete'):
             badapple.append(i)
         else:
             newlist.append(i)
 
-    newlist += badapple
-    return newlist
+    return newlist+badapple
 
 # list of user posts.
 @app.route('/u/<int:uid>/p')

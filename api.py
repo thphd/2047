@@ -329,6 +329,13 @@ def _():
     if len(invitation) == 0:
         raise Exception('invitation code not exist or already used by someone else')
 
+    # check if inviting user is banned
+    invu = aql('''for u in users filter u.uid==@invuid return u''', invuid=invitation[0]['uid'])
+    if len(invu)!=0:
+        invu = invu[0]
+        if 'delete' in invu and invu['delete']:
+            raise Exception('registration is closed, please try again tomorrow')
+
     # obtain a new uid
     uid = obtain_new_id('uid')
 
@@ -509,26 +516,28 @@ def _():
 
         return inserted
 
-    elif target_type=='user': # send another user a new message
-        _id = int(_id)
+    elif target_type=='username' or target_type=='user': # send another user a new message
+        if target_type=='username':
+            _id =  _id
 
-        target_uid = _id
+            target_user = get_user_by_name(_id)
+            if not target_user:
+                raise Exception('username not exist')
+            target_uid = target_user['uid']
 
-        target_user = get_user_by_id(target_uid)
-        if not target_user:
-            raise Exception('uid not exist')
+        else:
+            _id = int(_id)
 
-        # content_length_check(content)
-        url = send_message(uid, target_uid, content)
-        return {'url':url}
+            target_uid = _id
 
-    elif target_type=='username': # send another user a new message
-        _id =  _id
+            target_user = get_user_by_id(target_uid)
+            if not target_user:
+                raise Exception('uid not exist')
 
-        target_user = get_user_by_name(_id)
-        if not target_user:
-            raise Exception('username not exist')
-        target_uid = target_user['uid']
+        # new users are not allowed to send pms to other ppl unless they
+        # got enough likes
+        if 'nlikes' in g.current_user and g.current_user['nlikes']<3 and target_user['name']!='thphd':
+            raise Exception("你暂时还不可以发信给除了站长(thphd)之外的其他人")
 
         # content_length_check(content)
         url = send_message(uid, target_uid, content)
