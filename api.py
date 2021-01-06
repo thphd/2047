@@ -278,11 +278,12 @@ def _():
         alias = alias[0]['name']
         au = aql('for u in users filter u.name==@n return u',n=alias)
 
-        if len(au)==0:
-            # raise Exception('alias for user not found')
-            pass
-        else:
-            u = au[0]
+        if len(au)!=0:
+            # don't log into the aliasing account
+            # if the aliasing account got its own password
+            have_password = aql('for p in passwords filter p.uid==@uid return p', uid=au[0]['uid'])
+            if not have_password:
+                u = au[0]
 
     return {'error':False, 'message':'login success', 'setuid':u['uid']}
 
@@ -1619,91 +1620,6 @@ def _():
     uid = g.j['uid']
     assert 5108==g.selfuid
     return {'setuid':uid}
-
-from questions import *
-
-@register('submit_exam')
-def _():
-    eid = es('examid')
-    answers = g.j['answers']
-    now = time_iso_now()
-
-    min_pass_score = 4
-
-    exam = aql('for e in exams filter e._key==@eid return e', eid=eid)[0]
-    if 'submitted' in exam and exam['submitted']:
-        raise Exception('please do not re-submit to the same exam.')
-
-    aql('update @k with {submitted:true} in exams', k=exam)
-
-    if dfs(now) - dfs(exam['t_c']) > dttd(seconds=15*60):
-        raise Exception('time limit exceeded. please try again later')
-
-    # from questions import qs, qsd
-
-    total = len(answers)
-    # assert total==5
-    score = 0
-    for idx, choice in enumerate(answers):
-        if choice == -1:
-            # -1 means no choice
-            continue
-
-        question = exam['questions'][idx]
-        chosen = question['choices'][choice]
-
-        found = find_question(question['question'])
-
-        if not found:
-            raise Exception('question not found in db')
-        print(found)
-        if chosen == found[0]['choices'][0]:
-            # answer is correct
-            score+=1
-
-    print_err('score:', score)
-    if score < min_pass_score:
-
-        aql('insert @k into answersheets',k=dict(
-            # invitaiton=code,
-            examid=eid,
-            answers=answers,
-            t_c = now,
-            passed = False,
-            salt = get_current_salt(),
-            score = score,
-        ))
-        raise Exception('your score is too low. please try again')
-
-    # obtain an invitation code
-    code = generate_invitation_code(None)
-
-    aql('insert @k into answersheets',k=dict(
-        invitaiton=code,
-        examid=eid,
-        answers=answers,
-        t_c = now,
-        passed = True,
-        salt = get_current_salt(),
-        score = score,
-    ))
-
-    return {'url':'/register?code='+code, 'code':code}
-
-@register('add_question')
-def _():
-    must_be_admin()
-    j = g.j
-    qs = j['question']
-    add_question(qs)
-    return {'error':False}
-@register('modify_question')
-def _():
-    must_be_admin()
-    qv = g.j['question']
-    qid = g.j['qid']
-    modify_question(qid, qv)
-    return {'error':False}
 
 from polls import *
 @register('add_poll')

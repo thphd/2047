@@ -1013,6 +1013,7 @@ def get_all_threads():
 
 @app.route('/c/deleted')
 def delall():
+    must_be_logged_in()
     pagenumber = rai('page') or thread_list_defaults['pagenumber']
     pagesize = rai('pagesize') or thread_list_defaults['pagesize']
     order = ras('order') or thread_list_defaults['order']
@@ -2158,45 +2159,10 @@ def qr(to_encode):
         resp.headers['Cache-Control']= 'max-age=8640000'
     return resp
 
-aqlc.create_collection('exams')
 aqlc.create_collection('answersheets')
 aqlc.create_collection('questions')
 
-from questions import make_exam
-
-@app.route('/exam')
-def get_exam():
-    ipstr = request.remote_addr
-    timenow = time_iso_now()[:15] # every 10 min
-    exam_questions = make_exam(ipstr+timenow, 5)
-    exam = {}
-    exam['questions'] = exam_questions
-    exam['t_c'] = time_iso_now()
-    inserted = aql('insert @k into exams return NEW',k=exam,silent=True)[0]
-
-    return render_template_g(
-        'exam.html.jinja',
-        page_title='考试',
-        exam=inserted,
-
-    )
-
-@app.route('/questions')
-def list_questions():
-    must_be_admin()
-
-    qs = aql('''
-    for i in questions sort i.t_c desc
-    let user = (for u in users filter u.uid==i.uid return u)[0]
-    return merge(i,{user})
-    ''', silent=True)
-
-    return render_template_g(
-        'qs.html.jinja',
-        page_title='题库',
-        questions = qs,
-
-    )
+import questions
 
 @app.route('/polls')
 def list_polls():
