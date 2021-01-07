@@ -2162,7 +2162,7 @@ def qr(to_encode):
 aqlc.create_collection('answersheets')
 aqlc.create_collection('questions')
 
-import questions
+from questions import *
 
 @app.route('/polls')
 def list_polls():

@@ -252,7 +252,7 @@ def _():
     if not u:
         raise Exception('username not found')
 
-    if 'delete' in u and u['delete']:
+    if key(u, 'delete'):
         raise Exception('your account has been banned')
 
 
@@ -298,6 +298,25 @@ def insert_new_password_object(uid, pwh):
     )
 
     aql('''insert @i into passwords''', i=pwobj)
+
+@ttl_cache(ttl=60)
+def get_banned_salts():
+    return aql('''for u in users sort u.t_c desc
+        limit 100
+
+        filter u.delete==true
+
+        let inv = (for i in invitations filter i._key==u.invitation return i)[0]
+        let invsalt = inv.salt
+
+        return invsalt
+    ''')
+
+def has_banned_friends():
+    # check if salty friends are banned
+    banned_friends = get_banned_salts()
+    salt = get_current_salt()
+    return salt in banned_friends
 
 @register('register')
 def _():
@@ -433,6 +452,13 @@ def banned_check():
 def _():
     must_be_logged_in()
     banned_check()
+
+    # check if salty friends are banned
+    if has_banned_friends() and not is_self_admin():
+        aql('update @u with @u in users', u={
+            '_key':g.current_user['_key'],
+            'delete':True,
+        })
 
     uid = g.current_user['uid']
 

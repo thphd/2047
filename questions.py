@@ -84,8 +84,8 @@ def insert_question(q):
 
 aqlc.create_collection('exams')
 
-min_pass_score = 5
-num_questions = 6
+min_pass_score = 4
+num_questions = 5
 
 @app.route('/exam')
 def get_exam():
