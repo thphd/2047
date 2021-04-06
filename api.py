@@ -854,7 +854,7 @@ let t_hn = max([t_now + t_offset - (t_now - t_ref + t_offset) / sqrt(points), t_
 let t_next_hn_update = t_now + max([max([0, t_now - t_hn]) / 86400000 * @interval_multiplier, @min_interval])
 
 let t_hn_iso = left(date_format(t_hn,'%z'), 19)
-limit 50
+limit 20
 update t with {t_hn:t_hn_iso, t_next_hn_update, pinned, bigcats} in threads return 1
 ''')
 
@@ -875,7 +875,7 @@ let t_hn = max([t_now + t_offset - (t_now - t_submitted + t_offset) / sqrt(point
 let t_next_hn_update = t_now + max([max([0, t_now - t_hn]) / 86400000 * @interval_multiplier, @min_interval])
 
 let t_hn_iso = left(date_format(t_hn,'%z'), 19)
-limit 50
+limit 20
 update t with {t_hn:t_hn_iso, t_next_hn_update} in posts return 1 //differ
 ''')
 
@@ -1043,8 +1043,9 @@ def _():
 updateable_personal_info = [
     ('brief', '个人简介（80字符，帖子中显示在用户名旁边）'),
     ('url', '个人URL（80字符，显示在用户个人主页）'),
-    ('personal_title', '个性抬头（原创功能）（6字符，显示在用户头像左上角）'),
-    ('personal_party', '个性党徽（原创功能）（数字UID，所对应用户头像的缩小版会显示在用户头像左上角）（会屏蔽个性抬头）'),
+    ('receipt_addr','收款地址（数字货币等）'),
+    ('personal_title', '个性抬头（6字符，显示在用户头像左上角）'),
+    ('personal_party', '个性党徽（数字UID，所对应用户头像的缩小版会显示在用户头像左上角）（会屏蔽个性抬头）'),
     ('showcase', '个人主页展示帖子或评论（例如“t7113”或者“p247105”，中间逗号或空格隔开），限4项'),
     ('ignored_categories', '主页不显示的分类（数字ID，中间用逗号隔开，例如不想看水区和江湖，就写“4,21”）'),
     ('background_color', '背景色（R,G,B 用半角逗号隔开，0-255）（你浏览本站的时候，以及别人浏览你的个人主页或帖子的时候，背景颜色都会变成这个）'),
@@ -1107,12 +1108,12 @@ def _():
     if not can_do_to(g.current_user, 'edit', thread['uid']):
         raise Exception('insufficient priviledge')
 
-    # check legality of tagname
-    m = re.fullmatch(tagname_regex, tagname)
-    if m is None:
-        raise Exception('tagname illegal')
-
     if not to_remove:
+        # check legality of tagname
+        m = re.fullmatch(tagname_regex, tagname)
+        if m is None:
+            raise Exception('tagname illegal')
+
         # add new tag
         if tagname in tags:
             raise Exception('tag already exists')
@@ -1768,7 +1769,7 @@ def _():
         raise Exception('json too large')
 
     numcreated = aql('return length(for i in entities filter i.uid==@uid return 1)', silent=True, uid=g.current_user['uid'])[0]
-    if numcreated>32:
+    if numcreated>=128:
         raise Exception('you can only create so much entities')
 
     now = time_iso_now()
@@ -1877,9 +1878,6 @@ def _():
     update_user_votecount(uid)
     update_user_votecount(g.selfuid)
     return {'error':False}
-
-def obj2json(obj):
-    return json.dumps(obj, ensure_ascii=False, sort_keys=True, indent=2)
 
 aqlc.create_collection('favorites')
 @register('favorite')
