@@ -27,6 +27,10 @@ for fn, ts in l:
             dategroups[date] = []
         dategroups[date].append((fn, ts))
 
+    if now - t > dttd(days=0.5):
+        # not recent
+        endg(ts[:11]) # hour
+
     if now - t > dttd(days=2):
         # not recent
         endg(ts[:8]) # day
