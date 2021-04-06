@@ -45,6 +45,9 @@ def make_notification_names(names, from_uid, why, url, **kw):
 
 def make_notification_uids(uids, from_uid, why, url, **kw):
     if not len(uids): return
+    if "no_notifications" in g:
+        print_err('likely spam, no notifications sent')
+        return
 
     haters = get_reversed_blacklist()
     haters = [i['uid'] for i in haters]
@@ -171,6 +174,10 @@ def get_user_by_id_admin(uid):
         return merge(i, {admin})',
         k=uid, silent=True)
     return uo[0] if uo else False
+
+@stale_cache(ttr=60, ttl=1800)
+def get_user_by_id_cached(uid):
+    return get_user_by_id(uid)
 
 @register('test')
 def _():
@@ -310,13 +317,27 @@ def get_banned_salts():
         let invsalt = inv.salt
 
         return invsalt
-    ''')
+    ''', silent=True)
+
+def get_salt_registration():
+    inv = key(g.current_user, 'invitation')
+    if inv:
+        isalts = aql('for i in invitations filter i._key==@inv return i.salt', inv=inv,
+            silent=True)
+        if len(isalts):
+            return isalts[0]
+    return 'salt not found'
 
 def has_banned_friends():
     # check if salty friends are banned
     banned_friends = get_banned_salts()
     salt = get_current_salt()
-    return salt in banned_friends
+    salt2 = get_salt_registration()
+    has = salt in banned_friends
+    if has: print_err(salt, 'has banned friends')
+    has2 = salt2 in banned_friends
+    if has2: print_err(salt2, '(during invitation) has_banned_friends')
+    return has or has2
 
 @register('register')
 def _():
@@ -454,11 +475,15 @@ def _():
     banned_check()
 
     # check if salty friends are banned
-    if has_banned_friends() and not is_self_admin():
+    if has_banned_friends() \
+        and not is_self_admin() \
+        and current_user_doesnt_have_enough_likes():
+
         aql('update @u with @u in users', u={
             '_key':g.current_user['_key'],
             'delete':True,
         })
+        g.no_notifications = True
 
     uid = g.current_user['uid']
 
@@ -480,6 +505,11 @@ def _():
         if len(lp) >= 1:
             if lp[0]['content'] == content:
                 raise Exception('repeatedly posting same content')
+
+        # check if user posted too much content in too little time
+        nrecent = aql('return length(for t in posts filter t.uid==@k and t.t_c>@t return t)', silent=True, k=uid, t=time_iso_now(-1200))[0]
+        if nrecent>=5 and not g.is_admin:
+            raise Exception('too many posts in too little time')
 
         timenow = time_iso_now()
 
@@ -563,7 +593,8 @@ def _():
 
         # new users are not allowed to send pms to other ppl unless they
         # got enough likes
-        if 'nlikes' in g.current_user and g.current_user['nlikes']<3 and target_user['name']!='thphd':
+        if current_user_doesnt_have_enough_likes()\
+            and target_user['name']!='thphd':
             raise Exception("你暂时还不可以发信给除了站长(thphd)之外的其他人")
 
         # content_length_check(content)
@@ -600,6 +631,10 @@ def _():
         if len(jk):
             raise Exception('这个标题被别人使用过')
 
+        # check if user posted too much content in too little time
+        nrecent = aql('return length(for t in threads filter t.uid==@k and t.t_c>@t return t)', silent=True, k=uid, t=time_iso_now(-3600))[0]
+        if nrecent>=3 and not g.is_admin:
+            raise Exception('too many in too little time')
 
         # ask for a new tid
         tid = obtain_new_id('tid')
@@ -1035,7 +1070,11 @@ def _():
         value = es(item)
 
         # if item=='brief' or item=='showcase':
-        if len(value)>80 or (item=='personal_title' and len(value)>6) or (item=='ignored_categories' and len(value)>40):
+        if (
+            len(value)>180 or
+            (not item.startswith('receipt') and len(value)>80)
+            or (item=='personal_title' and len(value)>6) or (item=='ignored_categories' and len(value)>40)
+        ):
             raise Exception('其中一项超出长度限制')
 
         upd[item] = value
@@ -1913,7 +1952,7 @@ def _():
 
     curr = get_blacklist()
 
-    mbs = max_blacklist_size = 15
+    mbs = max_blacklist_size = 25
     if len(curr)>=mbs and enabled == True:
         raise Exception(f'you cannot blacklist more than {mbs} user(s)')
 
@@ -1958,9 +1997,12 @@ def _():
     list = get_blacklist()
     return {'blacklist':[(l['user']['name'],l['to_uid']) for l in list]}
 
-def im_in_blacklist_of(uid):
+def im_in_blacklist_of(uid, reversed=False):
     su = g.selfuid
     tu = uid
+
+    if reversed:
+        su,tu = tu,su
 
     res = aql('''for i in blacklist
     filter i.uid==@tu and i.to_uid==@su and i.enabled==true
