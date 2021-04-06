@@ -464,7 +464,7 @@ img.headerbtn {
     /* margin-left: 5px; */
     padding: 4px 6px;
     font-size: 90%;
-    margin-bottom: 6px;
+    /* margin-bottom: 6px; */
 }
 
 #editor_btnsubmit {
@@ -507,7 +507,7 @@ img.headerbtn {
 
 .post_content :not(pre)> code {
     margin: 1px 4px;
-    background-color: #e9f3f7;
+    background-color: #cae0e857;
     padding: 0px 3px;
     border-radius: 3px;
     border-style: solid;
@@ -771,7 +771,7 @@ code .nf {
 .post_content br {
     /* height: 3px; */
     display: block;
-    content:"";
+    /* content:""; */
     margin-top: .5em;
     /* line-height:190%; */
     /* vertical-align:top; */
@@ -986,6 +986,7 @@ a.gotmail {
 
 #footer .lr>*:first-child {
     margin-right: 2em;
+    max-width: 450px;
 }
 
 a.adminstuff {}
@@ -2099,7 +2100,7 @@ a.after_linkbox {
 .bigrednumber {
     color: #ff000042;
     text-align: center;
-    font-size: 20px;
+    font-size: 30px;
     line-height: 1;
     /* font-family: sans-serif; */
 }
@@ -2108,4 +2109,34 @@ a.after_linkbox {
     text-align: center;
     color: gray;
     font-size: 12px;
+}
+
+.editor_second_row {
+    padding: 4px 0;
+    font-size: 14px;
+    opacity: .5;
+    /* text-align: right; */
+}
+
+.yyetsitem {
+    margin: 6px 0;
+    font-size: 14px;
+}
+
+
+a {}
+
+.choice_text {
+    color: #757575;
+}
+
+.choice :first-child {
+    margin-right: 0.4em;
+    flex-shrink: 0;
+}
+
+.question .description ::marker {
+}
+
+.question_list_item::marker {
 }

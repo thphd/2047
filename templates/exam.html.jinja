@@ -5,14 +5,14 @@
 
   <div class="post_content">
 
-    <p>本考试开卷，请考生于15分钟内完成，未按时提交答题卡的，作零分处理。</p>
+    <p>本考试开卷，请考生于20分钟内完成，未按时提交答题卡的作零分处理。</p>
 
     <meta id='examid' name="" content="{{exam._key}}">
     <hr>
     <ol>
       {%for q in exam.questions %}
       {% set qi = loop.index0 %}
-      <li>
+      <li class='question_list_item'>
         <div class="question" {%if not exam._key %}id="{{q._key}}"{%endif%}>
           <div class="description">
             {{convert_markdown(q.question)|safe}}
@@ -22,12 +22,15 @@
             {%set ci = loop.index0%}
             <div class="choice">
               <input type="radio" name="{{qi}}" value="{{ci}}">
-              <span>{{choice|safe}}</span>
+              {# <span>{{choice|safe}}</span> #}
+              <div class="choice_text">
+                {{convert_markdown(choice)|safe}}
+              </div>
             </div>
             {%endfor%}
           </div>
           <div class="qcat">
-            （{{q.category}}）
+            （{{q.category}}）by {{macros.username(q.user,class='opaque5')}}
           </div>
         </div>
 

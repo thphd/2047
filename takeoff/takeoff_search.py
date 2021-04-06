@@ -2,8 +2,8 @@ from takeoff import *
 import time
 
 class Search:
-    def __init__(self):
-        self.g = [i() for i in (
+    def __init__(self, noisy=False):
+        self.g = [i(noisy=noisy) for i in (
             Weibo,QQ, JD, SF, Pingan, CarOwner20, Telegram40, Hotel2013,
             Momo2015,
         )]
@@ -37,6 +37,6 @@ class Search:
         return res, t1
 
 if __name__ == '__main__':
-    s = Search()
+    s = Search(noisy=True)
     print(s.search('13915466930'))
     print(s.search('3798002017'))

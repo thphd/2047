@@ -29,8 +29,9 @@ class Weibo:
         # return root_path, dest_path
 
     def init_sqlite(self):
-        print('fullpath is', self.fullpath)
-        print('trying to connect to', self.dbpath)
+        if hasattr(self, 'noisy') and self.noisy:
+            print('fullpath is', self.fullpath)
+            print('trying to connect to', self.dbpath)
         self.conn = sqlite3.connect(self.dbpath, check_same_thread=False)
         self.q('PRAGMA synchronous = OFF')
         self.q('PRAGMA journal_mode = MEMORY')
@@ -44,7 +45,9 @@ class Weibo:
         self.attrs = 'mobile,uid'.split(',')
         self.idxes = 'mobile,uid'.split(',')
 
-    def __init__(self):
+    def __init__(self, noisy=False):
+        self.noisy = noisy
+
         root, dest = self.get_root()
         self.set_paths()
         self.fullpath = root + self.path

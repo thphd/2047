@@ -1,7 +1,7 @@
 from commons import *
 from search import break_terms
 
-aqlc2 = AQLController(dbaddr, 'dbpmf')
+aqlc2 = AQLController(None, 'dbpmf')
 aqlc2.create_collection('pms')
 aql = aqlc2.aql
 
@@ -70,7 +70,7 @@ def search_term(term):
             query += ' and '
 
     query += f'''
-    let score = bm25(i)
+    let score = tfidf(i)
     sort score desc
     limit 100
 

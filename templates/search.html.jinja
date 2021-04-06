@@ -10,7 +10,7 @@
 {%endif%}
 
 <div class="search_section padlr">
-  <input type="text" value="{{query}}" id='search_term' placeholder="请输入关键字，例如“三个代表”">
+  <input type="text" value="{{query}}" id='search_term' placeholder="请输入关键字">
   <button type="button" id='btn_search'>搜索</button>
 </div>
 
@@ -23,76 +23,97 @@
 {%endmacro%}
 
 <div class="threadlist">
+  {%if has_result%}
 
-  {%if users%}
-    <div class="search_terms padded">
-      用户搜索结果
-    </div>
-
-    {%for u in users%}
-      {{macros.post_userlist(u)}}
-    {%endfor%}
-  {%endif%}
-
-  {%if results%}
-    <div class="search_terms padded" >
-      关键字搜索结果 (
-      {%for term in terms%}
-        {{term}}
+    {%if mode=='yyets'%}
+      <div class="threadlistitem search_terms padded">
+        影视搜索结果 <a href="/search?q={{original_terms}}">↗站内搜索</a>
+      </div>
+      <div class="padlr">
+      {%for item in yyets_results%}
+        <div class="yyetsitem">
+          <span class="category_name">{{item.category}}</span>
+          <span class="category_name">{{item.area}}</span>
+          <a href="/yyets/{{item.no}}">{{item.title|replace('&amp;','&')}}</a>
+        </div>
       {%endfor%}
-      )
     </div>
+    {%endif%}
 
-    <meta id='search_terms' data-id="{%for term in terms
-      %}{{term}} {%
-        endfor%}">
+    {%if mode!='yyets'%}
+      {%if users%}
+        <div class="search_terms padded">
+          用户搜索结果
+        </div>
 
-    <script type="text/javascript">
-      document.addEventListener('DOMContentLoaded',()=>{
-        var terms = geid('search_terms').dataset.id
-        terms = terms.split(' ').filter(s=>s.length)
+        {%for u in users%}
+          {{macros.post_userlist(u)}}
+        {%endfor%}
+      {%endif%}
 
-        var rescape = function(string) {
-          return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
-        };
+      <div class="search_terms padded" >
+        关键字搜索结果 (
+        {%for term in terms%}
+          {{term}}
+        {%endfor%}
+        )
+        <a href="/search_yyets?q={{original_terms}}">↗影视搜索(站内)</a>
 
-        var rexp = new RegExp('(' + terms.map(rescape).join('|') + ')')
-        print(rexp)
+        <a target="_blank" href="https://google.com/search?q=site:2047.name+{{original_terms}}">↗去谷歌搜索</a>
+      </div>
 
-        function replace_e(e){
-          var cn = Array.from(e.childNodes)
-          for (var i = 0; i<cn.length; i++){
-            var current = cn[i]
-            if (current.nodeName === '#text'){
+      <meta id='search_terms' data-id="{%for term in terms
+        %}{{term}} {%
+          endfor%}">
 
-              var s = current.nodeValue
-              var replaced = s.replace(rexp, '<span class="marked">$1</span>')
-              if (replaced!=s){
-                var newnode = document.createElement('div')
-                s = replaced
-                newnode.innerHTML = s
+      <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded',()=>{
+          var terms = geid('search_terms').dataset.id
+          terms = terms.split(' ').filter(s=>s.length)
 
-                var cnn = Array.from(newnode.childNodes)
-                for(var j=0; j<cnn.length;j++){
-                  current.parentNode.insertBefore(cnn[j], current)
+          var rescape = function(string) {
+            return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
+          };
+
+          var rexp = new RegExp('(' + terms.map(rescape).join('|') + ')', 'gi')
+          print(rexp)
+
+          function replace_e(e){
+            var cn = Array.from(e.childNodes)
+            for (var i = cn.length-1; i>=0; i--){
+              var current = cn[i]
+              if (current.nodeName === '#text'){
+
+                var s = current.nodeValue
+                var replaced = s.replace(rexp, '<span class="marked">$1</span>')
+                if (replaced!=s){
+                  var newnode = document.createElement('div')
+                  s = replaced
+                  newnode.innerHTML = s
+
+                  var cnn = Array.from(newnode.childNodes)
+                  for(var j=0; j<cnn.length;j++){
+                    current.parentNode.insertBefore(cnn[j], current)
+                  }
+                  current.parentNode.removeChild(current)
                 }
-                current.parentNode.removeChild(current)
+              }else{
+                replace_e(current)
               }
-            }else{
-              replace_e(current)
             }
           }
-        }
 
-        foreach(gebcn(document)('post_content'))(replace_e)
-        foreach(gebcn(document)('post_thread_title'))(replace_e)
+          foreach(gebcn(document)('post_content'))(replace_e)
+          foreach(gebcn(document)('post_thread_title'))(replace_e)
 
-      })
-    </script>
+        })
+      </script>
 
-    {%for r in results%}
-      {{post_or_thread(r)}}
-    {%endfor%}
+      {%for r in results%}
+        {{post_or_thread(r)}}
+      {%endfor%}
+    {%endif%}
+
   {%endif%}
 
 </div>

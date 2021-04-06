@@ -8,13 +8,16 @@
   {%set uid = u.uid %}
   {%set deco = not no_decoration%}
   {%set pt = deco and show_title and (not g.current_user or not g.current_user.hide_title) and u.personal_title%}
-  {%set pp = deco and show_title and (not g.current_user or not g.current_user.hide_title) and u.personal_party%}
+  {%set pp = deco and show_title and (not g.current_user or not g.current_user.hide_title) and (u.personal_party|trim)%}
 
   {%set title = titlify(u)%}
+  {%set etag_postfix = (('?etag='~u.avatar_etag) if u.avatar_etag else '')%}
+
+  {%set ppu = get_user_by_id_cached(pp)if pp else {} %}
+  {%set ppu_etag_postfix = (('?etag='~ppu.avatar_etag) if ppu.avatar_etag else '')%}
 
   {%set aurl =
-    ('/avatar/'~u.uid~'.png'~
-      (('?etag='~u.avatar_etag) if u.avatar_etag else ''))
+    ('/avatar/'~u.uid~'.png'~ etag_postfix)
 
     if u.has_avatar!=False
 
@@ -24,7 +27,7 @@
     <img title="{{title}}" class="{{class}}" src="{{aurl}}">
 
   {%else%}
-    <a title="{{title}}" class="avatar_outer" href="/u/{{uid}}">{%if pp%}<img class='personal_title' src='/avatar/{{pp}}.png'>{%elif pt%}<span class='personal_title'>{{pt}}</span>{%endif%}<img class="{{class or 'avatar'}}" src="{{aurl}}" alt=""></a>
+    <a title="{{title}}" class="avatar_outer" href="/u/{{uid}}">{%if pp%}<img class='personal_title' src='/avatar/{{pp}}.png{{ppu_etag_postfix}}'>{%elif pt%}<span class='personal_title'>{{pt}}</span>{%endif%}<img class="{{class or 'avatar'}}" src="{{aurl}}" alt=""></a>
 
   {%endif%}
 {%endmacro%}
@@ -608,6 +611,8 @@
     {{delete_post(p, t=in_thread)}}
   </div>
 
+  {{comment_section(p._id, p.comments, p.ncomments)}}
+
   {%endcall%}
 {%endmacro%}
 
@@ -995,7 +1000,12 @@
         </div>
 
       {%endif%}
-      <textarea placeholder="支持markdown语法，拖动右下角缩放" id="editor_text" class="{{'has_title' if title else ''}}">{{content if content}}</textarea>
+      <textarea placeholder="{{
+"""支持markdown语法，拖动右下角缩放
+
+使用礼貌得体的语言
+勿发表与主题无关或低信息量的言论"""}}"
+        id="editor_text" class="{{'has_title' if title else ''}}">{{content if content}}</textarea>
 
 
 
@@ -1005,7 +1015,7 @@
         {%if g.logged_in.delay_send%}<button class='major' type="button" id="editor_btnsubmitdelay">延时</button>{%endif%}
 
         <a href="/t/7140" target='_blank' rel='noreferrer'>语法参考</a>
-        <a href="https://imgur.com/upload" target="_blank" rel='noreferrer'>传图</a>
+        <a href="/t/11715" target="_blank" rel='noreferrer'>传图</a>
 
         <button type="button" id="editor_quote" title='引用文字'>“</button>
         <button type="button" id="editor_code" title='插入程序代码'>code</button>
@@ -1017,6 +1027,9 @@
         <button type="button" style='font-weight:bold;' id="editor_bold" title='加粗'>B</button>
 
 
+      </div>
+      <div class="editor_second_row">
+        <a href="/t/10052">发言的规则</a>
       </div>
     </div>
     <div class="editor_right" id="editor_right">
@@ -1037,6 +1050,26 @@
     }
   });
   </script>
+{%endmacro%}
+
+{#comment section#}
+{%macro comment_section(parent, comments, ncomments=None)%}
+  <div class="comment_section" data-id="{{parent}}">
+    {%for c in comments%}
+    <div class="comment">
+      <div class="comment_user_section">
+        {{avatar(c.user, plain=True, class="comment_avatar")}}
+        {{username(c.user)}}
+      </div>
+      <div class="post_content">
+        {{convert_markdown(c.content)| safe}}
+      </div>
+      <div class="date">
+        {{format_time_relative_fallback(c.t_c)}}
+      </div>
+    </div>
+    {%endfor%}
+  </div>
 {%endmacro%}
 
 {# titled header #}

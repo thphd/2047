@@ -51,6 +51,8 @@ dt
 em
 font color size face
 footer
+figure
+figcaption
 h1
 h2
 h3
@@ -110,7 +112,7 @@ def sanitizeAttrValue(tag, name, value):
             vl.startswith('https://') or
             vl.startswith('mailto:') or
             vl.startswith('tel:') or
-            vl.startswith('data:image/') or
+            vl.startswith('data:') or
             vl.startswith('ftp://') or
             vl.startswith('./') or
             vl.startswith('../') or
@@ -121,7 +123,7 @@ def sanitizeAttrValue(tag, name, value):
             return ''
 
         # replace domain names pointing at self
-        value = re.sub(r'^(?:http|https)://(?:2047.name|pincong.org|terminusnemheqvy.onion)/(.+)', '/\g<1>', value)
+        value = re.sub(r'^(?:http|https)://(?:2047.name|pincong.org|terminusnemheqvy.onion|terminus2xc2nnfk6ro5rmc5fu7lr5zm7n4ucpygvl5b6w6fqap6x2qd.onion)/(.+)', '/\g<1>', value)
 
         # kill img src s with relative paths due to an error found on 20201109
         if tag=='img' and re.match(r'^\./.*?_files/.*?$', value):
@@ -134,8 +136,17 @@ def sanitizeAttrValue(tag, name, value):
 
         if 'expression(' in vl: return ''
         if 'url(' in vl: return ''
+        if 'position' in vl: return ''
 
         # filter css inside style attr
+
+    elif name=='class':
+        if vl in ['youtube-player','youtube-player-unprocessed',
+        'poll-instance-unprocessed','comment_section_unprocessed','yellow','parody']:
+            return value
+        if vl.startswith('lang'):
+            return value
+        return ''
 
     return value
 
@@ -670,6 +681,19 @@ def walk(node, k=0):
             print('    '*k + str(child.name), type(child),'#', ns)
             walk(child, k+1)
 
+def walk_p_texts(soup, f, k=0):
+    for child in reversed(soup.contents):
+        tagname = child.name or ''
+
+        if not tagname:
+            # text stays
+            if type(child)==bs4.element.NavigableString:
+                f(child, k=k)
+            else:
+                child.extract()
+        else:
+            treewalk(child, f, k+1)
+
 if __name__ == '__main__':
 
     soup = parse_html(h)
@@ -688,3 +712,10 @@ if __name__ == '__main__':
     #
     # print('-------')
     # print(soup.prettify())
+
+    print('----')
+
+    soup = parse_html('''
+    <p>@yes</p>
+    <ul><li>@yes</li></ul>
+    ''')

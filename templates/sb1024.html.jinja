@@ -1,0 +1,30 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+
+<div class="padlr">
+  <a href="/t/11931">什么是SinoCrypt？</a>
+  <br>
+  <br>
+  <textarea placeholder="在这里输入密钥，例如“光复香港”" id="ta_key" rows="4" cols="40"></textarea>
+
+  <br>
+
+  <hr>
+
+  <textarea placeholder="在这里输入待加密的明文，例如“祖国万岁”" id="ta_plain" rows="4" cols="40"></textarea>
+  <button type="button" id='btn_encrypt'>加密</button>
+
+  <div class="post_content" id='div_encrypted'>
+
+  </div>
+  <br>
+
+  <textarea placeholder="在这里输入待解密的密文，例如“和退查况宗坏除择下使毛止”" id="ta_ct" rows="4" cols="40"></textarea>
+  <button type="button" id='btn_decrypt'>解密</button>
+
+  <div class="post_content" id='div_decrypted'>
+
+  </div>
+
+</div>
+{%endblock%}

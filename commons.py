@@ -11,6 +11,48 @@ from cachy import stale_cache
 
 def iif(a,b,c):return b if a else c
 
+import flask
+from flask import Flask, g, abort # session
+from flask import render_template, request, send_from_directory, make_response
+
+def make_text_response(text):
+    r = make_response(text, 200)
+    r = etag304(r)
+    r.headers['Content-Type']='text/plain; charset=utf-8'
+    r.headers['Content-Language']= 'en-US'
+    return r
+
+import zlib
+def calculate_etag(bin):
+    checksum = zlib.adler32(bin)
+    chksum_encoded = base64.b64encode(checksum.to_bytes(4,'big')).decode('ascii')
+    return chksum_encoded
+
+def etag304(resp):
+    etag = calculate_etag(resp.data)
+    # print(etag, request.if_none_match, request.if_none_match.contains_weak(etag))
+    if request.if_none_match.contains_weak(etag):
+        resp = make_response('', 304)
+
+    resp.set_etag(etag)
+    return resp
+
+def html_escape(s): return flask.escape(s)
+
+# return requests.args[k] as int or 0
+def rai(k):
+    v = key(request.args,k)
+    return int(v) if v else 0
+
+# return requests.args[k] as string or ''
+def ras(k):
+    v = key(request.args,k)
+    return str(v) if v else ''
+
+import json
+def obj2json(obj):
+    return json.dumps(obj, ensure_ascii=False, sort_keys=True, indent=2)
+
 # @stale_cache(ttr=1, ttl=30)
 def readfile(fn, mode='rb', *a, **kw):
     with open(fn, mode, *a, **kw) as f:
@@ -151,8 +193,8 @@ def login_time_validation(s):
 working_timezone = dttz(dttd(hours=+8)) # Hong Kong
 gmt_timezone = dttz(dttd(hours=0)) # GMT
 
-def time_iso_now():
-    return format_time_iso(dtn(working_timezone))
+def time_iso_now(dt=0): # dt in seconds
+    return format_time_iso(dtn(working_timezone) + dttd(seconds=dt))
 
 # pw hashing
 
@@ -188,226 +230,7 @@ def check_hash_salt_pw(hashstr, saltstr, string):
     chash = hash_pw(hexstr2bytes(saltstr), string)
     return chash == hexstr2bytes(hashstr)
 
-# extract non-markdown urls
-url_regex = r'((((http|https|ftp):(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+(:\[0-9]+)?|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)(?![^<]*?(?:<\/\w+>|\/?>))(?![^\(]*?\))'
-# dont use for now
-
-# username rule
-legal_chars = r'0-9a-zA-Z\u4e00-\u9fbb\-\_\.'
-username_regex_proto = f'[{legal_chars}]' + r'{2,16}'
-username_regex=r'^' + username_regex_proto + r'$'
-username_regex_pgp = r'2047login#(' + username_regex_proto + r')#(.{19})'
-username_regex_pgp_new = r'2047login##(.*?)##(.{19})'
-username_regex_string = str(username_regex).replace('\\\\','\\')
-
-tagname_regex_long = username_regex_proto.replace('2,16','1,40')
-tagname_regex = username_regex_proto.replace('2,16','1,10')
-
-at_extractor_regex = fr'(^|[^{legal_chars}<>])@([{legal_chars}]{{2,16}}?)(?=[^{legal_chars}(),。，]|$)'
-
-# @lru_cache(maxsize=4096)
-def extract_ats(s): # extract @usernames out of text
-    groups = re.findall(at_extractor_regex, s, flags=re.MULTILINE)
-    print(groups)
-    return [g[1] for g in groups]
-
-# @lru_cache(maxsize=4096)
-def replace_ats(s): # replace occurence
-    if s.startswith('<p>'):
-        return s
-
-    def f(match):
-        uname = match.group(2)
-        return match.group(1) + f'[@{uname}](/member/{uname})'
-
-    return re.sub(at_extractor_regex, f, s, flags=re.MULTILINE)
-
-post_autolink_regex = r'</?[#p]/?([0-9]{1,16})>'
-thread_autolink_regex = r'</?t/?([0-9]{1,16})>'
-
-# @lru_cache(maxsize=4096)
-def replace_pal(s):
-    def f(match):
-        pid = match.group(1)
-        return '[#{}](/p/{})'.format(pid,pid)
-
-    return re.sub(post_autolink_regex, f, s, flags=re.MULTILINE)
-
-# @lru_cache(maxsize=4096)
-def replace_tal(s):
-    def f(match):
-        pid = match.group(1)
-        return '[t{}](/t/{})'.format(pid,pid)
-
-    return re.sub(thread_autolink_regex, f, s, flags=re.MULTILINE)
-
-def replace_polls(s):
-    def f(match):
-        pollid = match.group(1)
-        return f'<div class="poll-instance-unprocessed" data-id="{pollid}"></div>'
-
-    return re.sub(r'^#poll(\d{1,16})(?:\t|$)', f, s, flags=re.MULTILINE)
-
-# match only youtube links that occupy a single line
-youtube_extractor_regex = r'(?=\n|\r|^)(?:http|https|)(?::\/\/|)(?:www.|)(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/ytscreeningroom\?v=|\/feeds\/api\/videos\/|\/user\S*[^\w\-\s]|\S*[^\w\-\s]))([\w\-]{11})[A-Za-z0-9;:@#?&%=+\/\$_.-]*(?=\n|$)'
-
-# match those from 2049bbs
-old_youtube_extractor_regex = r'<div class="videowrapper"><iframe src="https://www\.youtube\.com/embed/([\w\-]{11})" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>'
-
-youtube_extractor_regex_bugfix = r'<div class="youtube-player".*?data-id="(.*?)">.*?播放</a>'
-
-# combined together
-combined_youtube_extractor_regex = \
-'(?:'+youtube_extractor_regex+'|'+old_youtube_extractor_regex+'|'\
-    +youtube_extractor_regex_bugfix + ')'
-
-# @lru_cache(maxsize=4096)
-def replace_ytb_f(match):
-    vid = match.group(1) or match.group(2) or match.group(3)
-
-    ts = None
-    if vid==match.group(1):
-        url = match.group(0)
-        # print('urlmatch', url)
-        timestamp_found = re.search(r'\?t=([0-9]{1,})', url)
-        if timestamp_found:
-            ts = timestamp_found.group(1)
-            ts = int(ts)
-    # print('timestamp', ts)
-
-    ts = ('?t='+str(ts)) if ts else ''
-
-    return f'''<div class="youtube-player-unprocessed" data-id="{vid}" data-ts="{ts}"></div><a target="_blank" href="https://youtu.be/{vid}{ts}">去YouTube上播放</a>'''.format(vid)
-
-def replace_pincong(s):
-    def f(match):
-        return f'<mark class="parody">{match.group(1)}</mark>'
-    s = re.sub(r'(?<!>)((?:姨|桂|支|偽|伪|张献|張獻|韭|鹿)(?:葱|蔥)|(?:品|葱|蔥)韭)', f, s)
-    return s
-
-# @lru_cache(maxsize=4096)
-def replace_ytb(s):
-    s = re.sub(combined_youtube_extractor_regex,
-        replace_ytb_f, s, flags=re.MULTILINE)
-    return s
-
-@lru_cache(maxsize=4096)
-def extract_ytb(s):
-    groups = re.findall(combined_youtube_extractor_regex, s, flags=re.MULTILINE)
-    return [g[0] or g[1] for g in groups]
-youtube_extraction_test_string="""
-youtu.be/DFjD8iOUx0I
-https://youtu.be/DFjD8iOUx0I
-
-自动
-youtu.be/DFjD8iOUx0I
-
-http://youtu.be/dQw4w9WgXcQ
-
-// https://www.youtube.com/embed/dQw4w9WgXcQ
-// http://www.youtube.com/watch?v=dQw4w9WgXcQ
-// http://www.youtube.com/?v=dQw4w9WgXcQ
-// http://www.youtube.com/v/dQw4w9WgXcQ
-// http://www.youtube.com/e/dQw4w9WgXcQ
-// http://www.youtube.com/user/username#p/u/11/dQw4w9WgXcQ
-// http://www.youtube.com/sandalsResorts#p/c/54B8C800269D7C1B/0/dQw4w9WgXcQ
-// http://www.youtube.com/watch?feature=player_embedded&v=dQw4w9WgXcQ
-//
-
-http://www.youtube.com/?feature=player_embedded&v=dQw4w9WgXcQ
-
-" https://youtu.be/yVpbFMhOAwE ",
-"https://www.youtube.com/embed/yVpbFMhOAwE",
-"youtu.be/yVpbFMhOAwE",
-"youtube.com/watch?v=yVpbFMhOAwE",
-"http://youtu.be/yVpbFMhOAwE",
-"http://www.youtube.com/embed/yVpbFMhOAwE",
-"http://www.youtube.com/watch?v=yVpbFMhOAwE",
-"http://www.youtube.com/watch?v=yVpbFMhOAwE&feature=g-vrec",
-"http://www.youtube.com/watch?v=yVpbFMhOAwE&feature=player_embedded",
-好的" http://www.youtube.com/v/yVpbFMhOAwE?fs=1&hl=en_US  ",
-" http://www.youtube.com/ytscreeningroom?v=yVpbFMhOAwE ",
-"http://www.youtube.com/watch?NR=1&feature=endscreen&v=yVpbFMhOAwE",
-"http://www.youtube.com/user/Scobleizer#p/u/1/1p3vcRhsYGo",
-" http://www.youtube.com/watch?v=6zUVS4kJtrA&feature=c4-overview-vl&list=PLbzoR-pLrL6qucl8-lOnzvhFc2UM1tcZA ",
-"
-#真人献唱#
-
-**《没有倒车档就没有庆丰国》**
-
-<div class="videowrapper"><iframe src="https://www.youtube.com/embed/kfUx7Lv-az8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
-
-https://www.youtube.com/watch?v=FZu097wb8wU&list=RDFZu097wb8wU
- "
-youtu.be/DFjD8iOUx0I
-"""
-
-# markdown renderer
-
-if 0:
-    import markdown
-    def convert_markdown(s):
-        return markdown.markdown(s)
-
-elif 1:
-    import mistletoe
-    from html_stuff import parse_html, sanitize_html
-
-    def just_markdown(s):
-        s = replace_pal(s)
-        s = replace_tal(s)
-
-        s = replace_ats(s)
-        s = replace_pincong(s)
-        s = replace_ytb(s)
-        s = replace_polls(s)
-        html = mistletoe.markdown(s)
-
-        return html
-
-    @lru_cache(maxsize=2048)
-    def convert_markdown(s):
-        out = just_markdown(s)
-
-        try:
-            soup = parse_html(out)
-            sanitize_html(soup)
-            out = soup.decode()
-        except Exception as e:
-            print_err('failed to parse with bs4')
-            out = '(parse failure: check your HTML)'
-
-        return out
-
-else:
-
-    import re
-    pattern = (
-        r'((((http|https|ftp):(?:\/\/)?)'  # scheme
-        r'(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+(:\[0-9]+)?'  # user@hostname:port
-        r'|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)'  # www.|user@hostname
-        r'((?:\/[\+~%\/\.\w\-_]*)?'  # path
-        r'\??(?:[\-\+=&;%@\.\w_]*)'  # query parameters
-        r'#?(?:[\.\!\/\\\w]*))?)'  # fragment
-        r'(?![^<]*?(?:<\/\w+>|\/?>))'  # ignore anchor HTML tags
-        r'(?![^\(]*?\))'  # ignore links in brackets (Markdown links and images)
-    )
-    link_patterns = [(re.compile(pattern),r'\1')]
-    import markdown2 as markdown
-    from markdown2 import Markdown
-    md = Markdown(
-        extras=[
-            'link-patterns',
-            'fenced-code-blocks',
-            'nofollow',
-            'tag-friendly',
-            'strike',
-        ],
-        link_patterns = link_patterns,
-    )
-
-    def convert_markdown(s):
-        return md.convert(s)
+from render import *
 
 def get_environ(k):
     k = k.upper()
@@ -440,8 +263,7 @@ def eat_rgb(s, raw=False):
 
 # database connection
 from aql import AQLController, QueryString
-dbaddr = get_environ('dbaddr') or 'http://127.0.0.1:8529'
-aqlc = AQLController(dbaddr, 'db2047')
+aqlc = AQLController(None, 'db2047')
 aql = aqlc.aql
 
 def wait_for_database_online():
@@ -569,16 +391,18 @@ oplog /oplog 管理日志
 英雄 /hero BE4的实验性项目
 维尼查 /ccpfinder 镰和锤子不可兼得
 云上贵州 /guizhou 年轻人不讲武德
+人人影视 /search_yyets?q=越狱 人人英雄永垂不朽
 ''')
 
 friendly_links = linkify('''
-Tor上的2047 http://terminusnemheqvy.onion/ 特殊情况下使用
+Tor上的2047 http://terminus2xc2nnfk6ro5rmc5fu7lr5zm7n4ucpygvl5b6w6fqap6x2qd.onion 特殊情况下使用
 旧品葱 https://pincongbackup.github.io/ pin-cong.com备份
 火光 https://2049post.wordpress.com/ 薪火相传光明不息
 BE4 https://nodebe4.github.io/ BE4的网络服务
 XsDen https://xsden.info/ 講粵語嘅討論區
 英雄 https://nodebe4.github.io/hero/ 人民英雄永垂不朽
-新膜乎(品葱) https://mohu.rocks/ 品葱旗下的皇家娱乐城
+迷雾通 https://community.geph.io/ 迷雾通官方交流社区
+2049备份 https://2049bbs.github.io/ 本站前身
 ''')
 
 site_name='2047论坛，自由人的精神角落'
@@ -775,54 +599,8 @@ def is_legal_username(n):
 def is_alphanumeric(n):
     return re.fullmatch(r'^[0-9a-zA-Z]*$', n)
 
-
 import random
-
-@stale_cache(ttr=10, ttl=900)
-def get_quotes():
-    quotes = aql('''
-for i in entities
-
-filter i.type=='famous_quotes' or i.type=='famous_quotes_v2'
-sort i.t_c desc
-
-let user = (for u in users filter u.uid==i.uid return u)[0]
-return merge(i, {user})
-
-//for j in i.doc
-//return {quote:j[0], quoting:j[1], user, t_u:(i.t_u or i.t_c)}
-
-    ''', silent=True)
-
-    q = []
-    for i in quotes:
-        if i['type']=='famous_quotes':
-            if isinstance(i['doc'], list):
-                for j in i['doc']:
-                    if len(j)>=2:
-                        q.append(dict(
-                            quote=j[0],
-                            quoting=j[1],
-                            user=i['user'],
-                            t_u= i['t_e'] if 't_e' in i else i['t_c']
-                        ))
-
-        elif i['type']=='famous_quotes_v2':
-            if 'quoting' in i['doc'] and 'quotes' in i['doc']:
-                if isinstance(i['doc']['quotes'], list):
-                    for j in i['doc']['quotes']:
-                        q.append(dict(
-                            quote=j,
-                            quoting=i['doc']['quoting'],
-                            user=i['user'],
-                            t_u= i['t_e'] if 't_e' in i else i['t_c']
-                        ))
-
-    return q
-
-def get_quote():
-    quotes = get_quotes()
-    return random.choice(quotes)
+from quotes import *
 
 @stale_cache(ttr=10, ttl=900)
 def get_links():

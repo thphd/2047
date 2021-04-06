@@ -8,9 +8,9 @@
       {{macros.avatar(l.user)}}
       {{macros.username(l.user)}}
 
-      <span class="padlr">{{l.op}}</span>
-      <span class="">{{l.target}}</span>
-      <span class='padlr'>{{format_time_relative_fallback(l.t_c)}}</span>
+      <span class="">[{{l.op}}]</span>
+      <span class="">[{{l.target}}]</span>
+      <span class=''>[{{format_time_datetime(l.t_c)}}]</span>
 
       {%if l.reason%}
       <span class="">reason: {{l.reason}}</span>

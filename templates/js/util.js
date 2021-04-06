@@ -439,6 +439,56 @@ function go_or_refresh_if_samepage(url){
   }
 }
 
+
+function register_if_exist(target_id,f){
+  var target = geid(target_id)
+  if(target){
+    f()
+  }
+}
+
+function escapeHtml(unsafe) {
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+ }
+
+// sinoencrypt sb1024
+register_if_exist('btn_encrypt',function(){
+  var btn_encrypt = geid('btn_encrypt')
+  var btn_decrypt = geid('btn_decrypt')
+
+  var plain = geid('ta_plain'), key = geid('ta_key'), ct = geid('ta_ct')
+  var ed = geid('div_encrypted'), dd = geid('div_decrypted')
+
+  btn_encrypt.onclick = function(){
+    btn_encrypt.enabled = false
+    div_encrypted.innerText = '正在连接服务器...'
+    aa('sb1024_encrypt',{key:key.value, plain:plain.value}).then(res=>{
+      div_encrypted.innerText = res.ct
+    })
+    .catch(alert)
+    .then(()=>{
+      btn_encrypt.enabled = true
+    })
+  }
+  btn_decrypt.onclick = function(){
+    btn_decrypt.enabled = false
+    div_decrypted.innerText = '正在连接服务器...'
+    aa('sb1024_decrypt',{key:key.value, ct:ct.value}).then(res=>{
+      div_decrypted.innerText = res.plain
+    })
+    .catch(alert)
+    .then(()=>{
+      btn_decrypt.enabled = true
+    })
+  }
+})
+
+
 var editor_target = geid('editor_target')
 
 if (editor_target){
@@ -1071,6 +1121,24 @@ function process_all_youtube_reference(){
     .catch(print)
 
   })
+
+  var commsecs = gebcn(document)('comment_section_unprocessed')
+  foreach(commsecs)(e=>{
+    print(e)
+
+    var did = e.dataset.id
+    e.className = 'comment_section'
+
+    api({
+      action:'render_comments',
+      parent:did,
+    })
+    .then(res=>{
+      e.innerHTML = res.html
+    })
+    .catch(print)
+
+  })
 }
 
 function browser_check(){
@@ -1385,17 +1453,21 @@ function follow(uid, is_follow){
   .catch(alert)
 }
 
+function add_to_blacklist_by_name(name, del){
+  return aa('blacklist',{
+    username:name,
+    'delete':del,
+  })
+  .then(res=>{
+    window.location.reload()
+  })
+  .catch(alert)
+}
+
 function add_to_blacklist(del){
   var un = (prompt('请输入对方的用户名')||'').trim()
   if (un){
-    aa('blacklist',{
-      username:un,
-      'delete':del,
-    })
-    .then(res=>{
-      window.location.reload()
-    })
-    .catch(alert)
+    return add_to_blacklist_by_name(un,del)
   }
 }
 
@@ -1442,7 +1514,7 @@ if(btn_search){
       return
     }
 
-    window.location.href = '/search?q='+term
+    window.location.href = '?q='+term
   }
 
   st.onkeypress=function(e){

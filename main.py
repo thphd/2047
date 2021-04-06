@@ -28,14 +28,15 @@ import requests as r
 import mimetypes as mt
 
 from commons import *
+from aql import *
 wait_for_database_online()
+fix_view_loss(None)
 
 from medals import get_medals, get_user_medals
 
 import flask
 from flask import Flask, g, abort # session
 from flask import render_template, request, send_from_directory, make_response
-# from flask_gzip import Gzip
 
 from api import api_registry, get_categories_info, get_url_to_post, get_url_to_post_given_details
 from api import *
@@ -44,15 +45,12 @@ from session import save_session,load_session
 
 from app import app
 
+import sb1024_encryption
+
 def route(r):
     def rr(f):
         app.add_url_rule(r, str(random.random()), f)
     return rr
-
-def calculate_etag(bin):
-    checksum = zlib.adler32(bin)
-    chksum_encoded = base64.b64encode(checksum.to_bytes(4,'big')).decode('ascii')
-    return chksum_encoded
 
 import glob
 # hash all resource files see if they change
@@ -705,16 +703,6 @@ class Paginator:
 
 pgnt = Paginator()
 
-# return requests.args[k] as int or 0
-def rai(k):
-    v = key(request.args,k)
-    return int(v) if v else 0
-
-# return requests.args[k] as string or ''
-def ras(k):
-    v = key(request.args,k)
-    return str(v) if v else ''
-
 # filter bots/DOSes that use a fixed UA
 '''
 不是我说你们，你们要是真会写代码，也不至于过来干这个，我都替你们着急啊
@@ -937,7 +925,7 @@ def before_request():
             uafd(acceptstr), uafd(ipstr)))
 
         if random.random()>0:
-            time.sleep(10+random.random()*25)
+            time.sleep(1+random.random()*2)
             return ('rate limit exceeded', 429)
         elif random.random()>0.02:
             return (b'please wait a moment before accesing this page'+base64.b64encode(os.urandom(int(random.random()*256))), 200)
@@ -1083,13 +1071,6 @@ def getpost(pid):
 
     return resp
 
-def make_text_response(text):
-    r = make_response(text, 200)
-    r = etag304(r)
-    r.headers['Content-Type']='text/plain; charset=utf-8'
-    r.headers['Content-Language']= 'en-US'
-    return r
-
 @app.route('/p/<int:pid>/code')
 def getpostcode(pid):
     if not can_do_to(g.current_user,'view_code', -1):
@@ -1211,6 +1192,9 @@ def get_category_threads(cid):
                 ids=[p['_id'] for p in pinned])
 
             threadlist = pinned_threads + [t for t in threadlist if t['tid']not in tids]
+
+    if cid=='main':
+        threadlist = remove_hidden_from_visitor(threadlist)
 
     return render_template_g('threadlist.html.jinja',
         page_title=catobj['name'],
@@ -2106,6 +2090,8 @@ def upload_file():
     etag = calculate_etag(png)
     png = base64.b64encode(png).decode('ascii')
 
+    etag += time_iso_now() # ensure renewal
+
     avatar_object = dict(
         uid=g.selfuid,
         data_new=png,
@@ -2114,16 +2100,9 @@ def upload_file():
         uid=g.selfuid, k=avatar_object)
     aql('for i in users filter i.uid==@uid update i with {has_avatar:true, avatar_etag:@etag} in users', uid=g.selfuid, etag=etag)
 
+    time.sleep(0.5)
+
     return {'error':False}
-
-def etag304(resp):
-    etag = calculate_etag(resp.data)
-    # print(etag, request.if_none_match, request.if_none_match.contains_weak(etag))
-    if request.if_none_match.contains_weak(etag):
-        resp = make_response('', 304)
-
-    resp.set_etag(etag)
-    return resp
 
 import qrcode, io
 
@@ -2348,14 +2327,10 @@ def pkey_un(uname):
 def doc2resp(doc):
     pk = doc
     if isinstance(pk, str):
-        r = make_response(pk, 200)
-        r.headers['Content-Type'] = 'text/plain; charset=utf-8'
-        r.headers['Content-Language']= 'en-US'
-
+        return make_text_response(pk)
     else:
         r = make_response(obj2json(pk), 200)
         r.headers['Content-Type'] = 'application/json'
-
     return r
 
 def pkey(uid, ty):
@@ -2374,15 +2349,8 @@ def get_invitation(iid):
         resp = make_response('',307)
         resp.headers['Location'] = '/u/'+str(i['uid'])
     else:
-        resp=make_response(str(i),200)
-        resp.headers['content-type']='text/plain; charset=utf-8'
+        resp = make_text_response(str(i))
     return resp
-
-@app.route('/quotes')
-def show_quotes():
-    return render_template_g('quotes.html.jinja',
-        page_title="语录",
-    )
 
 @app.route('/links')
 def show_links():
@@ -2392,12 +2360,12 @@ def show_links():
         links = linksd,
     )
 
-@stale_cache(maxsize=512, ttr=3, ttl=1800)
+@stale_cache(maxsize=128, ttr=3, ttl=1800)
 def get_oplog(target=None, raw=False):
     query = f'''
     for i in operations
     {'filter i.target==@target' if target else ''}
-    sort i.t_c desc limit 100
+    sort i.t_c desc limit 300
     let user = (for u in users filter u.uid==i.uid return u)[0]
     return merge(i,{{username:user.name, user}})
     '''
@@ -2447,24 +2415,6 @@ def oplog_t(target):
     return resp
 
 from search import search_term
-@app.route('/search')
-def search():
-    q = ras('q').strip()
-    if not q:
-        return render_template_g(
-            'search.html.jinja',
-            hide_title=True,
-            page_title='搜索',
-        )
-    else:
-        result = search_term(q, start=0, length=20)
-        return render_template_g(
-            'search.html.jinja',
-            query=q,
-            hide_title=True,
-            page_title='搜索 - '+flask.escape(q),
-            **result
-        )
 
 from pmf import search_term as pm_search_term
 @app.route('/ccpfinder')
@@ -2487,11 +2437,14 @@ def searchpm():
         )
 
 import sys
+
 sys.path.append('./takeoff/')
 from takeoff_search import Search
-tks = Search()
+
 @app.route('/guizhou')
 def tksearch():
+    tks = Search()
+
     q = ras('q').strip()
     if not q:
         return render_template_g(
@@ -2656,8 +2609,7 @@ def f404(to_show):
 @app.route('/robots.txt')
 def robots():
     s = readfile('templates/robots.txt', 'r')
-    resp = make_response(s, 200)
-    resp.headers['content-type'] = 'text/plain; charset=utf-8'
+    resp = make_text_response(s)
     return resp
 
 @app.errorhandler(404)

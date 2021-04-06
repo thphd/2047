@@ -3,6 +3,15 @@ from colors import *
 import requests as r
 import time
 
+import os
+
+def get_environ(k):
+    k = k.upper()
+    if k in os.environ:
+        return os.environ[k]
+    else:
+        return None
+
 # rs = r.Session()
 basic_auth = r.auth.HTTPBasicAuth('root','')
 
@@ -26,7 +35,8 @@ class AQLController:
                 proxies = {},
             ).json()
 
-            if resp['error'] == False: # server returned success
+            if ('error' not in resp) or resp['error'] == False:
+                # server returned success
                 return resp
             else:
                 if not raise_error:
@@ -42,7 +52,7 @@ class AQLController:
                         raise Exception(str(resp))
 
     def __init__(self, dburl, dbname, collections=[], timeout=12):
-        self.dburl = dburl
+        self.dburl = dburl or (get_environ('dbaddr') or 'http://127.0.0.1:8529')
         self.dbname = dbname
         self.collections = collections
         self.prepared = False
@@ -109,6 +119,14 @@ class AQLController:
         if not silent: print_down('AQL <<', str(res))
         return res
 
+    def change_view_properties(self, viewname, **kw):
+        print(f'attempting to change view properties on {self.dbname}/{viewname}')
+        resp = self.request('PATCH',
+            '/_db/'+self.dbname+'/_api/view/'+viewname
+            +'/properties#ArangoSearch',
+            **kw,
+        )
+
     def from_filter(self, _from, _filter, **kw):
         self.prepare()
         return self.aql('for i in {} filter {} return i'.format(_from, _filter), **kw)
@@ -146,17 +164,47 @@ class QueryString:
         result = QueryString(self.s+'\n'+b.s, **k)
         return result
 
+def fix_view_loss(addr):
+    aqlc = AQLController(addr, 'db2047', timeout=60)
+    aqlc.change_view_properties(
+        'sv',
+        links = {
+                    'threads':{
+                        'analyzers':['text_zh'],
+                        'fields':{
+                        'title':{},
+                        'content':{},
+                        },
+                    },
+                    'posts':{
+                        'analyzers':['text_zh'],
+                        'fields':{
+                            'content':{},
+                        },
+                    },
+                    'users':{
+                        'analyzers':['text_zh'],
+                        'fields':{
+                        'name':{},
+                        'brief':{},
+                        },
+                    },
+                }
+        )
+
 if __name__ == '__main__':
 
-    aqlc = AQLController('http://127.0.0.1:8529', 'test',[
-    'queue'
-    ])
-    aql = aqlc.aql
+    # aqlc = AQLController('http://127.0.0.1:8529', 'test',[
+    # 'queue'
+    # ])
+    # aql = aqlc.aql
+    #
+    # aql('insert {a:1} into queue')
+    # a = aql('for u in queue return u')
+    #
+    # aql('for u in queue filter u.a==1 remove u in queue')
+    # a = aql('for u in queue return u')
+    #
+    # print(a)
 
-    aql('insert {a:1} into queue')
-    a = aql('for u in queue return u')
-
-    aql('for u in queue filter u.a==1 remove u in queue')
-    a = aql('for u in queue return u')
-
-    print(a)
+    pass

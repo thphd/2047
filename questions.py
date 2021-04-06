@@ -53,20 +53,29 @@ def find_question(qq):
 def choose_questions(seed, nquestions):
     rng = random.Random(seed)
 
+    # num questions available
     nqa = aql('return length(for i in questions filter i.delete==null return i)', silent=True)[0]
 
-    chosen_idx= rng.sample(range(nqa), nquestions)
-    chosen_qs = []
-    for i in chosen_idx:
+    got_questions = []
+    gqkeys = {}
+    while len(got_questions)<nquestions:
+        chosen_idx= rng.randint(0, nqa)
         q = aql(f'''
             for i in questions
             sort i._key
-            limit {i},1
-            return i
+            limit {chosen_idx},1
+            let user = (for u in users filter u.uid==i.uid return u)[0]
+            return merge(i, {{user}})
         ''', silent=True)[0]
-        chosen_qs.append(q)
 
-    return chosen_qs
+        if q['question'].startswith('!!'):
+            continue
+
+        if q['_key'] not in gqkeys:
+            gqkeys[q['_key']] = 1
+            got_questions.append(q)
+
+    return got_questions
 
 def make_exam(seed, nquestions):
     chosen = choose_questions(seed, nquestions)
@@ -85,7 +94,8 @@ def insert_question(q):
 aqlc.create_collection('exams')
 
 min_pass_score = 4
-num_questions = 5
+num_questions = 6
+time_to_submit = 20
 
 @app.route('/exam')
 def get_exam():
@@ -133,7 +143,7 @@ def _():
 
     aql('update @k with {submitted:true} in exams', k=exam)
 
-    if dfs(now) - dfs(exam['t_c']) > dttd(seconds=15*60):
+    if dfs(now) - dfs(exam['t_c']) > dttd(seconds=time_to_submit*60):
         raise Exception('time limit exceeded. please try again later')
 
     # from questions import qs, qsd

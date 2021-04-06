@@ -1,9 +1,19 @@
 {%extends 'base.html.jinja'%}
 {%block content%}
 
-<div class="threadlist padded">
-  <div class="post_content" style='color:red;'>
-    出题要求：题目答案不可以随手谷歌得到，但只要稍微动动脑就可以在3分钟内解出；题目难度不得超过高中；不得使用脑筋急转弯，不得存在浪费做题人时间的陷阱。修改其他人的题目前，必须跟出题人打招呼。
+<div class="threadlist padlr">
+  <div class="post_content" style='color:red;font-size:70%;'>
+    {{convert_markdown('''
+- Answer to any question must not occur in the Google search result of that question.
+- Do not ask questions where greater than 1/3 of our active user base could not answer within 3 minutes. See <t11561>
+- Please do not ask questions that requires greater than senior high-school level of education.
+- **Never set up traps that waste our target users\' time. Our goal is to deter fools, not making the lives of wise men more miserable.**
+- The first choice will be used as the correct choice.
+- Our users may use either Chrome, Firefox, Tor Browser or Safari from either desktop or mobile. Please make sure your questions work nicely for all of them. Please do not ask browser-specific or platform-dependent questions.
+- Questions starting with `!!` will not be included in the exam. If you find one of your questions prepended with `!!`, it usually means that question was deemed unsuitable for use in the exam after being reviewed by the site owner.
+
+''')|safe}}
+
   </div>
 
   <div class="post_content">
@@ -26,7 +36,7 @@
         <textarea name="name" rows="8" cols="30" id="{{q._key}}">{{q2str(q)}}</textarea>
 
         <div class="qtitle">
-          {%if q.uid==g.logged_in.uid or g.logged_in.uid==5108%}
+          {%if q.uid==g.logged_in.uid or g.logged_in.uid in [5108,5347,2764,3793,3393]%}
           <a href="javascript:modify_question('{{q._key}}')">应用修改</a>
           {%endif%}
           <span class='qmeta'>{{format_time_dateifnottoday(q.t_c)}}</span>

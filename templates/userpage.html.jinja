@@ -38,6 +38,14 @@
         <a href="javascript:ban_user_reverse({{u.uid}})" class="adminstuff delete">解除封禁</a>
         {%endif%}
 
+        {%if g.logged_in and u.uid!=g.selfuid %}
+          {%if not im_in_blacklist_of(u.uid, reversed=True)%}
+            <a href="javascript:add_to_blacklist_by_name('{{u.name}}')">加入黑名单</a>
+          {%else%}
+            <a href="javascript:add_to_blacklist_by_name('{{u.name}}', true)">解除黑名单</a>
+          {%endif%}
+        {%endif%}
+
       </div>
 
       {%if u.alias%}
@@ -66,6 +74,12 @@
       {%if u.public_key%}
       <div class="userpage_name">
         <span>公钥</span><a href="/public_key/{{u.name}}">/public_key/{{u.name}}</a>{%if u.pgp_login%}<span>(已验证)</span>{%endif%}
+      </div>
+      {%endif%}
+
+      {%if u.receipt_addr%}
+      <div class="userpage_name">
+        <span>收款地址</span><span style="word-break:break-all; line-height:1.1; align-self:center;">{{u.receipt_addr}}</span>
       </div>
       {%endif%}
 
