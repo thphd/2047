@@ -27,6 +27,9 @@ class StaleBuffer:
                 r = self.f()
             except Exception as e:
                 traceback.print_exc()
+                self.l.acquire()
+                self.state = 'nodispatch'
+                self.l.release()
             else:
                 self.l.acquire()
                 self.state = 'nodispatch'
