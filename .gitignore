@@ -38,3 +38,6 @@ templates/highlight/styles/*.*
 
 takeoff/root_path.py
 takeoff/testfile.py
+
+takeoff/yyets_parse.py
+takeoff/yyparse2.py
