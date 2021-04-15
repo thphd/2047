@@ -2011,11 +2011,12 @@ def apir():
     action = j['action']
 
     # method limitation
-    if action!='ping' and request.method != 'POST':
-        return e('you must use POST for actions other than "ping"')
+    if action not in ['ping','sb1024_encrypt','sb1024_decrypt']:
+        if request.method != 'POST':
+            return e('you must use POST for actions other than "ping"')
 
     # CSRF prevention
-    if action!='ping':
+    # if action!='ping':
         # check if referrer == self
         if request.referrer and request.referrer.startswith(request.host_url):
             pass
@@ -2049,7 +2050,9 @@ def apir():
         return e(errstr)
 
     # send the response back
-    response = make_response(answer)
+    answerj = obj2json(answer)
+    response = make_response(answerj)
+    response.headers['Content-Type']='application/json'
 
     if printback:
         print_down('API <<', answer)

@@ -5,9 +5,14 @@
   <a href="/t/11931">什么是SinoCrypt？</a>
   <br>
   <br>
-  <textarea placeholder="在这里输入密钥，例如“光复香港”" id="ta_key" rows="4" cols="40"></textarea>
+  <textarea placeholder="在这里输入密钥，例如“光复香港”" id="ta_key" rows="4" cols="40">{{skey or ''}}</textarea>
+
+
 
   <br>
+  {%for i in ['光复香港','新疆集中营','2047']%}
+    <button type="button" onclick="javascript:geid('ta_key').value='{{i}}'">使用“{{i}}”</button>
+  {%endfor%}
 
   <hr>
 

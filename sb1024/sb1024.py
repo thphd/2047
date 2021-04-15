@@ -44,7 +44,7 @@ def decompress(c):
         # print(e)
         return c
 
-if __name__ == '__main__':
+if __name__ == '__main__' and 1:
     def cd(b):
         cc = compress(b)
         p = decompress(cc)
@@ -52,7 +52,7 @@ if __name__ == '__main__':
         print('equal:', 'yes' if p==b else 'no', f'ratio:{len(cc)/len(b):.3f}')
 
     cd(b'asdf')
-    cd(b'asdf'*20)
+    cd(b'asdf'*2)
     hard = bytes([i%256 for i in range(1000)])
     cd(hard)
     cd('中国'.encode('utf8'))
@@ -72,7 +72,7 @@ if __name__ == '__main__':
             pass
             # print(e)
             # print(b[0:20])
-    print(f'{succ}/{tries} successed')
+    print(f'{succ}/{tries} success')
 
 
     tries = 1000
@@ -83,7 +83,7 @@ if __name__ == '__main__':
             succ+=1
         else:
             print(b)
-    print(f'{succ}/{tries} successed')
+    print(f'{succ}/{tries} success')
 
 
 # chinese characters ranked by frequency
@@ -111,6 +111,10 @@ def sb1024_decode(ca):
 # determine whether c is within the 1024 character set
 def sb1024_is_occupied(c):
     return (c in backward) and (backward[c] < 1024)
+
+def sb1024_synonym(c):
+    k = backward[c]%256
+    return [forward[k+i*256] for i in range(4)]
 
 def pf(*a):
     la = len(a)
@@ -172,7 +176,7 @@ if __name__ == '__main__':
     print(plain)
 
 
-from functools import lru_cache
+# from functools import lru_cache
 
 # conversion between unicode string and bytes
 
@@ -199,6 +203,7 @@ def bytes_to_string(ba):
         return ba.decode('gbk')
 
 if __name__ == '__main__':
+    print('..')
     pf('ninja', string_to_bytes, bytes_to_string)
     pf('忍者', string_to_bytes, bytes_to_string)
 
@@ -316,14 +321,20 @@ def sb1024_cc2_encryption_collider(keystring, plaintextstring, target, attempts=
     keybytes = string_to_bytes(keystring)
     plain = string_to_bytes(plaintextstring)
 
+    lr = len_target_regex = 0
+
     target_regex = []
     for idx, char in enumerate(target):
         if sb1024_is_occupied(char):
-            target_regex.append(char)
+            charset = f"(?:{'|'.join(sb1024_synonym(char))})"
+            target_regex.append(charset)
+            lr+=1
     target_regex = ''.join(target_regex)
 
+    print('target_regex', target_regex)
+
     cr = re.compile(target_regex)
-    lr = len(target_regex)
+    # lr = len(target_regex)
 
     collisions = []
 
@@ -356,6 +367,6 @@ if __name__ == '__main__':
     # print(sb1024_cc2_str_decrypt('习明泽大战姚安娜', ci+'大'))
     print(sb1024_cc2_str_decrypt('习明泽大战姚安娜',ci+'繁'))
 
-    res = sb1024_cc2_encryption_collider('习明泽大战姚安娜','吼'*30,'大撒币',999,limit=2221)
+    res = sb1024_cc2_encryption_collider('新疆集中营','是真的','陈全国',999999,limit=111)
 
-    print(len(res), res[0] if len(res) else '')
+    print(len(res), res[0] if type(res)=='list' else res)
