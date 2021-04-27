@@ -162,7 +162,13 @@ def get_user_by_name(name):
         return None
 
 def get_user_by_id(id):
-    res = aql('for u in users filter u.uid==@n return u', n=int(id), silent=True)
+    try:
+        id = int(id)
+    except:
+        print_err('personal_party_wrongly_set', id)
+        return None
+
+    res = aql('for u in users filter u.uid==@n return u', n=id, silent=True)
     if len(res)>0:
         return res[0]
     else:

@@ -8,12 +8,12 @@
   {%set uid = u.uid %}
   {%set deco = not no_decoration%}
   {%set pt = deco and show_title and (not g.current_user or not g.current_user.hide_title) and u.personal_title%}
-  {%set pp = deco and show_title and (not g.current_user or not g.current_user.hide_title) and (u.personal_party|trim)%}
+  {%set pp = deco and show_title and (not g.current_user or not g.current_user.hide_title) and intify(u.personal_party|trim) %}
 
   {%set title = titlify(u)%}
   {%set etag_postfix = (('?etag='~u.avatar_etag) if u.avatar_etag else '')%}
 
-  {%set ppu = get_user_by_id_cached(pp)if pp else {} %}
+  {%set ppu = (get_user_by_id_cached(pp) or {}) if pp else {} %}
   {%set ppu_etag_postfix = (('?etag='~ppu.avatar_etag) if ppu.avatar_etag else '')%}
 
   {%set aurl =

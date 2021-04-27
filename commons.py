@@ -91,6 +91,13 @@ def key(d, k):
     else:
         return None
 
+def intify(s):
+    try:
+        return int(s)
+    except:
+        print_err(s)
+        return 0
+
 # everything time related
 
 import datetime
@@ -403,6 +410,7 @@ XsDen https://xsden.info/ 講粵語嘅討論區
 英雄 https://nodebe4.github.io/hero/ 人民英雄永垂不朽
 迷雾通 https://community.geph.io/ 迷雾通官方交流社区
 2049备份 https://2049bbs.github.io/ 本站前身
+昌维 https://changwei.me/ changwei
 ''')
 
 site_name='2047论坛，自由人的精神角落'
