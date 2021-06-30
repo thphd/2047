@@ -91,11 +91,13 @@ def key(d, k):
     else:
         return None
 
-def intify(s):
+def intify(s, name=''):
     try:
         return int(s)
     except:
-        print_err(s)
+        if s:
+            # print_err('intifys',s,name)
+            pass
         return 0
 
 # everything time related
@@ -150,6 +152,29 @@ def days_since(ts):
     dt = now - then
     return dt.days
 
+def seconds_since(ts):
+    then = dfshk(ts)
+    now = dtn(working_timezone)
+    dt = now - then
+    return dt.total_seconds()
+
+def cap(x, mi, ma):
+    return min(max(x, mi),ma)
+
+def page_grayness():
+    now_year = time_iso_now()[0:5]
+    lod = list_of_dates = [
+        '06-04 00:00:00',
+    ]
+    lod = [now_year+i for i in lod]
+    k = b = 86400*0.4
+    for d in lod:
+        ssd = seconds_since(d)
+        assd = abs(ssd)
+        if assd < k:
+            k = assd
+
+    return cap(1 - (1 - (b-k) / b)**1.2, 0, 1) * 0.95
 
 def format_time_relative_fallback(s):
     dt = dfshk(s)
@@ -399,10 +424,13 @@ oplog /oplog 管理日志
 维尼查 /ccpfinder 镰和锤子不可兼得
 云上贵州 /guizhou 年轻人不讲武德
 人人影视 /search_yyets?q=越狱 人人英雄永垂不朽
+图书馆 https://zh.b-ok.org/ 人类进步的阶梯
 ''')
 
-friendly_links = linkify('''
-Tor上的2047 http://terminus2xc2nnfk6ro5rmc5fu7lr5zm7n4ucpygvl5b6w6fqap6x2qd.onion 特殊情况下使用
+tor_address = 'http://terminus2xc2nnfk6ro5rmc5fu7lr5zm7n4ucpygvl5b6w6fqap6x2qd.onion'
+
+friendly_links = linkify(f'''
+Tor上的2047 {tor_address} 特殊情况下使用
 旧品葱 https://pincongbackup.github.io/ pin-cong.com备份
 火光 https://2049post.wordpress.com/ 薪火相传光明不息
 BE4 https://nodebe4.github.io/ BE4的网络服务
@@ -483,6 +511,10 @@ def parse_showcases(s):
 from flask import request
 def is_pincong_org():
     return 'pincong.org' in request.host
+
+def pagerank_format(u):
+    pr = key(u, 'pagerank') or 0
+    return int(pr*1000)
 
 def redact(s):
     out = []

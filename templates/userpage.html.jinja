@@ -77,6 +77,12 @@
       </div>
       {%endif%}
 
+      {%if u.contact_method%}
+      <div class="userpage_name">
+        <span>联系方式</span><span style="word-break:break-all; line-height:1.1; align-self:center;">{{u.contact_method}}</span>
+      </div>
+      {%endif%}
+
       {%if u.receipt_addr%}
       <div class="userpage_name">
         <span>收款地址</span><span style="word-break:break-all; line-height:1.1; align-self:center;">{{u.receipt_addr}}</span>
@@ -119,6 +125,12 @@
           <a href="/u/{{u.uid}}/upvoted">(点击查看内容)</a>
         {%endif%}
       </div>
+
+      {%if u.pagerank%}
+      <div class="userpage_name">
+        <span>声望</span><span>{{pagerank_format(u)}}</span>
+      </div>
+      {%endif%}
 
       <div class="userpage_name">
         <span>收藏了</span><a href="/u/{{u.uid}}/favorites">{{u.nfavs or 0}} 条内容 {%if u.nfavs%}(点击查看){%endif%}</a>

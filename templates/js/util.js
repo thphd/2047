@@ -199,7 +199,7 @@ function timed(interval){
     })
   }, interval)
 }
-timed(5000)
+//timed(5000)
 
 // use client side hashing
 // such that servers need not know the actual password.
@@ -846,24 +846,30 @@ if(bupi){
   }
 }
 
-function at_reply(k){
+function at_reply(k,un){
   var text = geid('editor_text')
   if (!text){
     return
   }
 
   var tli = geid(k)
-  var uns = gebcn(tli)('user_name')
-  if(uns.length<1){
-    return
+  if (!un){
+    var uns = gebcn(tli)('user_name')
+    if(uns.length<1){
+      return
+    }
+    uns = uns[0]
+    var uname = uns.firstChild &&
+      (uns.firstChild.wholeText||uns.firstChild.textContent)
+      || uns.innerText
+    print('uname obtained via old method')
+  }else{
+    var uname = un
   }
-  uns = uns[0]
-  var uname = uns.firstChild &&
-    (uns.firstChild.wholeText||uns.firstChild.textContent)
-    || uns.innerText
+
   var url = `/p/${k}`
 
-  text.value += `@${uname} <#${k}> `
+  text.value += `${text.value?' ':''}@${uname} <#${k}> `
   text.focus()
 }
 

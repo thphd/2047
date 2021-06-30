@@ -3,22 +3,70 @@
 {# include all macros used by project #}
 {%import 'macros.html.jinja' as macros with context%}
 
+{% set base_url = 'https://2047.name'%}
+{% set path_url = (request.full_path[:-1] if request.full_path[-1]=='?' else request.full_path) %}
+{% set share_url = base_url + path_url %}
+{% set qr_url = request.host_url + "qr/" + share_url %}
+{% set logourl =
+  ('/images/2049bbslogo_clipped_small_pressed.png')
+if not is_pincong_org() else
+  '/images/pincong_logo.svg'
+%}
+{% set logo_url_full = base_url + logourl%}
+
+{% set icon_url = "/images/favicon_new_pressed.png" if not is_pincong_org()
+ else "/images/pc_favicon.ico" %}
+
+{% set icon_url_full = base_url+"/images/favicon_new_pressed.png"%}
+
 <!DOCTYPE html>
-<html lang="zh" dir="ltr">
+<html lang="zh" dir="ltr" prefix="og: http://ogp.me/ns#">
 <head>
-  <meta name="noreferrer" content="no-referrer">
+  <meta name="referrer" content="same-origin">
   <meta charset="utf-8">
+  <meta http-equiv="onion-location" content="{{tor_address}}{{path_url}}" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/css/normalize.css">
   <link rel="stylesheet" href="/css/styles.css?v={{resource_files_hash}}">
   <link rel="stylesheet" href="/css/labnol_youtube.css">
   {%if not is_pincong_org()%}
-    <link rel="icon" type="image/png" href="/images/favicon_new_pressed.png">
+    <link rel="icon" type="image/png" href="{{icon_url}}">
   {%else%}
-    <link rel="icon" type="image/x-icon" href="/images/pc_favicon.ico?c">
+    <link rel="icon" type="image/x-icon" href="{{icon_url}}">
   {%endif%}
 
   <title>{{page_title}} - {{site_name}}</title>
+
+  <meta name="twitter:card" content="summary_large_image">
+
+  <meta property="og:title" content="{{page_title}}" />
+  <meta property="og:site_name" content="2047">
+  {% set og_description =
+    (u and u.brief) or "2047论坛，自由人的精神角落" %}
+  <meta property="og:description" content="{{og_description}}">
+  <meta name="twitter:description" content="{{og_description}}">
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="{{share_url}}" />
+
+  {%if t%} {# if thread object exists#}
+    <meta property="og:article:author" content="{{t.user.name}}" />
+    {%if t.category and t.category.name %}
+    <meta property="og:article:section" content="{{t.category.name}}" />
+    {%endif%}
+    <meta property="og:article:published_time" content="{{t.t_c}}" />
+
+    {%for tag in t.tags%}
+      <meta property="og:article:tag" content="{{tag}}" />
+    {%endfor%}
+  {%endif%}
+
+  {%if t or u%}
+    {% set og_image_url = base_url+macros.avatar_url(t.user if t else u) %}
+    <meta property="og:image" content="{{og_image_url}}" />
+  {%else%}
+    <meta property="og:image" content="{{icon_url_full}}" />
+  {%endif%}
+
   {%block meta%}{%endblock%}
 </head>
 
@@ -53,7 +101,9 @@
 {%endif%}
 {%endmacro%}
 
-<body {{color_if('background_color')}}>
+<body>
+
+  {# style conditionals #}
   {%if g.current_user and g.current_user.hide_avatar%}
     <style>
       .left {
@@ -70,6 +120,16 @@
     </style>
   {%endif%}
 
+  <style>
+  .header_bkgnd, .body_wrapper {
+    filter: grayscale({{page_grayness()}}); /* {{page_grayness()}} */
+  }
+  .body_wrapper{
+    padding-bottom: 1px;
+  }
+  </style>
+
+  {# navbar bkgnd #}
   <div class="header_bkgnd" {{color_if('header_background_color')}}>
     {%set eaten = eat_rgb(get_colors('header_background_color', raw=True), raw=True)%}
     {%if eaten and (eaten[0]*0.3+eaten[1]*0.6+eaten[2]*0.1 > 128) %}
@@ -90,16 +150,11 @@
       </style>
     {%endif%}
 
+    {# navbar #}
     <div id="header" class="">
       <div class="leftalign">
         {# left 2 right: logo, [links], search, [uavatar, uname, login/logout] #}
         <a class="headerblock" href="/">
-          {%set logourl =
-            ('/images/2049bbslogo_clipped_small_pressed.png')
-          if not is_pincong_org() else
-            '/images/pincong_logo.svg'
-          %}
-          {%if 0%}<img id="site_logo" src="/images/logo.png" alt="">{%endif%}
           <img id="site_logo" src='{{logourl}}' alt="">
           {#<div id="site_name">{{site_name_header}}</div>#}
         </a>
@@ -137,6 +192,9 @@
 
   </div>
 
+{# body(separated from header) #}
+<div class="body_wrapper" {{color_if('background_color')}}>
+
   <div class="outerbox">
     <div class="lr">
       <div id="content" class="">
@@ -170,11 +228,7 @@
             <a rel='noreferrer' href="http://line-count.herokuapp.com/thphd/2047">line_count</a>
             {%if 1%}
               {#remove this temporarily. find a better way maybe#}
-              <a href="{{
-                request.host_url}}qr/https://2047.name{{
-
-                request.full_path[:-1] if request.full_path[-1]=='?' else request.full_path
-              }}">二维码分享此页</a>
+              <a href="{{qr_url}}">二维码分享此页</a>
             {%endif%}
           </div>
 
@@ -233,6 +287,7 @@
 
     </div>
   </div>
+</div>
 
   <div id='viewed_target' style='display:none;'>{{viewed_target}}</div>
   <div id='browser_check' style='display:none;'>{{'1' if g.using_browser else ''}}</div>
@@ -244,6 +299,7 @@
   <script src="/highlight/highlight.pack.js"></script>
   <script>hljs.registerAliases(['js','javascript'],{languageName:'typescript'});
   hljs.initHighlightingOnLoad();</script>
+
 
 </body>
 </html>

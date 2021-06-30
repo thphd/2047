@@ -148,10 +148,10 @@ def create_all_necessary_indices():
     ciut('categories', ['cid'])
 
     ciut('users',['uid'])
-    ci('users',[['invitation']])
+    ci('users',[['invitation'],['t_next_pr_update']])
     ci('users',indexgen(
         [[],['delete']],
-        ['t_c','nposts','nthreads','nlikes','nliked','name']
+        ['t_c','nposts','nthreads','nlikes','nliked','name','pagerank']
     ))
 
     ci('invitations',indexgen(
@@ -205,7 +205,7 @@ class Paginator:
         pagenumber=1,
         path=''):
 
-        assert sortby in ['t_c','uid','nthreads','nposts','nlikes','nliked','name'] # future can have more.
+        assert sortby in ['t_c','uid','nthreads','nposts','nlikes','nliked','name','pagerank'] # future can have more.
         # sortby = 't_c'
         assert order in ['desc', 'asc']
 
@@ -648,6 +648,8 @@ class Paginator:
             'nliked'==sortby),
         ('被赞', querystring(pagenumber, pagesize, order, 'nlikes'),
             'nlikes'==sortby),
+        ('声望', querystring(pagenumber, pagesize, order, 'pagerank'),
+            'pagerank'==sortby),
         ]
 
         if mode=='post' or mode=='post_q':
@@ -890,7 +892,7 @@ def before_request():
         log_info(ipstr, 'browser' if g.using_browser else '==naked==', salt)
 
 
-    if non_critical_paths or g.using_browser:
+    if non_critical_paths: # or g.using_browser:
         # uaf.cooldown(uas)
         # uaf.cooldown(acceptstr)
         return
@@ -898,7 +900,7 @@ def before_request():
     weight = 1.
     if is_local:
         # log_up(f'local [{uas}][{acceptstr}]')
-        weight *= 5. # be more strict on the tor side
+        weight *= 1.5 # be more strict on the tor side
     if acceptstr=='NoAccept':
         weight *= 1.
 

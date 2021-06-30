@@ -1,33 +1,48 @@
 <!-- all template macros of this project -->
 
-{%macro titlify(u)%}
-{%if u.name%}{{u.name}} ({{u.uid}}){%endif%}
-{%endmacro%}
+{%macro titlify(u)%}{%
+  if u.name%}{{u.name}} ({{u.uid}})
+声望 {{pagerank_format(u) or 0}}{%endif
+%}{%endmacro%}
+
+{%macro avatar_url(u)
+  %}{%set etag_postfix = (('?etag='~u.avatar_etag) if u.avatar_etag else '')
+  %}{%set aurl =
+    ('/avatar/'~u.uid~'.png'~ etag_postfix)
+
+    if u.has_avatar!=False
+
+    else '/images/avatar-max-img.png'
+  %}{{aurl}}{%endmacro%}
 
 {%macro avatar(u, class="", plain=False, show_title=True, no_decoration=False)%}
   {%set uid = u.uid %}
   {%set deco = not no_decoration%}
   {%set pt = deco and show_title and (not g.current_user or not g.current_user.hide_title) and u.personal_title%}
-  {%set pp = deco and show_title and (not g.current_user or not g.current_user.hide_title) and intify(u.personal_party|trim) %}
+  {%set pp = deco and show_title and (not g.current_user or not g.current_user.hide_title) and intify(u.personal_party|trim, u.name) %}
 
   {%set title = titlify(u)%}
-  {%set etag_postfix = (('?etag='~u.avatar_etag) if u.avatar_etag else '')%}
 
   {%set ppu = (get_user_by_id_cached(pp) or {}) if pp else {} %}
-  {%set ppu_etag_postfix = (('?etag='~ppu.avatar_etag) if ppu.avatar_etag else '')%}
 
-  {%set aurl =
-    ('/avatar/'~u.uid~'.png'~ etag_postfix)
-
-    if u.has_avatar!=False
-
-    else '/images/avatar-max-img.png'%}
+  {%set aurl = avatar_url(u)%}
 
   {%if plain%}
     <img title="{{title}}" class="{{class}}" src="{{aurl}}">
 
   {%else%}
-    <a title="{{title}}" class="avatar_outer" href="/u/{{uid}}">{%if pp%}<img class='personal_title' src='/avatar/{{pp}}.png{{ppu_etag_postfix}}'>{%elif pt%}<span class='personal_title'>{{pt}}</span>{%endif%}<img class="{{class or 'avatar'}}" src="{{aurl}}" alt=""></a>
+    <span class="avatar_outer">{%
+      if pp%}{{avatar(
+        ppu,
+        class='personal_title',
+        show_title=False,
+        no_decoration=True
+        )}}{%
+
+      elif pt%}<span class='personal_title'>{{pt}}</span>{%
+
+      endif
+      %}<a title="{{title}}" href="/u/{{uid}}"><img class="{{class or 'avatar'}}" src="{{aurl}}" alt=""></a></span>
 
   {%endif%}
 {%endmacro%}
@@ -601,7 +616,7 @@
 
     {%if in_thread%}
       {%if g.logged_in%}
-        <a class='adminstuff at_reply' href="javascript:at_reply('{{p._key}}')">@回复</a>
+        <a class='adminstuff at_reply' href="javascript:at_reply('{{p._key}}','{{p.user.name}}')">@回复</a>
       {%endif%}
     {%endif%}
 
@@ -870,6 +885,11 @@
     <a href='/u/{{u.uid}}' class="nlikes">被赞 {{u.nlikes}} 次</a>
     {%endif%}
 
+    {%if pagerank_format(u) %}
+    <a href='/u/{{u.uid}}' class="pagerank">声望 {{
+      pagerank_format(u)}}</a>
+    {%endif%}
+
   </div>
 {%endcall%}
 {%endmacro%}
@@ -1004,7 +1024,8 @@
 """支持markdown语法，拖动右下角缩放
 
 使用礼貌得体的语言
-勿发表与主题无关或低信息量的言论"""}}"
+勿发表与主题无关或低信息量的言论
+能一个回复写完不要分两条发"""}}"
         id="editor_text" class="{{'has_title' if title else ''}}">{{content if content}}</textarea>
 
 

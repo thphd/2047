@@ -41,3 +41,6 @@ takeoff/testfile.py
 
 takeoff/yyets_parse.py
 takeoff/yyparse2.py
+
+Thumbs.*
+ads/

@@ -475,6 +475,10 @@ def banned_check():
     if 'delete' in g.current_user and g.current_user['delete']:
         raise Exception('your account has been banned')
 
+
+def current_user_doesnt_have_enough_likes():
+    return g.current_user['nlikes'] < 3 if 'nlikes' in g.current_user else True
+
 @register('post')
 def _():
     must_be_logged_in()
@@ -513,9 +517,17 @@ def _():
                 raise Exception('repeatedly posting same content')
 
         # check if user posted too much content in too little time
-        nrecent = aql('return length(for t in posts filter t.uid==@k and t.t_c>@t return t)', silent=True, k=uid, t=time_iso_now(-1200))[0]
-        if nrecent>=5 and not g.is_admin:
+        recents = aql('for t in posts filter t.uid==@k and t.t_c>@t sort t.t_c desc return t', silent=True, k=uid, t=time_iso_now(-1200))
+        if len(recents)>=5 and not g.is_admin:
             raise Exception('too many posts in too little time')
+
+        if recents and recents[0]['t_c'] > time_iso_now(-60):
+            raise Exception('too little time since last post')
+
+        # new users cannot post outside water in the first hours
+        if g.current_user['t_c'] > time_iso_now(-43200) and \
+            thread['cid']!=4 and current_user_doesnt_have_enough_likes():
+            raise Exception('新注册用户最开始只能在水区发帖')
 
         timenow = time_iso_now()
 
@@ -641,6 +653,11 @@ def _():
         nrecent = aql('return length(for t in threads filter t.uid==@k and t.t_c>@t return t)', silent=True, k=uid, t=time_iso_now(-3600))[0]
         if nrecent>=3 and not g.is_admin:
             raise Exception('too many in too little time')
+
+        # new users cannot post outside water in the first hours
+        if g.current_user['t_c'] > time_iso_now(-43200) and \
+            cid!=4 and current_user_doesnt_have_enough_likes():
+            raise Exception('新注册用户最开始只能在水区发帖')
 
         # ask for a new tid
         tid = obtain_new_id('tid')
@@ -931,8 +948,77 @@ def update_post_hackernews_batch():
     res = aql(qr, silent=True, raise_error=False)
     return len(res)
 
+def update_user_pagerank_batch():
+    qr = QueryString('''
+
+//let now = date_iso8601(date_now())
+//let t_now = date_timestamp(now)
+let t_now = date_now()
+
+for t in users
+
+filter t.t_next_pr_update < t_now
+sort t.t_next_pr_update asc
+
+//nlikes: received
+//nliked: gave
+
+let target_user = t
+//filter t.nlikes > 0
+
+limit 30
+
+let newscore = sum(
+    for v in votes filter v.to_uid==target_user.uid
+
+    let voter = (for u in users filter u.uid==v.uid return u)[0]
+    let voterrank = voter.pagerank or 0
+    let voterbonus = (voter.uid==5108?1:0) + voterrank
+    let score = (voter.nliked?voterbonus / voter.nliked:0) * .95
+
+    return score
+)
+
+let adjusted = newscore
+
+update t with {
+    t_next_pr_update:t_now + 1200*1000,
+    pagerank:adjusted,
+} in users
+
+return {name:NEW.name, pr:NEW.pagerank}
+    ''')
+    res = aql(qr, silent=True, raise_error=False)
+    return len(res)
+
+uf_registry = {}
+def update_forever_generator(update_function, name_string, balance_count=25):
+    def update_forever():
+        global uf_registry
+        if name_string in uf_registry: return
+        uf_registry[name_string] = 1
+
+        itvl = 1
+
+        while 1:
+            time.sleep(itvl)
+            l = 0
+            try:
+                l = update_function()
+            except Exception as e:
+                print_err('e_update_forever', e)
+                print_info(f'update {name_string} failed, retry...')
+                continue
+
+            print_info(f'updated {name_string}: {l} itvl: {itvl:.2f}')
+
+            itvl *= max(0.9, 1+((balance_count-l)*0.005))
+            itvl = min(max(0.3, itvl), 600)
+
+    return update_forever
+
 once = False
-def update_forever():
+def _update_forever():
     global once
     if once == True: return
     once=True
@@ -942,7 +1028,7 @@ def update_forever():
         try:
             l = update_thread_hackernews_batch()
         except Exception as e:
-            print(e)
+            print_err(e)
             continue
 
         print_info(f'updated hackernews(t): {l} itvl: {itvl:.2f}')
@@ -950,16 +1036,31 @@ def update_forever():
         try:
             l2 = update_post_hackernews_batch()
         except Exception as e:
-            print(e)
+            print_err(e)
             continue
 
         print_info(f'updated hackernews(p): {l2} itvl: {itvl:.2f}')
 
-        l += l2
+        try:
+            l3 = update_user_pagerank_batch()
+        except Exception as e:
+            print_err(e)
+            continue
+
+        print_info(f'updated user pagerank: {l3} itvl: {itvl:.2f}')
+
+        l += l2 + l3
         itvl *= max(0.9, 1+((25-l)*0.005))
         itvl = max(0.3, itvl)
 
-dispatch(update_forever)
+# dispatch(update_forever)
+dispatch(update_forever_generator(
+    update_thread_hackernews_batch, 'hackernews(t)', 10))
+dispatch(update_forever_generator(
+    update_post_hackernews_batch, 'hackernews(p)', 10))
+dispatch(update_forever_generator(
+    update_user_pagerank_batch, 'user pagerank', 15))
+
 
 def update_thread_votecount(tid):
 
@@ -1050,6 +1151,7 @@ updateable_personal_info = [
     ('brief', '个人简介（80字符，帖子中显示在用户名旁边）'),
     ('url', '个人URL（80字符，显示在用户个人主页）'),
     ('receipt_addr','收款地址（数字货币等）'),
+    ('contact_method','联系方式'),
     ('personal_title', '个性抬头（6字符，显示在用户头像左上角）'),
     ('personal_party', '个性党徽（数字UID，所对应用户头像的缩小版会显示在用户头像左上角）（会屏蔽个性抬头）'),
     ('showcase', '个人主页展示帖子或评论（例如“t7113”或者“p247105”，中间逗号或空格隔开），限4项'),
@@ -1083,6 +1185,9 @@ def _():
             or (item=='personal_title' and len(value)>6) or (item=='ignored_categories' and len(value)>40)
         ):
             raise Exception('其中一项超出长度限制')
+
+        if item=='personal_party' and value.strip()!='' and not intify(value):
+            raise Exception('党派只能填数字UID或留空')
 
         upd[item] = value
 

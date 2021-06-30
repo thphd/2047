@@ -251,6 +251,7 @@ span.last_commented_date {
     /* background-color: green; */
     flex-direction: row;
     position: relative;
+    scroll-margin-top: 40px;
 }
 
 
