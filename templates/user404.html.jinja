@@ -1,0 +1,22 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+<div class="threadlist padlr">
+  <div class="post_content">
+    <p>找不到用户: {{name}}</p>
+    <ul>
+      <li>你可以试试:
+        <a href="https://xsden.info/user/{{name}}">{{name}} (XsDen)</a>
+      </li>
+      <li>或者试试:
+        <a href="https://pincong.rocks/people/{{name}}">{{name}} (品葱)</a>
+      </li>
+      <li>或者试试:
+        <a href="https://pincong.rocks/people/{{name}}">{{name}} (膜乎)</a>
+      </li>
+      <li>Telegram:
+        <a href="https://t.me/{{name}}">@{{name}}</a>
+      </li>
+    </ul>
+  </div>
+</div>
+{%endblock%}

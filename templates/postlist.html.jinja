@@ -10,7 +10,13 @@
 {%if t and t.count%}
 <div class="padlr">
   <div class='nreplies'>
-    {{t.nreplies}}个{{'回答'if t.mode=='question' else '评论'}}
+    {{
+      spf(
+        zhen('$0 个评论','$0 comment$es0')
+        if t.mode!='question' else
+        zhen('$0 个回答', '$0 answer$es0')
+
+      )(t.count) }}
   </div>
 </div>
 {%endif%}
@@ -38,9 +44,9 @@
   {{macros.post_postlist_editor(t)}}
 {%elif t%}
   <div class="register_notice padlr threadlistitem">
-    {{convert_markdown('''
-欲参与讨论，请 [登录](/login) 或 [注册](/register)。
-''')|safe}}
+    {{convert_markdown(zh(
+      '''欲参与讨论，请 [登录](/login) 或 [注册](/register)。'''
+      ))|safe}}
   </div>
 {%endif%}
 
@@ -53,7 +59,7 @@
     <div class="box navigator_userpanel">
 
       <div class="boxtitle">
-        发起人
+        {{zhen("发起人",'Author')}}
       </div>
       {# publisher #}
       <div class="thread_header_info">
@@ -74,7 +80,7 @@
     {%if upt%}
     <div class="box">
       <div class="boxtitle">
-        同一作者
+        {{zhen("同一作者",'Same Author')}}
       </div>
       <div class="navigator_quote">
         {{list_threads(upt)}}
@@ -86,7 +92,7 @@
     {%if pt%}
     <div class="box">
       <div class="boxtitle">
-        随机推荐
+        {{zhen("随机推荐",'Random Threads')}}
       </div>
       <div class="navigator_quote">
         {{list_threads(pt)}}

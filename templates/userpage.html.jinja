@@ -128,7 +128,25 @@
 
       {%if u.pagerank%}
       <div class="userpage_name">
-        <span>声望</span><span>{{pagerank_format(u)}}</span>
+        <span>声望</span><span>{{pagerank_format(u)}}{%
+          if ('pagerank_rank' in u) and u.pagerank_rank <399 %}
+            <a href="/u/all?sortby=pagerank&page={{
+              u.pagerank_rank // user_list_defaults.pagesize + 1
+            }}#{{u.uid}}">(排名 {{u.pagerank_rank+1}})</a>
+          {%endif
+          %}</span>
+      </div>
+      {%endif%}
+
+      {%if u.trust_score%}
+      <div class="userpage_name">
+        <span>信用分</span><span>{{trust_score_format(u)}}{%
+          if ('trust_score_rank' in u) and u.trust_score_rank <399 %}
+          <a href="/u/all?sortby=trust_score&page={{
+            u.trust_score_rank // user_list_defaults.pagesize + 1
+          }}#{{u.uid}}">(排名 {{u.trust_score_rank+1}})</a>
+          {%endif
+          %}</span>
       </div>
       {%endif%}
 

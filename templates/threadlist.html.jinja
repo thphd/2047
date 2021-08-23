@@ -100,7 +100,7 @@ for(var i=0;i<tabs.length;i++){k(i)}
 
   <div class="box">
     <div class="boxtitle">
-      分类列表
+      {{zhen('分类列表','Categories')}}
     </div>
 
     <div class="categories">
@@ -116,7 +116,7 @@ for(var i=0;i<tabs.length;i++){k(i)}
 
   <div class="box">
     <div class="boxtitle">
-      语录 <a class="after_linkbox" href="/quotes">查看更多</a>
+      {{zhen('语录','Quotes')}} <a class="after_linkbox" href="/quotes">{{zhen('查看更多','More')}}</a>
     </div>
     <div class="navigator_quote">
       {{base.quote_section(get_quote())}}
@@ -128,7 +128,7 @@ for(var i=0;i<tabs.length;i++){k(i)}
   {%set link = get_link_one()%}
   <div class="box">
     <div class="boxtitle">
-      {{link.category}} <a class="after_linkbox" href="/links">查看更多</a>
+      {{link.category}} <a class="after_linkbox" href="/links">{{zh('查看更多')}}</a>
     </div>
 
     <div class="boxlink">
@@ -139,7 +139,7 @@ for(var i=0;i<tabs.length;i++){k(i)}
   {%if common_links %}
   <div class="box">
     <div class="boxtitle">
-      常用链接
+      {{zhen('常用链接','Useful Links')}}
     </div>
     <div class="categories">
       {%for l in common_links%}
@@ -155,35 +155,36 @@ for(var i=0;i<tabs.length;i++){k(i)}
 
   <div class="box">
     <div class="boxtitle" title="按照被点赞的次数">
-      最佳帖文
+      {{zhen('最佳帖文','Best Thrd/Posts')}}
     </div>
     <div class="navigator_quote">
       {{switchy_tabs([
-        ['三日',list_threads(get_weekly_best(0, 3, n=15))],
-        ['本周',list_threads(get_weekly_best(0, 7, n=15))],
-        ['本月',list_threads(get_weekly_best(7, 30, n=15))],
-        ['上月',list_threads(get_weekly_best(30, 60, n=15))],
+        [zhen('三日','3day'),list_threads(get_weekly_best(0, 3, n=15))],
+        [zhen('本周','week'),list_threads(get_weekly_best(0, 7, n=15))],
+        [zhen('本月','month'),list_threads(get_weekly_best(7, 30, n=15))],
+        [zhen('上月','prev'),list_threads(get_weekly_best(30, 60, n=15))],
         ], index=random.randint(0,5)%4)}}
     </div>
   </div>
 
   <div class="box">
     <div class="boxtitle" title='按照被点赞的次数'>
-      高赞用户
+      {{zhen('高赞用户','Most Liked')}}
     </div>
     <div class="navigator_quote">
       {{switchy_tabs(tabs=[
-        ['三日',list_users(get_weekly_best_user(0,3,n=20))],
-        ['本周',list_users(get_weekly_best_user(0,7,n=20))],
-        ['本月',list_users(get_weekly_best_user(7,30,n=20))],
-        ['上月',list_users(get_weekly_best_user(30,60,n=20))],
+        [zhen('三日','3day'),list_users(get_weekly_best_user(0,3,n=20))],
+        [zhen('本周','week'),list_users(get_weekly_best_user(0,7,n=20))],
+        [zhen('本月','month'),list_users(get_weekly_best_user(7,30,n=20))],
+        [zhen('上月','prev'),list_users(get_weekly_best_user(30,60,n=20))],
         ], index=random.randint(0,5)%4)}}
     </div>
   </div>
 
   <div class="box">
     <div class="boxtitle">
-      守望 <a class="after_linkbox" href="/t/9387">了解更多</a>
+      {{zhen('守望','Keep Watch')}} <a class="after_linkbox" href="/t/9387">{{
+        zhen('了解更多','Learn More')}}</a>
     </div>
     <div class="bigrednumber">
       {{days_since('2020-04-19')}}
@@ -195,7 +196,7 @@ for(var i=0;i<tabs.length;i++){k(i)}
 
   <div class="box">
     <div class="boxtitle">
-      铭记
+      {{zhen('铭记','Never Forget')}}
     </div>
     <div class="bigrednumber">
       {{days_since('1989-06-04')}}
@@ -204,6 +205,50 @@ for(var i=0;i<tabs.length;i++){k(i)}
       days since 1989-06-04
     </div>
   </div>
+
+  <div class="box">
+    <div class="boxtitle">
+      {{zhen('语言 (LANG)','Language')}}
+      <a class="after_linkbox" href="/translations">{{
+        zhen('帮助翻译','Help Translate')}}</a>
+    </div>
+    <div class="dropdown">
+      {% set al = trans.allowed_languages %}
+
+      <button class="dropbtn">{{
+          al[g.locale].name
+          if g.locale in al
+          else 'Not specified'
+        }}</button>
+
+      <div class="dropdown-content">
+        {% for lang in al %}
+          {% if not al[lang].name.startswith('*')%}
+            <a href="javascript:set_locale('{{lang}}')">{{al[lang].name}}</a>
+          {%endif%}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+
+
+  {%if ads%}
+  <div class="box">
+    <div class="boxtitle">
+      广告 <a class="after_linkbox" href="/t/12386">关于广告</a>
+    </div>
+    {%for ad in ads%}
+      <div class="adbox">
+        <a href="{{ad.url}}" target="_blank"><img
+          src="{{ad.image}}"
+          alt="{{ad.alt}}"
+          style="width:100%;"
+          ></a>
+      </div>
+    {%endfor%}
+  </div>
+  {%endif%}
 
 </div>
 

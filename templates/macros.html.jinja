@@ -2,7 +2,8 @@
 
 {%macro titlify(u)%}{%
   if u.name%}{{u.name}} ({{u.uid}})
-声望 {{pagerank_format(u) or 0}}{%endif
+{{spf(zhen('被赞 $0 次','Liked $0 Time$es0'))(u.nlikes or 0)}}
+{{zh('声望')}} {{pagerank_format(u) or 0}}{%endif
 %}{%endmacro%}
 
 {%macro avatar_url(u)
@@ -258,6 +259,7 @@
             </a>
 
           {%elif m=='vc'%}
+            {{view_count(p)}}
             {%if p.vc%}
             {# view count #}
             <span>{{p.vc}} 次浏览</span>
@@ -470,7 +472,7 @@
     {%endif%}
   {%endif%}
   {%if num_votes and g.logged_in%}
-  <a href="/{{targ_type[0]}}/{{targ_id}}/votes">票箱</a>
+  <a href="/{{targ_type[0]}}/{{targ_id}}/votes">{{zhen('票箱','Likes')}}</a>
   {%endif%}
 
   </div>
@@ -512,10 +514,10 @@
 {%set targ = ('post/'~p._key) if mode=='post' else ('thread/'~p.tid)%}
 {%if can_do_to(g.logged_in, 'delete', p.uid) or (t and can_do_to(g.logged_in, 'delete', t.uid))%}
   {%if not p.delete%}
-    <a class='adminstuff delete' href="javascript:mark_delete('{{targ}}')">删除</a>
+    <a class='adminstuff delete' href="javascript:mark_delete('{{targ}}')">{{zhen('删除','Delete')}}</a>
 
   {%else%}
-    <a class='adminstuff undelete' href="javascript:mark_delete('{{'u'~targ}}')">取消删除</a>
+    <a class='adminstuff undelete' href="javascript:mark_delete('{{'u'~targ}}')">{{zhen('取消删除','Undelete')}}</a>
 
   {%endif%}
 {%endif%}
@@ -526,10 +528,10 @@
 {%set count = '('~p.nfavs~')' if p.nfavs else '' %}
 {%if g.logged_in%}
   {%if not p.favorited%}
-    <a class='adminstuff favorite' href="javascript:favorite('{{targ}}')">收藏{{count}}</a>
+    <a class='adminstuff favorite' href="javascript:favorite('{{targ}}')">{{zhen('收藏','Favorite')}} {{count}}</a>
 
   {%else%}
-    <a class='adminstuff favorite' href="javascript:favorite('{{targ}}', true)">已收藏{{count}}</a>
+    <a class='adminstuff favorite' href="javascript:favorite('{{targ}}', true)">{{zhen('已收藏','Favorited')}}{{count}}</a>
 
   {%endif%}
 {%endif%}
@@ -538,23 +540,23 @@
 {%macro edit_post(p, mode='post')%}
 {%set targ = ('post/'~p._key) if mode=='post' else ('thread/'~p.tid)%}
   {%if can_do_to(g.logged_in, 'edit', p.uid)%}
-    <a class='adminstuff edit' href="/editor?target=edit_{{targ}}">编辑</a>
+    <a class='adminstuff edit' href="/editor?target=edit_{{targ}}">{{zhen('编辑','Edit')}}</a>
   {%endif%}
 {%endmacro%}
 
 {%macro source_post(p,mode='post')%}
 {%set targ = ('/p/'~p._key) if mode=='post' else ('/t/'~p.tid)%}
   {%if can_do_to(g.current_user,'view_code',-1)%}
-    <a class='adminstuff viewcode' href="{{targ}}/code">源码</a>
+    <a class='adminstuff viewcode' href="{{targ}}/code">{{zhen('源码','Src')}}</a>
   {%endif%}
 {%endmacro%}
 
 {%macro contentify(p, foldable=False)%}
   <div class="post_content {{'foldable' if foldable else ''}}">
     {%if p.delete%}
-      <s>标记为删除</s>
+      <s>{{zhen('标记为删除','Marked as deleted')}}</s>
     {%elif p.blacklist%}
-      <s>此人被你黑名单</s>
+      <s>{{zhen('此人被你黑名单','User in your blacklist')}}</s>
     {%else%}
       {{(convert_markdown(p.content or '')|safe)}}
     {%endif%}
@@ -563,7 +565,7 @@
 
   {%if foldable%}
     <div class="unfold hidden">
-      ↓ 点击展开所有内容 ↓
+      ↓ {{zhen('点击展开所有内容','Click to Unfold')}} ↓
     </div>
   {%endif%}
 {%endmacro%}
@@ -616,7 +618,7 @@
 
     {%if in_thread%}
       {%if g.logged_in%}
-        <a class='adminstuff at_reply' href="javascript:at_reply('{{p._key}}','{{p.user.name}}')">@回复</a>
+        <a class='adminstuff at_reply' href="javascript:at_reply('{{p._key}}','{{p.user.name}}')">{{zhen('@回复','@reply')}}</a>
       {%endif%}
     {%endif%}
 
@@ -662,7 +664,7 @@
       {{delete_post(t, mode='thread')}}
 
       {%if g.logged_in and get_oplog('thread/'~t.tid)%}
-        <a href="/oplog/thread/{{t.tid}}" class='adminstuff viewcode'>管理记录</a>
+        <a href="/oplog/thread/{{t.tid}}" class='adminstuff viewcode'>{{zhen('管理记录','Oplog')}}</a>
       {%endif%}
     </div>
 
@@ -787,7 +789,14 @@
     {%endif%}
 
     {%if t.count %}
-      <a class="response" href="{{url_to_last}}">{{t.count}} 个{{'评论'if t.mode!='question' else '回答'}}</a>
+      <a class="response" href="{{url_to_last}}">{{
+        spf(
+          zhen('$0 个评论','$0 comment$es0')
+          if t.mode!='question' else
+          zhen('$0 个回答', '$0 answer$es0')
+
+        )(t.count) }}
+      </a>
     {%endif%}
 
     {{view_count(t)}}
@@ -819,13 +828,13 @@
 
 {%macro view_count(t)%}
 {%if t.vc%}
-<span>{{t.vc}} 次浏览</span>
+<span>{{spf(zhen('$0 次浏览','$0 views'))(t.vc)}}</span>
 {%endif%}
 {%endmacro%}
 
 {%macro move_thread(t)%}
 {%if can_do_to(g.logged_in,'move',t.uid)%}
-  <a class='adminstuff move_to_category' href="javascript:move_to_category('{{'thread/'~t.tid}}')">移动</a>
+  <a class='adminstuff move_to_category' href="javascript:move_to_category('{{'thread/'~t.tid}}')">{{zhen('移动','Move')}}</a>
 {%endif%}
 {%endmacro%}
 
@@ -845,7 +854,7 @@
 
 {# one line of user, used in userlist #}
 {%macro post_userlist(u)%}
-{%call post(u, metas=[], avatar_user=u)%}
+{%call post(u, metas=[], avatar_user=u, item_id=u.uid)%}
   <div class="post_content">
     {{username(u, class='userlist_name')}}
 
@@ -870,24 +879,48 @@
     <span>uid: {{u.uid}}</span>
 
     {%if u.nthreads%}
-    <a href='/u/{{u.uid}}/t' class="threads">{{u.nthreads}} 个帖子</a>
+    <a href='/u/{{u.uid}}/t' class="threads">{{
+      spf(zhen('$0 个帖子','$0 Thread$es0'))(u.nthreads)
+    }}</a>
     {%endif%}
 
     {%if u.nposts%}
-    <a href='/u/{{u.uid}}/p' class="response">{{u.nposts}} 个回复</a>
+    <a href='/u/{{u.uid}}/p' class="response">{{
+      spf(zhen('$0 个回复','$0 Replie$es0'))(u.nposts)
+    }}</a>
     {%endif%}
 
     {%if u.nliked%}
-    <a href='/u/{{u.uid}}' class="nliked">点赞 {{u.nliked}} 次</a>
+    <a href='/u/{{u.uid}}' class="nliked">{{
+      spf(zhen('点赞 $0 次','$0 Like$es0'))(u.nliked)
+    }}</a>
     {%endif%}
 
     {%if u.nlikes%}
-    <a href='/u/{{u.uid}}' class="nlikes">被赞 {{u.nlikes}} 次</a>
+    <a href='/u/{{u.uid}}' class="nlikes">{{
+      spf(zhen('被赞 $0 次','Liked $0 Time$es0'))(u.nlikes)
+    }}</a>
     {%endif%}
 
     {%if pagerank_format(u) %}
-    <a href='/u/{{u.uid}}' class="pagerank">声望 {{
-      pagerank_format(u)}}</a>
+    <a href='/u/{{u.uid}}' class="pagerank">{{
+      spf(zhen('声望 $0','Rep $0'))(pagerank_format(u))
+    }}</a>
+      {% set total_activities = ((u.nthreads or 0) + (u.nposts or 0))%}
+      {% set trust_factor = 1 - 0.95**total_activities %}
+      {% set unit_pr = u.pagerank*1000/total_activities %}
+
+      {%if g.selfuid==5108 and total_activities %}
+          <span>rep/(t+p): {{
+            '%.3f'|format(unit_pr )
+          }} tf {{'%.3f'|format(trust_factor)
+        }} k {{'%.3f'|format(trust_factor*unit_pr)}}</span>
+      {%endif%}
+
+      {% set trust_score = (((u.trust_score or 0)*1000*1000)|int)%}
+      {%if trust_score%}
+        <span>{{zh('信用分')}} {{trust_score}}</span>
+      {%endif%}
     {%endif%}
 
   </div>
@@ -1016,7 +1049,8 @@
         <input placeholder="标题" type='text' id="editor_title" value="{{title if title}}">
 
         <div class="editor_checkbox_row">
-          <input type="checkbox" id='editor_checkbox' {{'checked' if mode=='question' else ''}}><span>作为问题（评论按赞排序）</span>
+          <input type="checkbox" id='editor_checkbox' {{'checked' if mode=='question' else ''}}><span>{{
+            zh('作为问题（评论按赞排序，每人只能回复一次）')}}</span>
         </div>
 
       {%endif%}
@@ -1031,9 +1065,9 @@
 
 
       <div class="editor_button_row">
-        <button class="major" type="button" id="editor_btnpreview">预览</button>
-        <button class='major' type="button" id="editor_btnsubmit">提交</button>
-        {%if g.logged_in.delay_send%}<button class='major' type="button" id="editor_btnsubmitdelay">延时</button>{%endif%}
+        <button class="major" type="button" id="editor_btnpreview">{{zhen('预览','Preview')}}</button>
+        <button class='major' type="button" id="editor_btnsubmit">{{zhen('提交','Submit')}}</button>
+        {%if g.logged_in.delay_send%}<button class='major' type="button" id="editor_btnsubmitdelay">{{zhen('延时','Delay')}}</button>{%endif%}
 
         <a href="/t/7140" target='_blank' rel='noreferrer'>语法参考</a>
         <a href="/t/11715" target="_blank" rel='noreferrer'>传图</a>
@@ -1111,7 +1145,7 @@
             {%endfor%}
           {%endif%}
           {%if can_do_to(g.current_user, 'edit', t.uid)%}
-            <a class='tagadd' href="javascript:add_tag({{t.tid}})">添加标签</a>
+            <a class='tagadd' href="javascript:add_tag({{t.tid}})">{{zhen('添加标签','Add Tag')}}</a>
           {%endif%}
         </div>
       {%endif%}
@@ -1137,15 +1171,15 @@
         {{category_bubble(t.category) if (t and t.category) else ''}}
 
         {%if g.logged_in and category and not bigcatism%}
-        <a class='makepost' href="/editor?target=category/{{category.cid}}">发新帖</a>
+        <a class='makepost' href="/editor?target=category/{{category.cid}}">{{zhen("发新帖","New Thread")}}</a>
         {%endif%}
 
         {%if g.logged_in and (categories and not category or bigcatism)%}
-        <a class='makepost' href="javascript:alert('请在右边分类列表中选择一个分类（手机用户请翻到页面最下方）')">发新帖</a>
+        <a class='makepost' href="javascript:alert('请在右边分类列表中选择一个分类（手机用户请翻到页面最下方）')">{{zhen("发新帖","New Thread")}}</a>
         {%endif%}
 
         {%if can_send_message%}
-        <a class='makepost' href="javascript:send_new_message()">写私信</a>
+        <a class='makepost' href="javascript:send_new_message()">{{zhen('写信给','New PM')}}</a>
         {%endif%}
       </div>
     </div>

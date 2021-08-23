@@ -27,10 +27,10 @@ apt --assume-yes install python3-pip
 # code
 git clone https://github.com/thphd/2047
 python3.7 -m pip install --upgrade pip
-python3.7 -m pip install termcolor
+python3.7 -m pip install termcolor cachetools flask-threads
 python3.7 -m pip install colorama
-python3.7 -m pip install markdown2
-python3.7 -m pip install mistletoe
+# python3.7 -m pip install markdown2
+python3.7 -m pip install mistletoe beautifulsoup4 python-snappy cryptography
 python3.7 -m pip install pillow
 python3.7 -m pip install Flask
 python3.7 -m pip install flask_cors

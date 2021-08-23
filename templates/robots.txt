@@ -1,3 +1,5 @@
 User-agent: *
 Disallow: /*/code
 Disallow: /qr/*
+Disallow: /p/*
+Disallow: /u/all*

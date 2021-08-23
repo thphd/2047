@@ -35,7 +35,8 @@ return merge(i, {user})
                             quote=j[0],
                             quoting=j[1],
                             user=i['user'],
-                            t_u= i['t_e'] if 't_e' in i else i['t_c']
+                            t_u= i['t_e'] if 't_e' in i else i['t_c'],
+                            **{'_key':i['_key']},
                         ))
 
         elif i['type']=='famous_quotes_v2':
@@ -46,7 +47,8 @@ return merge(i, {user})
                             quote=j,
                             quoting=i['doc']['quoting'],
                             user=i['user'],
-                            t_u= i['t_e'] if 't_e' in i else i['t_c']
+                            t_u= i['t_e'] if 't_e' in i else i['t_c'],
+                            **{'_key':i['_key']},
                         ))
 
     return q

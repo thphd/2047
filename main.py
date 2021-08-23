@@ -41,6 +41,8 @@ from flask import render_template, request, send_from_directory, make_response
 from api import api_registry, get_categories_info, get_url_to_post, get_url_to_post_given_details
 from api import *
 
+import i18n_api
+
 from session import save_session,load_session
 
 from app import app
@@ -102,6 +104,7 @@ def route_static(frompath, topath, maxage=1800):
 
 route_static('static', 'static')
 route_static('images', 'templates/images', 3600*12)
+route_static('pr_images', 'ads/images', 3600*12)
 route_static('css', 'templates/css', 3600)
 route_static('js', 'templates/js', 3600)
 route_static('highlight', 'templates/highlight', 3600*6)
@@ -126,14 +129,14 @@ def create_all_necessary_indices():
                 unique=False,sparse=False)
 
     # create index with unique=True
-    def ciut(coll, a):
+    def ciut(coll, a, unique=True):
         for ai in a:
             print('creating index on',coll,[ai])
-            aqlc.create_index(coll, type='persistent', fields=[ai], unique=True, sparse=False)
+            aqlc.create_index(coll, type='persistent', fields=[ai], unique=unique, sparse=False)
 
     ciut('threads', ['tid'])
-    ciut('threads', ['bigcats','pinned'])
-    ciut('threads', ['cid','pinned'])
+    ciut('threads', ['bigcats','pinned'], unique=False)
+    ciut('threads', ['cid','pinned'], unique=False)
     ci('threads', indexgen(
             [['delete'],['uid'],['delete','cid'],['delete','bigcats[*]'],['delete','tags[*]'],['tags[*]']],
             ['t_u','t_c','nreplies','vc','votes','t_hn','amv','nfavs'],
@@ -151,7 +154,7 @@ def create_all_necessary_indices():
     ci('users',[['invitation'],['t_next_pr_update']])
     ci('users',indexgen(
         [[],['delete']],
-        ['t_c','nposts','nthreads','nlikes','nliked','name','pagerank']
+        ['t_c','nposts','nthreads','nlikes','nliked','name','pagerank','trust_score']
     ))
 
     ci('invitations',indexgen(
@@ -205,7 +208,8 @@ class Paginator:
         pagenumber=1,
         path=''):
 
-        assert sortby in ['t_c','uid','nthreads','nposts','nlikes','nliked','name','pagerank'] # future can have more.
+        assert sortby in ['t_c','uid','nthreads','nposts','nlikes','nliked','name',
+            'pagerank','trust_score'] # future can have more.
         # sortby = 't_c'
         assert order in ['desc', 'asc']
 
@@ -377,9 +381,10 @@ class Paginator:
 
     @stale_cache(maxsize=128, ttr=3, ttl=30)
     def get_thread_list(self, *a, **k):
-        return self.get_thread_list_uncached(*a, **k)
+        return self.get_thread_list_uncached(*a, locale=g.locale, **k)
 
     def get_thread_list_uncached(self,
+        locale='',
         by='category',
         category='all',
         tagname='yadda',
@@ -619,50 +624,52 @@ class Paginator:
         slots = [(i, querystring(i, pagesize, order, sortby), i==pagenumber) for i in slots]
 
         orders = [
-            ('降序', querystring(pagenumber, pagesize, 'desc', sortby), order=='desc','大的排前面'),
-            ('升序', querystring(pagenumber, pagesize, 'asc', sortby), order=='asc','小的排前面')
+            (zhen('降序','Desc'), querystring(pagenumber, pagesize, 'desc', sortby), order=='desc',zhen('大的排前面','Greatest First')),
+            (zhen('升序','Asc'), querystring(pagenumber, pagesize, 'asc', sortby), order=='asc',zhen('小的排前面','Least First'))
         ]
 
         sortbys = [
-        ('综合', querystring(pagenumber, pagesize, order, 't_hn'), 't_hn'==sortby,'HackerNews 排序'),
-        ('即时', querystring(pagenumber, pagesize, order, 't_u'), 't_u'==sortby,'按最后回复时间排序'),
-        ('新帖', querystring(pagenumber, pagesize, order, 't_c'), 't_c'==sortby,'按发表时间排序'),
+        (zhen('综合','Syn'), querystring(pagenumber, pagesize, order, 't_hn'), 't_hn'==sortby,'HackerNews 排序'),
+        (zhen('即时','Latest'), querystring(pagenumber, pagesize, order, 't_u'), 't_u'==sortby,'按最后回复时间排序'),
+        (zhen('新帖','New'), querystring(pagenumber, pagesize, order, 't_c'), 't_c'==sortby,'按发表时间排序'),
 
-        ('回复', querystring(pagenumber, pagesize, order, 'nreplies'), 'nreplies'==sortby,'按照回复数量排序'),
-        ('高赞', querystring(pagenumber, pagesize, order, 'amv'), 'amv'==sortby,'按照得票（赞）数排序'),
-        ('观看', querystring(pagenumber, pagesize, order, 'vc'), 'vc'==sortby,'按照被浏览次数排序'),
+        (zhen('回复','Replies'), querystring(pagenumber, pagesize, order, 'nreplies'), 'nreplies'==sortby,'按照回复数量排序'),
+        (zhen('高赞','Likes'), querystring(pagenumber, pagesize, order, 'amv'), 'amv'==sortby,'按照得票（赞）数排序'),
+        (zhen('观看','Views'), querystring(pagenumber, pagesize, order, 'vc'), 'vc'==sortby,'按照被浏览次数排序'),
         ]
 
         sortbys2 = [
         ('UID',querystring(pagenumber, pagesize, order, 'uid'),
             'uid'==sortby),
-        ('户名', querystring(pagenumber, pagesize, order, 'name'),
+        (zhen('户名','Name'), querystring(pagenumber, pagesize, order, 'name'),
             'name'==sortby),
 
-        ('主题数', querystring(pagenumber, pagesize, order, 'nthreads'),
+        (zhen('主题数','Threads'), querystring(pagenumber, pagesize, order, 'nthreads'),
             'nthreads'==sortby),
-        ('评论数', querystring(pagenumber, pagesize, order, 'nposts'),
+        (zhen('评论数','Replies'), querystring(pagenumber, pagesize, order, 'nposts'),
             'nposts'==sortby),
 
-        ('点赞', querystring(pagenumber, pagesize, order, 'nliked'),
+        (zhen('点赞','Likes(Sent)'), querystring(pagenumber, pagesize, order, 'nliked'),
             'nliked'==sortby),
-        ('被赞', querystring(pagenumber, pagesize, order, 'nlikes'),
+        (zhen('被赞','Likes'), querystring(pagenumber, pagesize, order, 'nlikes'),
             'nlikes'==sortby),
-        ('声望', querystring(pagenumber, pagesize, order, 'pagerank'),
+        (zhen('声望','Reputation'), querystring(pagenumber, pagesize, order, 'pagerank'),
             'pagerank'==sortby),
+        (zhen('信用分','TrustScore'), querystring(pagenumber, pagesize, order, 'trust_score'),
+            'trust_score'==sortby),
         ]
 
         if mode=='post' or mode=='post_q':
             sortbys3 = [
-                ('综合',querystring(pagenumber, pagesize, 'desc', 't_hn'), 't_hn'==sortby),
-                ('时间',querystring(pagenumber, pagesize, 'asc', 't_c'), 't_c'==sortby),
-                ('票数',querystring(pagenumber, pagesize, 'desc', 'votes'), 'votes'==sortby),
+                (zh('综合'),querystring(pagenumber, pagesize, 'desc', 't_hn'), 't_hn'==sortby),
+                (zhen('时间','Time'),querystring(pagenumber, pagesize, 'asc', 't_c'), 't_c'==sortby),
+                (zhen('票数','Likes'),querystring(pagenumber, pagesize, 'desc', 'votes'), 'votes'==sortby),
             ]
         elif mode=='user_post' or mode=='all_post':
             sortbys3 = [
-                ('综合',querystring(pagenumber, pagesize, 'desc', 't_hn'), 't_hn'==sortby),
-                ('时间',querystring(pagenumber, pagesize, 'desc', 't_c'), 't_c'==sortby),
-                ('票数',querystring(pagenumber, pagesize, 'desc', 'votes'), 'votes'==sortby),
+                (zh('综合'),querystring(pagenumber, pagesize, 'desc', 't_hn'), 't_hn'==sortby),
+                (zh('时间'),querystring(pagenumber, pagesize, 'desc', 't_c'), 't_c'==sortby),
+                (zh('票数'),querystring(pagenumber, pagesize, 'desc', 'votes'), 'votes'==sortby),
             ]
 
         button_groups = []
@@ -671,10 +678,10 @@ class Paginator:
             turnpage = []
 
             if pagenumber!=1:
-                turnpage.insert(0,('上一页',querystring(pagenumber-1, pagesize, order,sortby)))
+                turnpage.insert(0,(zhen('上一页','Prev Page'),querystring(pagenumber-1, pagesize, order,sortby)))
 
             if pagenumber!=total_pages:
-                turnpage.insert(0, ('下一页',querystring(pagenumber+1, pagesize, order, sortby)))
+                turnpage.insert(0, (zhen('下一页','Next Page'),querystring(pagenumber+1, pagesize, order, sortby)))
 
             button_groups.append(turnpage)
             button_groups.append(slots)
@@ -696,7 +703,7 @@ class Paginator:
             else:
                 button_groups.append(orders)
 
-            button_groups.append([('共 {:d}'.format(count), '')])
+            button_groups.append([(spf(zhen('共 $0', '$0 Total'))(count), '')])
 
         return {
             'button_groups':button_groups,
@@ -838,6 +845,11 @@ def before_request():
         g.using_browser = False
     else:
         g.using_browser = True
+
+    if 'locale' in session:
+        g.locale = session['locale']
+    else:
+        g.locale = 'zh'
 
     salt = get_current_salt()
 
@@ -1579,19 +1591,13 @@ def userpage_byname(name):
 
     if not res:
         # assert is_legal_username(name)
-        name=flask.escape(name)
+        # name=flask.escape(name)
 
-        return make_response(convert_markdown(
-        f'''
-找不到用户: {name}
-
-- 你可以试试: [{name} (XsDen)](https://xsden.info/user/{name})
-
-- 或者试试: [{name} (品葱)](https://pincong.rocks/people/{name})
-
-- 或者试试: [{name} (膜乎)](https://mohu.rocks/people/{name})
-        '''
-        ), 404)
+        response = render_template_g('user404.html.jinja',
+            page_title='查无此人',
+            name=name,
+        )
+        return make_response(response, 404)
 
     u = res
     return _userpage(u['uid'])
@@ -1655,6 +1661,16 @@ def _userpage(uid):
 
     uobj['public_key']=get_public_key_by_uid(uid)
     uobj['alias'] = get_alias_user_by_name(uobj['name'])
+
+    # calculate rank for pagerank and credit score
+    uobj['pagerank_rank'] = pagerank_rank = aql('''
+    return length(for u in users filter u.pagerank>@pr return u)''',
+    silent=True,pr=key(uobj, 'pagerank')or 0)[0]
+
+    uobj['trust_score_rank'] = trust_score_rank = aql('''
+    return length(for u in users filter u.trust_score>@pr return u)''',
+    silent=True,pr=key(uobj, 'trust_score')or 0)[0]
+
 
     invitations = None
     pagination = None
@@ -2069,6 +2085,10 @@ def apir():
         g.session['browser'] = 1
         save_session(response)
 
+    if 'set_locale' in answer:
+        g.session['locale'] = answer['set_locale']
+        save_session(response)
+
     if 'salt' not in g.session:
         g.session['salt'] = get_random_hex_string(3)
         save_session(response)
@@ -2270,6 +2290,16 @@ def entpage():
     count = aql('return length(for i in entities return i)',silent=True)[0]
     pagination = eat_count(count)
 
+    eid = ras('eid') or None
+    if eid:
+        ent0 = aql('''for i in entities filter i._key==@k
+        let user = (for u in users filter u.uid==i.uid return u)[0]
+        return merge(i, {user})
+        ''',
+            silent=True, k=eid)
+    else:
+        ent0 = []
+
     ents = aql('''
         for i in entities sort i.t_c desc
         let user = (for u in users filter u.uid==i.uid return u)[0]
@@ -2288,7 +2318,7 @@ def entpage():
 
     return render_template_g('entities.html.jinja',
         page_title='entities',
-        entities = ents,
+        entities = ent0+ents,
         pagination = pagination,
         pagenumber = pagenumber,
     )

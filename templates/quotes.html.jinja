@@ -13,7 +13,11 @@
     {% for quote in get_quotes() %}
     <div class='quotebox'>
       {{base.quote_section(quote)}}
-      <div class='rightalign quoteuploader'>由  {{macros.username(quote.user)}} 上传于 {{format_time_dateifnottoday(quote.t_u)}}</div>
+      <div class='rightalign quoteuploader'>由 {{macros.username(quote.user)}} 上传于
+        <a href='/entities?eid={{quote._key}}#{{quote._key}}'>
+          {{format_time_dateifnottoday(quote.t_u)}}
+        </a>
+      </div>
     </div>
 
     {% endfor %}

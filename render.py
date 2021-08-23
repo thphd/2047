@@ -267,7 +267,8 @@ class FlavoredRenderer(HTMLRenderer):
         # no documentation at all
         un = token.username
         self.collected['at_user_list'].append(un)
-        un = self.escape_html(un)
+        # un = self.escape_html(un)
+        # un = flask.escape(un)
         return f'<a href="/member/{un}">@{un}</a>'
 
 flavored_renderer = FlavoredRenderer()
@@ -303,3 +304,10 @@ if __name__ == '__main__':
 
     print(just_markdown('<https://baidu.com/>'))
     print(convert_markdown('<https://baidu.com/>'))
+
+# ads
+
+import sys
+sys.path.append('./ads')
+
+from advert import ads

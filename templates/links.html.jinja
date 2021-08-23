@@ -9,7 +9,11 @@
     </div>
 
     {%if show_uploader%}
-      <div class='linkuploader'>由  {{macros.username(link.user)}} 上传于 {{format_time_dateifnottoday(link.t_u or link.t_c)}}</div>
+      <div class='linkuploader'>由  {{macros.username(link.user)}} 上传于
+        <a href='/entities?eid={{link._key}}#{{link._key}}'>
+          {{format_time_dateifnottoday(link.t_u or link.t_c)}}
+        </a>
+      </div>
     {%endif%}
   </div>
 {%endmacro%}

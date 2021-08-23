@@ -24,7 +24,7 @@ if not is_pincong_org() else
 <head>
   <meta name="referrer" content="same-origin">
   <meta charset="utf-8">
-  <meta http-equiv="onion-location" content="{{tor_address}}{{path_url}}" />
+  {#<meta http-equiv="onion-location" content="{{tor_address}}{{path_url}}" />#}
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/css/normalize.css">
   <link rel="stylesheet" href="/css/styles.css?v={{resource_files_hash}}">
@@ -65,6 +65,18 @@ if not is_pincong_org() else
     <meta property="og:image" content="{{og_image_url}}" />
   {%else%}
     <meta property="og:image" content="{{icon_url_full}}" />
+  {%endif%}
+
+  <meta name="locale" content="{{g.locale}}">
+  {%if dict_of_languages %}
+    <meta name="dict_of_languages" content="{{
+      json.dumps(dict_of_languages,ensure_ascii=False)}}">
+  {%endif%}
+
+  {%if meta_dict and meta_dict.items%}
+    {%for k,v in meta_dict.items()%}
+      <meta name="{{k}}" content="{{v}}">
+    {%endfor%}
   {%endif%}
 
   {%block meta%}{%endblock%}
@@ -160,9 +172,9 @@ if not is_pincong_org() else
         </a>
 
         <!-- <a class='headerlink' href="/">首页</a> -->
-        {{hl('/c/all?sortby=t_c', '新帖')}}
-        {{hl('/p/all', '近评')}}
-        {{hl('/search', '搜索')}}
+        {{hl('/c/all?sortby=t_c', enzh('NuThrds','新帖'))}}
+        {{hl('/p/all', zhen('近评','Replies'))}}
+        {{hl('/search', zhen('搜索','Search'))}}
       </div>
 
 
@@ -170,10 +182,10 @@ if not is_pincong_org() else
 
         {%if g.logged_in%}
 
-          {{hl('/n','提醒'~redcircle(g.logged_in.num_notif))}}
-          {{hl('/m','私信'~redcircle(g.logged_in.num_unread))}}
+          {{hl('/n',zhen('提醒','Notif.')~redcircle(g.logged_in.num_notif))}}
+          {{hl('/m',zhen('私信','PM')~redcircle(g.logged_in.num_unread))}}
 
-          <a class='headerlink' href="javascript:logout()">登出</a>
+          <a class='headerlink' href="javascript:logout()">{{zhen('登出','Logout')}}</a>
 
           {{hl('/u/'~g.current_user.uid, g.current_user.name)}}
 
@@ -181,8 +193,8 @@ if not is_pincong_org() else
 
         {%else%}
 
-          {{hl('/register', '注册')}}
-          {{hl('/login','登录')}}
+          {{hl('/register', zhen('注册','Register'))}}
+          {{hl('/login',zhen('登录','Login'))}}
 
         {%endif%}
 
@@ -199,6 +211,17 @@ if not is_pincong_org() else
     <div class="lr">
       <div id="content" class="">
         {{macros.header()}}
+        {%if html_content%}
+          <div class="threadlist padlr">
+            {%if wrap_post_content%}
+              <div class="post_content">                
+                {{html_content|safe}}
+              </div>
+            {%else%}
+              {{html_content|safe}}
+            {%endif%}
+          </div>
+        {%endif%}
         {%block content%}{%endblock%}
       </div>
       {%block navigator%}
@@ -222,24 +245,24 @@ if not is_pincong_org() else
           </div>
 
           <div class="copyright">
-            <a href="/t/7110">服务条款</a>
-            <a href="/t/7448">隐私声明</a>
+            <a href="/t/7110">{{zhen('服务条款','Service Terms')}}</a>
+            <a href="/t/7448">{{zhen('隐私声明','Privacy Policy')}}</a>
             <a rel='noreferrer' href="https://github.com/thphd/2047">GitHub</a>
             <a rel='noreferrer' href="http://line-count.herokuapp.com/thphd/2047">line_count</a>
             {%if 1%}
               {#remove this temporarily. find a better way maybe#}
-              <a href="{{qr_url}}">二维码分享此页</a>
+              <a href="{{qr_url}}">{{zhen('二维码','QR Code')}}</a>
             {%endif%}
           </div>
 
           <div class="copyright">
-            <a href="/">回到首页</a>
+            <a href="/">{{zhen('回到首页','Go Home')}}</a>
           </div>
         </div>
 
         <div class="">
           <div class="friendly_link_title copyright">
-            友情链接
+            {{zhen('友情链接','Friendlinks')}}
           </div>
           <div rel='noreferrer' class="copyright">
             {%for item in friendly_links%}
@@ -258,8 +281,8 @@ if not is_pincong_org() else
 
           {%endif%}
           <div class="copyright">
-            <span>访问者IP {{g.display_ip_address}} </span>
-            <a href="/t/7623">为什么显示IP？</a>
+            <span>{{zhen('访问者IP','Visitor IP')}} {{g.display_ip_address}} </span>
+            <a href="/t/7623">{{zhen('为什么显示IP？','Why show IP?')}}</a>
             <span class='opaque5'> {{g.get_elapsed()}}ms</span>
           </div>
 
@@ -270,13 +293,14 @@ if not is_pincong_org() else
     </div>
   </div>
 
+</div>
+
 {%macro quote_section(quote)%}
-<div class="quote_section">
+<div class="quote_section" id="{{quote._key}}">
   <span class='quote'>{{quote.quote}}</span>
   {%if quote.quoting%}<span class='quoting'>——{{quote.quoting}}</span>{%endif%}
 </div>
 {%endmacro%}
-
 
   <div id="overlay" style='opacity:0;'>
     <div id="overlay_text">
@@ -287,7 +311,6 @@ if not is_pincong_org() else
 
     </div>
   </div>
-</div>
 
   <div id='viewed_target' style='display:none;'>{{viewed_target}}</div>
   <div id='browser_check' style='display:none;'>{{'1' if g.using_browser else ''}}</div>

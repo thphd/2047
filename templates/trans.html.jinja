@@ -1,0 +1,68 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+
+<div class="threadlist">
+  <div class="threadlistitem padded">
+    {{convert_markdown('''
+## 须知
+
+- 开始翻译前，建议先去主页，将语言设置调整为你即将翻译的语言。
+- 请仅为你常用的语言提供翻译。不同地区的语言习惯不同，存在诸如打印机、列印机、印表机的区别。
+- 译文长度应和原文长度相近，超长会影响页面排版。
+- $符号是占位符，如果不清楚是什么意思，请不要提交翻译。
+- 请等待管理员审批你的翻译。站方对译文有多方面严格要求，如果未通过审批，请不要气馁。
+- 如果你打算提交的en-us翻译，已经被原en翻译包含，或者zh-cn已经被zh包含，请不要重复提交。
+- 如需增加语言，请确保你经常使用该语言，然后与站长联络。
+
+    ''')|safe}}
+  </div>
+
+  {%for original,tns in translations%}
+    <div class="threadlistitem padded">
+      <span>{{original}}</span>
+      <a class='opaque5 padlr' href=
+        "javascript:update_translation('{{original}}')"
+        >创建/更新翻译</a>
+    </div>
+
+      <div class="links padlr">
+        {%for tn in tns%}
+          <div class="linkbox">
+
+            <div class="linkbox_left">
+              <span class='opaque5'>{{tn.lang}}:</span>
+              <span>{{tn.string}}</span>
+            </div>
+
+
+            <div class="linkuploader">
+              {%if tn._key%}
+                <a
+                  href='javascript:approve_translation(
+                    "{{tn._key}}",
+                    {{"true" if tn.approved else "false"}}
+                  )'
+
+                  class="{{'approved' if tn.approved else ''}}" >{{
+                  '已审核' if tn.approved else '未审核'
+                }}</a>
+
+                {{macros.avatar(tn.user, class='follower_avatar', plain=True)}}
+
+                {{macros.username(tn.user)}}
+
+                <span>{{format_time_datetime(tn.t_c)}}</span>
+              {%else%}
+                <span>Hardcoded</span>
+              {%endif%}
+            </div>
+
+          </div>
+        {%endfor%}
+      </div>
+
+  {%endfor%}
+
+</div>
+
+{%endblock%}

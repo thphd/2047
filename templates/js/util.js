@@ -1623,3 +1623,58 @@ function activityWatcher(){
 }
 
 activityWatcher();
+
+function update_translation(original){
+  var curr_lang = get_meta('locale')
+  var d = JSON.parse(get_meta('dict_of_languages'))
+  var al = d
+  var ll = ''
+  for(k in al){
+    ll+=`${k.toString()} ${al[k].toString()}\n`
+  }
+  var promptext = '请输入 <语言代码>[空格]<翻译内容>，如：\nzh-tw 登錄\n\n'+ll
+  var hint = curr_lang+' '+original
+
+  var lang_trans = prompt(promptext, hint)
+
+  if(!lang_trans)return
+
+  var lang = lang_trans.split(' ')[0]
+  var string = lang_trans.slice(lang.length+1)
+
+  if (!(lang in al) || string.length<1){
+    alert('不支持的语言 或者翻译内容过短')
+    return
+  }
+
+  print(lang, string)
+
+  aa('update_translation',{original, lang, string})
+  .then(r=>{
+    alert('提交成功。如果要查看刚刚提交的内容，请刷新页面。')
+  })
+  .catch(alert)
+}
+
+function approve_translation(id, del){
+  aa('approve_translation',{id, delete:del})
+  .then(r=>{
+    display_notice(
+      del?'已取消审核标记。':'已标记为通过审核。'+'如果要查看修改后的状态，请刷新页面。'
+    )
+
+    setTimeout(()=>display_notice(''), 3500)
+  })
+  .catch(alert)
+}
+
+function get_meta(name){
+  return document.querySelector(`meta[name="${name}"]`).content
+}
+
+function set_locale(l){
+  aa('set_locale',{locale:l})
+  .then(res=>{
+    window.location.reload()
+  }).catch(alert)
+}
