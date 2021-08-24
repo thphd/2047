@@ -1,4 +1,4 @@
-from flask_cors import CORS
+# from flask_cors import CORS
 
 import flask
 from flask import Flask, g, abort # session
@@ -26,6 +26,6 @@ app = FlaskPatched(__name__, static_url_path='')
 app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
 
-CORS(app)
+# CORS(app)
 from flask_response_gzip import gzipify
 gzipify(app)

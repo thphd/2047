@@ -68,9 +68,6 @@ def p2str(poll):
     s+= '\n'.join(['$'+i for i in poll['choices']])
     return s
 
-aqlc.create_collection('polls')
-aqlc.create_collection('poll_votes')
-
 from flask import g
 
 # create or update a poll

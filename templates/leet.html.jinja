@@ -1,0 +1,30 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+
+<div class="threadlist">
+  {%for lcn in lcs.l%}
+    <div class="threadlistitem post_content padded">
+      {%set lc = lcs.d[lcn]%}
+
+      <div class="">
+        <a href = '/leet/{{lcn}}'>{{lcn}} {{lc.name}}</a>
+        {%if lcn in my_subs%}
+          <span style='color:green;'>√</span>
+        {%endif%}
+
+        {%if other_subs and (lcn in other_subs)%}
+        {%set uids = other_subs[lcn] %}
+          <div class="line_of_avatars">
+            {%for uid in uids%}
+              {{macros.avatar(get_user_by_id(uid), class='follower_avatar', no_decoration=True)}}
+            {%endfor%}
+          </div>
+        {%endif%}
+
+      </div>
+
+
+    </div>
+  {%endfor%}
+</div>
+{%endblock%}

@@ -1,0 +1,44 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+
+
+<style type="text/css" media="screen">
+    #ace_editor {
+        position: relative;
+        width:100%;
+        min-height:100px;
+        max-height:800px;
+    }
+</style>
+
+<div class="threadlist padlr">
+  <div class="post_content">
+    <h1>{{lc.name}}</h1>
+    {{convert_markdown(lc.description)|safe}}
+  </div>
+
+  <div class="post_content">
+    <div id="ace_editor" style="height:{{loc*20}}px;">{{(most_recent and most_recent.code) or lc.user_code}}</div>
+  </div>
+
+  <script src="/js/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+  <script>
+      var ace_editor = ace.edit("ace_editor");
+      ace_editor.setTheme("ace/theme/xcode");
+      ace_editor.session.setMode("ace/mode/python");
+  </script>
+
+  <div class="post_content">
+
+    <div class="">
+      测试输入
+    </div>
+    <textarea rows="4" cols="60" id="runcode_input" placeholder="(leave empty if program takes no input)">{{lc.test_cases or ''}}</textarea>
+    <br>
+    <button onclick="runcode('{{lcn}}', false)">Test Run 测试运行</button>
+    <div id="runcode_result">(result will show up here)</div>
+    <button onclick="runcode('{{lcn}}', true)">Submit 提交</button>
+  </div>
+
+</div>
+{%endblock%}

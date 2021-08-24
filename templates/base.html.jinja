@@ -35,7 +35,7 @@ if not is_pincong_org() else
     <link rel="icon" type="image/x-icon" href="{{icon_url}}">
   {%endif%}
 
-  <title>{{page_title}} - {{site_name}}</title>
+  <title>{{page_title_title or page_title}} - {{site_name}}</title>
 
   <meta name="twitter:card" content="summary_large_image">
 
@@ -59,6 +59,8 @@ if not is_pincong_org() else
       <meta property="og:article:tag" content="{{tag}}" />
     {%endfor%}
   {%endif%}
+
+  <meta name="twitter:dnt" content="on">
 
   {%if t or u%}
     {% set og_image_url = base_url+macros.avatar_url(t.user if t else u) %}
@@ -214,7 +216,7 @@ if not is_pincong_org() else
         {%if html_content%}
           <div class="threadlist padlr">
             {%if wrap_post_content%}
-              <div class="post_content">                
+              <div class="post_content">
                 {{html_content|safe}}
               </div>
             {%else%}
@@ -312,7 +314,19 @@ if not is_pincong_org() else
     </div>
   </div>
 
-  <div id='viewed_target' style='display:none;'>{{viewed_target}}</div>
+  <div id="overlay_notif_list">
+    <div class="overlay_notif_box" style="opacity:0">
+      <div class="overlay_notif_icon_inner">
+
+      </div>
+      <div class="overlay_notif_text">
+        example notif text
+      </div>
+    </div>
+  </div>
+
+  <!-- <div id='viewed_target' style='display:none;'>{{viewed_target}}</div> -->
+  <div id='viewed_target_v2' style='display:none;'>{{viewed_target_v2}}</div>
   <div id='browser_check' style='display:none;'>{{'1' if g.using_browser else ''}}</div>
   <script src="/js/md5.js" charset="utf-8"></script>
   <script src="/js/util.js?v={{resource_files_hash}}" charset="utf-8"></script>
@@ -322,7 +336,5 @@ if not is_pincong_org() else
   <script src="/highlight/highlight.pack.js"></script>
   <script>hljs.registerAliases(['js','javascript'],{languageName:'typescript'});
   hljs.initHighlightingOnLoad();</script>
-
-
 </body>
 </html>

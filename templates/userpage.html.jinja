@@ -11,13 +11,28 @@
 
         <span class='userpage_username'>{{macros.username(u, class='', as_link=False)}}{{'（已封禁于 '~format_time_dateifnottoday(u.t_d)~'）'if u.delete and u.t_d else ''}}</span>
 
+        {%if u.delete and u.ban_information%}
+          {%for bi in u.ban_information%}
+            <div class="opaque5" style="font-size:12px;line-height:1.4">
+              {{spf(zh("由 $0 封禁/解封于 $1 理由 【$2】"))
+                (
+                macros.username(get_user_by_id_cached(bi.uid)),
+                bi.t_c,
+                bi.reason|escape,
+                )
+              |safe}}
+
+            </div>
+          {%endfor%}
+        {%endif%}
+
         {%if g.logged_in%}
           <a href="/editor?target=username/{{u.name}}">发私信给ta</a>
           {%if u.stats.ifollowedhim%}
             {%if u.stats.hefollowedme%}
-            <a class='mutualfollow' href="javascript:follow({{u.uid}}, false)">互相关注</a>
+            <a class='mutualfollow' href="javascript:follow({{u.uid}}, false)">{{zhen('互相关注','Mutually Followed')}}</a>
             {%else%}
-            <a class='followed' href="javascript:follow({{u.uid}}, false)">已关注</a>
+            <a class='followed' href="javascript:follow({{u.uid}}, false)">{{zhen('已关注','Followed')}}</a>
             {%endif%}
           {%else%}
             {%if u.uid!=g.selfuid%}
@@ -126,7 +141,7 @@
         {%endif%}
       </div>
 
-      {%if u.pagerank%}
+      {%if u.pagerank or 1%}
       <div class="userpage_name">
         <span>声望</span><span>{{pagerank_format(u)}}{%
           if ('pagerank_rank' in u) and u.pagerank_rank <399 %}
@@ -138,7 +153,7 @@
       </div>
       {%endif%}
 
-      {%if u.trust_score%}
+      {%if u.trust_score or 1%}
       <div class="userpage_name">
         <span>信用分</span><span>{{trust_score_format(u)}}{%
           if ('trust_score_rank' in u) and u.trust_score_rank <399 %}
@@ -147,6 +162,9 @@
           }}#{{u.uid}}">(排名 {{u.trust_score_rank+1}})</a>
           {%endif
           %}</span>
+          {%if g.is_admin%}
+            {{macros.daily_quota(u)}}
+          {%endif%}
       </div>
       {%endif%}
 

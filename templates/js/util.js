@@ -138,7 +138,8 @@ function upload_file(target){
   btn_upload.disabled=true
   var files = file_selector.files
   if(files.length==0){
-    alert('请先选择一个文件')
+    // alert('请先选择一个文件')
+    isa_error('请先选择一个文件',3500)
     btn_upload.disabled=false
     return
   }
@@ -149,11 +150,15 @@ function upload_file(target){
   var xhrObj = new XMLHttpRequest();
   // xhrObj.upload.addEventListener("loadstart", loadStartFunction, false);
   // xhrObj.upload.addEventListener("progress", progressFunction, false);
+
+  var isa = isa_waiting('正在上传到服务器...')
   xhrObj.upload.addEventListener("load", function(){
-    display_notice('')
+    // display_notice('')
+    isa.set_text('完成')
+    isa.destruct()
     window.location.reload()
   }, false);
-  display_notice('正在上传到服务器...')
+  // display_notice('正在上传到服务器...')
   xhrObj.open("POST", target, true);
   xhrObj.setRequestHeader("Content-type", file.type);
   // xhrObj.setRequestHeader("X_FILE_NAME", file.name);
@@ -164,14 +169,23 @@ function upload_file(target){
 
 // access api
 function api(j, display){
-  if(!display){display_notice('连接服务器...')}
+  if(!display){
+    // display_notice('连接服务器...')
+    var isa = isa_waiting('连接服务器...')
+  }
   var p = xhr('post', '/api', JSON.stringify(j))
   return p.then(r=>{
-    if(!display){display_notice('')}
+    if(!display){
+      isa.set_text('成功')
+      isa.destruct()
+    }
     return r
   })
   .catch(e=>{
-    if(!display){display_notice('')}
+    if(!display){
+      isa.set_text('失败')
+      isa.destruct()
+    }
     throw e
   })
 }
@@ -328,7 +342,9 @@ if (loginbtn){
   }
 
   function go_back_if_possible(){
-    if (document.referrer.match('/register')||document.referrer==""){
+    if (document.referrer.match('/register') ||
+      document.referrer.match('/login')||
+      document.referrer==""){
       window.location.href = '/'
     }else{
       // window.history.back()
@@ -346,6 +362,7 @@ if (loginbtn){
       password_hash:hash_user_pass(username, password),
     })
     .then(res=>{
+      print(res)
       go_back_if_possible()
     })
     .catch(err=>{
@@ -418,7 +435,8 @@ function logout(){
     action:'logout'
   })
   .then(res=>{
-    if(window.location.href.includes('/m')){
+    if(window.location.href.includes('/m') || 
+      window.location.href.includes('/n')){
       window.location.href='/'
     }else{
       window.location.reload()
@@ -603,7 +621,7 @@ if (editor_target){
       editor_right.style.display = 'initial'
 
       if(process_all_youtube_reference){
-        process_all_youtube_reference()
+        process_all_youtube_reference(preview)
       }
 
       if(hljs){
@@ -661,12 +679,14 @@ if (editor_target){
           return
         }
         var c = 0
+        var isa = isa_waiting('倒计时准备')
         setInterval(()=>{
           c+=1
           if (c>=pr){
             geid('editor_btnsubmit').click()
           }else{
-            display_notice(`倒计时 ${pr-c} 秒`)
+            // display_notice(`倒计时 ${pr-c} 秒`)
+            isa.set_text(`倒计时 ${pr-c} 秒`)
           }
         }, 1000)
       }
@@ -697,7 +717,8 @@ function mark_delete(targ){
   })
   .then(res=>{
     var note = (targ.startsWith('u')?'已取消删除':'已标记为删除')
-    alert(note+JSON.stringify(res))
+    // alert(note+JSON.stringify(res))
+    isa_info(note, 2000)
   })
   .catch(alert)
 }
@@ -892,6 +913,12 @@ function at_reply(k,un){
       return rgbify(yellow)
   }
 
+  function colormap3(i){
+    var c = [235, 255, 229, 0.65]
+    c[3]*=i
+    return c[3]?rgbify(c):''
+  }
+
 
   // function vote2col(v){
   //     if(v>0){
@@ -908,11 +935,9 @@ function at_reply(k,un){
   //     return colormap(v)
   // }
   function vote2col(v){
-    var k = Math.max(0,(v-2)/20)
-    k = Math.min(1,k)
-    k = Math.pow(k,1)
-    print(k)
-    return colormap(k)
+    var k = cap((v-2)/20)
+    print('vote', v, k)
+    return colormap3(k)
   }
 
 
@@ -926,8 +951,10 @@ function at_reply(k,un){
       if(e1.className.trim()=='votenumber'){
         var vote = parseInt(e1.innerText.trim()||0)
         // print(vote)
-        var col = vote2col(vote)
-        e.style.backgroundColor = col
+        if(vote){
+          var col = vote2col(vote)
+          if(col) e.style.backgroundColor = col
+        }
       }
     })
   })
@@ -1044,10 +1071,12 @@ function move_to_category(targ){
     })
     .then(res=>{
       // do nothing
-      display_notice(`${targ} 已移动至 ${cid}`)
-      setTimeout(()=>{
-        display_notice('')
-      },2000)
+      // display_notice(`${targ} 已移动至 ${cid}`)
+      // setTimeout(()=>{
+      //   display_notice('')
+      // },2000)
+
+      var isa = isa_info(`${targ} 已移动至 ${cid}`, 2000)
     })
     .catch(alert)
   }
@@ -1072,14 +1101,16 @@ function move_to_category(targ){
 /* Web: http://labnol.org/?p=27941 */
 // modified by thphd
 
-function process_all_youtube_reference(){
+function process_all_youtube_reference(element2){
   function labnolThumb(id) {
       var thumb = '<img src="https://i.ytimg.com/vi/ID/hqdefault.jpg">',
           play = '<div class="play"></div>';
       return thumb.replace("ID", id) + play;
   }
 
-  var divs = gebcn(document)('youtube-player-unprocessed')
+  var element = element2.getElementsByClassName?element2:document
+  // print('element is', element)
+  var divs = gebcn(element)('youtube-player-unprocessed')
 
   foreach(divs)(e=>{
     print(e)
@@ -1109,7 +1140,7 @@ function process_all_youtube_reference(){
     e.appendChild(div)
   })
 
-  var votes = gebcn(document)('poll-instance-unprocessed')
+  var votes = gebcn(element)('poll-instance-unprocessed')
 
   foreach(votes)(e=>{
     print(e)
@@ -1128,7 +1159,7 @@ function process_all_youtube_reference(){
 
   })
 
-  var commsecs = gebcn(document)('comment_section_unprocessed')
+  var commsecs = gebcn(element)('comment_section_unprocessed')
   foreach(commsecs)(e=>{
     print(e)
 
@@ -1145,7 +1176,50 @@ function process_all_youtube_reference(){
     .catch(print)
 
   })
+
+  var twsecs = gebcn(element)('twitter-tweet')
+  twsecs = foreach(twsecs)(e=>e).filter(e=>e.tagName=="BLOCKQUOTE")
+
+  if (twsecs.length){
+    // https://developer.twitter.com/en/docs/twitter-for-websites/javascript-api/guides/set-up-twitter-for-websites
+    window.twttr = (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0],
+        t = window.twttr || {};
+      if (d.getElementById(id)) return t;
+      js = d.createElement(s);
+      js.id = id;
+      js.src = "https://platform.twitter.com/widgets.js";
+      fjs.parentNode.insertBefore(js, fjs);
+
+      t._e = [];
+      t.ready = function(f) {
+        t._e.push(f);
+      };
+
+      return t;
+    }(document, "script", "twitter-wjs"));
+
+    // may not load immediately
+    if(window.twttr.widgets&&window.twttr.widgets.load){
+      window.twttr.widgets.load(element)
+    }
+
+  }
+
 }
+
+// https://stackoverflow.com/a/35385518
+/**
+ * @param {String} HTML representing a single element
+ * @return {Element}
+ */
+function htmlToElement(html) {
+    var template = document.createElement('template');
+    html = html.trim(); // Never return a text node of whitespace as the result
+    template.innerHTML = html;
+    return template.content.firstChild;
+}
+
 
 function browser_check(){
   var bc = geid('browser_check').innerText
@@ -1162,12 +1236,12 @@ function browser_check(){
 
 function viewed(){
   setTimeout(function(){
-    var target = geid('viewed_target').innerText
-    if (target){
+    var target = geid('viewed_target')
+    if (target && target.innerText){
       if (user_browser_active){
         api({
           action:'viewed_target',
-          target:target,
+          target:target.innerText,
         }, true)
         .then(print)
         .catch(console.error)
@@ -1175,8 +1249,30 @@ function viewed(){
         // print('no user interaction, wait some more...')
         viewed()
       }
+    }else{
+      print('viewed not found', target)
     }
-  },5*1000)
+  },4*1000)
+}
+
+function viewed_v2(){
+  setTimeout(function(){
+    var target = geid('viewed_target_v2')
+    if (target && target.innerText){
+      if (user_browser_active) {
+        api({
+          action:'viewed_target_v2',
+          target:target.innerText,
+        }, true)
+        .then(print)
+        .catch(console.error)
+      }else{
+        viewed_v2()
+      }
+    }else{
+      print('viewed v2 not found', target)
+    }
+  },4*1000)
 }
 
 function ondomload(f){
@@ -1186,6 +1282,7 @@ function ondomload(f){
 ondomload(process_all_youtube_reference);
 ondomload(browser_check);
 ondomload(viewed);
+ondomload(viewed_v2);
 
 // fold/expand
 ondomload(()=>{
@@ -1330,15 +1427,19 @@ function add_poll_vote(id, choice, del){
   .then(res=>{
     // window.location.reload()
     var polls = gebcn(document)('poll-instance')
+    var p = 0
     foreach(polls)(e=>{
       var did = e.dataset.id
       if (did==id){
         // e.innerHTML = ''
         e.className = 'poll-instance-unprocessed'
 
-        process_all_youtube_reference()
+        // process_all_youtube_reference(e.parentNode)
+        p = Promise.resolve()
+        .then(res=>process_all_youtube_reference(e.parentNode))
       }
     })
+    return p
   })
   .catch(alert)
 }
@@ -1352,7 +1453,8 @@ function modify_question(k){
     qid:k,
   })
   .then(res=>{
-    window.location.reload()
+    // window.location.reload()
+
   })
   .catch(alert)
 }
@@ -1433,7 +1535,8 @@ function modify_entity(key){
     })
   })
   .then(res=>{
-    alert('修改成功')
+    // alert('修改成功')
+    isa_info('修改成功', 2000)
     // window.location.reload()
   })
   .catch(alert)
@@ -1578,7 +1681,8 @@ function delete_tag(tid, tagname){
 function favorite(targ, del){
   aa('favorite', {target:targ, delete:(del?true:null)})
   .then(res=>{
-    display_notice(targ+(del?'已取消收藏':'已收藏'))
+    var isa = isa_info(targ+(del?'已取消收藏':'已收藏'), 2000)
+    // display_notice(targ+(del?'已取消收藏':'已收藏'))
 
     if(del){}else{
       foreach(gebcn(document)('favorite'))(e=>{
@@ -1589,9 +1693,9 @@ function favorite(targ, del){
       })
     }
 
-    setTimeout(()=>{
-      display_notice('')
-    }, 2000)
+    // setTimeout(()=>{
+    //   display_notice('')
+    // }, 2000)
   })
   .catch(alert)
 }
@@ -1624,16 +1728,18 @@ function activityWatcher(){
 
 activityWatcher();
 
-function update_translation(original){
-  var curr_lang = get_meta('locale')
+function update_translation(sample, locale, original){
+  var curr_lang = locale || get_meta('locale')
   var d = JSON.parse(get_meta('dict_of_languages'))
   var al = d
   var ll = ''
   for(k in al){
     ll+=`${k.toString()} ${al[k].toString()}\n`
   }
+
+  original = original || sample
   var promptext = '请输入 <语言代码>[空格]<翻译内容>，如：\nzh-tw 登錄\n\n'+ll
-  var hint = curr_lang+' '+original
+  var hint = curr_lang+' '+sample
 
   var lang_trans = prompt(promptext, hint)
 
@@ -1643,7 +1749,7 @@ function update_translation(original){
   var string = lang_trans.slice(lang.length+1)
 
   if (!(lang in al) || string.length<1){
-    alert('不支持的语言 或者翻译内容过短')
+    alert('所指定的语言不在支持列表内/未填写翻译内容')
     return
   }
 
@@ -1651,7 +1757,8 @@ function update_translation(original){
 
   aa('update_translation',{original, lang, string})
   .then(r=>{
-    alert('提交成功。如果要查看刚刚提交的内容，请刷新页面。')
+    isa_info('提交成功。如果要查看刚刚提交的内容，请刷新页面。', 3500)
+    // alert('提交成功。如果要查看刚刚提交的内容，请刷新页面。')
   })
   .catch(alert)
 }
@@ -1659,11 +1766,11 @@ function update_translation(original){
 function approve_translation(id, del){
   aa('approve_translation',{id, delete:del})
   .then(r=>{
-    display_notice(
+    var isa = isa_info(
       del?'已取消审核标记。':'已标记为通过审核。'+'如果要查看修改后的状态，请刷新页面。'
-    )
+    ,3500)
 
-    setTimeout(()=>display_notice(''), 3500)
+    // setTimeout(()=>display_notice(''), 3500)
   })
   .catch(alert)
 }
@@ -1677,4 +1784,129 @@ function set_locale(l){
   .then(res=>{
     window.location.reload()
   }).catch(alert)
+}
+
+function change_name(uid, name){
+  aa('change_name',{uid, name})
+  .then(alert)
+  .catch(alert)
+}
+
+function runcode(challenge_name, is_submission){
+  code = ace_editor.getValue()
+  input = geid('runcode_input').value
+
+  print(challenge_name, code, input)
+  var rcrs = geid('runcode_result')
+
+  aa('runcode',{
+    code,
+    input,
+    challenge_name,
+    is_submission,
+  })
+  .then(res=>{
+    rcrs.innerHTML = res.result
+
+    if (res.error){
+      rcrs.style="color:red"
+      isa_error('代码运行结果可能包含错误',3500)
+    }else{
+      rcrs.style="color:green"
+      isa_info('代码运行成功', 2000)
+    }
+
+    rcrs.scrollTop = rcrs.scrollHeight;
+
+    if (is_submission){
+      if(!res.error){
+        alert('提交通过！')
+        go_or_refresh_if_samepage('/leet')
+      }else{
+        alert('提交未通过，请检查代码。')
+      }
+    }
+  })
+  .catch(alert)
+}
+
+var isa_list = geid('overlay_notif_list')
+var isa_template = gebcn(isa_list)('overlay_notif_box')[0]
+isa_list.removeChild(isa_template)
+
+function create_isa(){
+  var isa = isa_template.cloneNode(true) // deep
+  isa_list.appendChild(isa)
+  isa.style.opacity = 1
+
+  var textnode = gebcn(isa)('overlay_notif_text')[0]
+  var bouncy = gebcn(isa)('overlay_notif_icon_inner')[0]
+
+  function change_text(t){
+    textnode.innerHTML = escapeHtml(t)
+  }
+
+  var bounce_ticker=-999;
+  isa.start_bouncing = ()=>{
+    var t = 0
+    bounce_ticker = setInterval(()=>{
+      if (t>= 2*Math.pi){
+        t-=2*Math.pi
+      }
+      bouncy.style.opacity = Math.pow((Math.cos(t)+1)*.5, 2)
+      t=t+0.2
+      // bouncy.style.left = (Math.cos(t)*3).toString()+'px'
+    }, 50)
+  }
+  isa.stop_bouncing = ()=>{
+    if (bounce_ticker!=-999) clearInterval(bounce_ticker)
+  }
+  isa.set_color = (c)=>{
+    bouncy.style.backgroundColor = c
+    textnode.style.color = c
+  }
+
+  isa.destruct = ()=>{
+    isa.stop_bouncing()
+    var counter = 10
+    var ticker = setInterval(()=>{
+      isa.style.opacity = counter/10
+      if (counter<=0){
+        clearInterval(ticker)
+        isa.parentNode.removeChild(isa)
+      }
+      counter=counter-1
+    }, 40)
+  }
+  isa.set_text = (msg)=>msg?change_text(msg):isa.destruct()
+
+  isa.delay_destruct = t=>{
+    setTimeout(()=>{
+      isa.destruct()
+    },t)
+  }
+  return isa
+}
+
+function isa_info(message, t){
+  var isa = create_isa()
+  isa.set_text(message)
+  isa.set_color('#3b70b0')
+  if (t) isa.delay_destruct(t)
+  return isa
+}
+function isa_waiting(message, t){
+  var isa = create_isa()
+  isa.set_text(message)
+  isa.set_color('#41b7a6')
+  isa.start_bouncing()
+  if (t) isa.delay_destruct(t)
+  return isa
+}
+function isa_error(message, t){
+  var isa = create_isa()
+  isa.set_text(message)
+  isa.set_color('#c92626')
+  if (t) isa.delay_destruct(t)
+  return isa
 }

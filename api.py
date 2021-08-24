@@ -5,14 +5,24 @@ from commons import *
 
 from flask import g, make_response
 
-aqlc.create_collection('admins')
-aqlc.create_collection('operations')
-aqlc.create_collection('aliases')
-aqlc.create_collection('histories')
-aqlc.create_collection('votes')
-aqlc.create_collection('messages')
-aqlc.create_collection('conversations')
-aqlc.create_collection('notifications')
+def create_all_necessary_collections():
+    aqlc.create_collection('admins')
+    aqlc.create_collection('operations')
+    aqlc.create_collection('aliases')
+    aqlc.create_collection('histories')
+    aqlc.create_collection('votes')
+    aqlc.create_collection('messages')
+    aqlc.create_collection('conversations')
+    aqlc.create_collection('notifications')
+
+    aqlc.create_collection('tags')
+    aqlc.create_collection('comments')
+    aqlc.create_collection('followings')
+    aqlc.create_collection('favorites')
+    aqlc.create_collection('blacklist')
+
+    aqlc.create_collection('polls')
+    aqlc.create_collection('poll_votes')
 
 # def make_notification(to_uid, from_uid, why, url, **kw):
 #     d = dict(
@@ -181,7 +191,7 @@ def get_user_by_id_admin(uid):
         k=uid, silent=True)
     return uo[0] if uo else False
 
-@stale_cache(ttr=60, ttl=1800)
+@stale_cache(ttr=60, ttl=1800, maxsize=1024)
 def get_user_by_id_cached(uid):
     return get_user_by_id(uid)
 
@@ -475,9 +485,128 @@ def banned_check():
     if 'delete' in g.current_user and g.current_user['delete']:
         raise Exception('your account has been banned')
 
+def get_comment(k):
+    c = aqlc.from_filter('comments', 'i._key==@k', k=str(k), silent=True)
+    if len(c) == 0: raise Exception('comment id not found')
+    return c[0]
+
+@register('comment')
+def _():
+    must_be_logged_in()
+    uid = g.selfuid
+    op = es('op')
+    t_c = time_iso_now()
+
+    if op=='add':
+        content = es('content').strip()
+        parent = es('parent').strip()
+
+        parent_object = aql('return document(@parent)', parent=parent, silent=True)
+        if not parent_object:
+            raise Exception('parent object not found')
+
+        # check if user repeatedly submitted the same content
+        lp = aql('for p in comments filter p.uid==@k sort p.t_c desc limit 1 return p',k=uid, silent=True)
+        if len(lp) >= 1:
+            if lp[0]['content'] == content:
+                raise Exception('repeatedly posting same content')
+
+
+        coid = str(obtain_new_id('pid'))
+
+        content_length_check(content, allow_short=True)
+
+        newcomment = dict(
+            _key = coid,
+            content = content,
+            parent = parent,
+            t_c = t_c,
+            uid = uid,
+        )
+
+        aql('insert @k in comments', k=newcomment)
+
+    elif op=='edit':
+        content = es('content').strip()
+        key = es('key').strip()
+        comm = get_comment(key)
+
+        if not can_do_to(g.current_user, 'edit', comm['uid']):
+            raise Exception('insufficient priviledge')
+
+        content_length_check(content)
+
+        newcomment = dict(
+            _key = key,
+            content = content,
+            t_e = t_c,
+            editor = uid,
+        )
+
+        aql('update @k with @k in comments', k=newcomment)
+    else:
+        raise Exception('unsupported op on comments')
+
+    return {'error':False}
+
+def get_comments(parent):
+    comments = aql('''for i in comments filter i.parent==@p
+        sort i.t_c asc
+        let user = (for u in users filter u.uid==i.uid return u)[0]
+        return merge(i, {user})''', p=parent, silent=True)
+    html = render_template_g(
+        'comment_section.html.jinja',
+        comments = comments,
+        parent = parent,
+    )
+    return html
+
+@register('render_comments')
+def _():
+    j = g.j
+    parent = es('parent').strip()
+    html = get_comments(parent)
+    return {'error':False, 'html':html}
+
+@app.route('/comments/<string:k1>/<string:k2>')
+def getcomments(k1,k2):
+    parent = k1+'/'+k2
+    html = get_comments(parent)
+    return html
 
 def current_user_doesnt_have_enough_likes():
     return g.current_user['nlikes'] < 3 if 'nlikes' in g.current_user else True
+
+def dlp_ts(ts): return min(60, max(2, int(ts*0.025*2)))
+def dlt_ts(ts): return min(8, max(1, int(ts*0.003*2)))
+
+def daily_limit_posts(uid):
+    user = get_user_by_id_cached(uid)
+    trust_score = trust_score_format(user)
+    return dlp_ts(trust_score)
+
+def daily_limit_threads(uid):
+    user = get_user_by_id_cached(uid)
+    trust_score = trust_score_format(user)
+    return dlt_ts(trust_score)
+
+def daily_number_posts(uid):
+    return aql('return length(for t in posts filter t.uid==@k and t.t_c>@t return t)', silent=True, k=uid, t=time_iso_now(-86400*2))[0]
+
+def daily_number_threads(uid):
+    return aql('return length(for t in threads filter t.uid==@k and t.t_c>@t return t)', silent=True, k=uid, t=time_iso_now(-86400*2))[0]
+
+@ttl_cache(ttl=120, maxsize=1024)
+def daily_limit_posts_cached(uid):return daily_limit_posts(uid)
+@ttl_cache(ttl=120, maxsize=1024)
+def daily_limit_threads_cached(uid):return daily_limit_threads(uid)
+
+@ttl_cache(ttl=120, maxsize=1024)
+def daily_number_posts_cached(uid):return daily_number_posts(uid)
+@ttl_cache(ttl=120, maxsize=1024)
+def daily_number_threads_cached(uid):return daily_number_threads(uid)
+
+from antispam import is_spam
 
 @register('post')
 def _():
@@ -504,6 +633,22 @@ def _():
     content = es('content').strip()
     content_length_check(content)
 
+    pagerank = pagerank_format(g.current_user)
+    trust_score = trust_score_format(g.current_user)
+
+    spam_detected = False
+    if is_spam(content):
+        spam_detected = True
+        content = "<span style='color:red;'>[detected as spam by our AI]</span>\n\n" + content
+
+        if current_user_doesnt_have_enough_likes():
+            aql('update @u with @u in users', u={
+                '_key':g.current_user['_key'],
+                'delete':True,
+            })
+            g.no_notifications = True
+
+
     if target_type=='thread':
         _id = int(_id)
         # check if tid exists
@@ -514,26 +659,46 @@ def _():
         lp = aql('for p in posts filter p.uid==@k sort p.t_c desc limit 1 return p',k=uid, silent=True)
         if len(lp) >= 1:
             if lp[0]['content'] == content:
-                raise Exception('repeatedly posting same content')
+                raise Exception(en('repeatedly posting same content'))
+
+
+        # daily limit for low pagerank users
+        # daily_limit = int(pagerank*2+6)
+        daily_limit = daily_limit_posts(uid)
+        recent24hs = daily_number_posts(uid)
+
+        if recent24hs>=daily_limit:
+            raise Exception(spf(zh('你在过去$3小时发表了$0个评论，达到或超过了你目前的社会信用分($1) 所允许的值($2)。如果要提高这个限制，请尽量发表受其他用户欢迎的内容，以提高社会信用分。'))(recent24hs, trust_score, daily_limit,48))
+
 
         # check if user posted too much content in too little time
-        recents = aql('for t in posts filter t.uid==@k and t.t_c>@t sort t.t_c desc return t', silent=True, k=uid, t=time_iso_now(-1200))
-        if len(recents)>=5 and not g.is_admin:
-            raise Exception('too many posts in too little time')
+        recents = aql('return length(for t in posts filter t.uid==@k and t.t_c>@t return t)', silent=True, k=uid, t=time_iso_now(-1200))[0]
+        if recents>=5:
+            raise Exception(spf(en('too many posts ($0) in the last $1 minute(s)'))(recents, 1200//60))
 
-        if recents and recents[0]['t_c'] > time_iso_now(-60):
-            raise Exception('too little time since last post')
 
-        # new users cannot post outside water in the first hours
-        if g.current_user['t_c'] > time_iso_now(-43200) and \
-            thread['cid']!=4 and current_user_doesnt_have_enough_likes():
-            raise Exception('新注册用户最开始只能在水区发帖')
+        if lp and lp[0]['t_c'] > time_iso_now(-60):
+            raise Exception(en('please wait one minute between posts'))
+
+        # # new users cannot post outside water in the first hours
+        # if g.current_user['t_c'] > time_iso_now(-600) and \
+        #     thread['cid']!=4 and current_user_doesnt_have_enough_likes():
+        #     raise Exception('新注册用户前十分钟只能在水区发帖')
+
+        # can only post once in questions
+        if 'mode'in thread and thread['mode']=='question':
+            nposts_already = len(aql(
+                'for p in posts filter p.uid==@k and p.tid==@tid return 1',
+                k=uid, tid=tid, silent=True))
+
+            if nposts_already:
+                raise Exception(zh('（从2021年7月8日开始）每个问题只允许发表一次回答。'))
 
         timenow = time_iso_now()
 
         tu = thread['uid']
         if im_in_blacklist_of(tu):
-            raise Exception('you are in the blacklist of the thread owner')
+            raise Exception(en('you are in the blacklist of the thread owner'))
 
         while 1:
             new_pid = str(obtain_new_id('pid'))
@@ -613,7 +778,7 @@ def _():
         # got enough likes
         if current_user_doesnt_have_enough_likes()\
             and target_user['name']!='thphd':
-            raise Exception("你暂时还不可以发信给除了站长(thphd)之外的其他人")
+            raise Exception(zh("你暂时还是新用户，不可以发信给除了站长(thphd)之外的其他人"))
 
         # content_length_check(content)
         url = send_message(uid, target_uid, content)
@@ -624,6 +789,9 @@ def _():
 
         title = es('title').strip()
         title_length_check(title)
+
+        if spam_detected:
+            title = '[SPAM]' + title
 
         mode = es('mode')
         mode = None if mode!='question' else mode
@@ -642,22 +810,32 @@ def _():
         lp = aql('for t in threads filter t.uid==@k sort t.t_c desc limit 1 return t',k=uid, silent=True)
         if len(lp) >= 1:
             if lp[0]['content'] == content:
-                raise Exception('repeatedly posting same content')
+                raise Exception(en('repeatedly posting same content'))
 
         # check if the same title has been used before
         jk = aql('for t in threads filter t.title==@title limit 1 return 1', title=title, silent=True)
         if len(jk):
-            raise Exception('这个标题被别人使用过')
+            raise Exception(zh('这个标题被别人使用过'))
+
+
+        # # new users cannot post outside water in the first hours
+        # if g.current_user['t_c'] > time_iso_now(-43200) and \
+        #     cid!=4 and current_user_doesnt_have_enough_likes():
+        #     raise Exception('新注册用户最开始只能在水区发帖')
+
+
+        daily_limit = daily_limit_threads(uid)
+        recent24hs = daily_number_threads(uid)
+
+        if recent24hs>=daily_limit:
+            raise Exception(spf(zh('你在过去$3小时发表了$0个主题帖或问题，达到或超过了你目前的社会信用分($1) 所允许的值($2)。如果要提高这个限制，请尽量发表受其他用户欢迎的内容，以提高社会信用分。'))(recent24hs, trust_score, daily_limit, 48))
+
 
         # check if user posted too much content in too little time
-        nrecent = aql('return length(for t in threads filter t.uid==@k and t.t_c>@t return t)', silent=True, k=uid, t=time_iso_now(-3600))[0]
-        if nrecent>=3 and not g.is_admin:
-            raise Exception('too many in too little time')
+        recents = aql('return length(for t in threads filter t.uid==@k and t.t_c>@t return t)', silent=True, k=uid, t=time_iso_now(-1200))[0]
+        if recents>=2 and not g.is_admin:
+            raise Exception(spf(en('too many threads ($0) in the last $1 minute(s)'))(recents, 1200//60))
 
-        # new users cannot post outside water in the first hours
-        if g.current_user['t_c'] > time_iso_now(-43200) and \
-            cid!=4 and current_user_doesnt_have_enough_likes():
-            raise Exception('新注册用户最开始只能在水区发帖')
 
         # ask for a new tid
         tid = obtain_new_id('tid')
@@ -877,8 +1055,15 @@ let t_hn = max([t_now + t_offset - (t_now - t_ref + t_offset) / sqrt(points), t_
 let t_next_hn_update = t_now + max([max([0, t_now - t_hn]) / 86400000 * @interval_multiplier, @min_interval])
 
 let t_hn_iso = left(date_format(t_hn,'%z'), 19)
+
+let viewcount_v2 = (for j in view_counters filter j.targ==t._id return j.c)[0]
+let total_viewcount = (viewcount_v2 or 0) + (t.old_vc or 0)
+
 limit 20
-update t with {t_hn:t_hn_iso, t_next_hn_update, pinned, bigcats} in threads return 1
+update t with {t_hn:t_hn_iso, t_next_hn_update, pinned, bigcats,
+    vc:total_viewcount,
+    new_vc:viewcount_v2 or 0,
+} in threads return 1
 ''')
 
 hn_formula_post = QueryString('''
@@ -955,21 +1140,25 @@ def update_user_pagerank_batch():
 //let t_now = date_timestamp(now)
 let t_now = date_now()
 
+let now_iso = @now_iso
+
 for t in users
 
-filter t.t_next_pr_update < t_now
+let uid = t.uid
+let time_factor = 0.99999985
+
+filter t.t_next_pr_update < t_now - 1800*1000 // update interval
 sort t.t_next_pr_update asc
+limit 30
 
 //nlikes: received
 //nliked: gave
 
 let target_user = t
-//filter t.nlikes > 0
 
-limit 30
-
+// all-time pagerank
 let newscore = sum(
-    for v in votes filter v.to_uid==target_user.uid
+    for v in votes filter v.to_uid==target_user.uid and v.vote==1
 
     let voter = (for u in users filter u.uid==v.uid return u)[0]
     let voterrank = voter.pagerank or 0
@@ -979,16 +1168,108 @@ let newscore = sum(
     return score
 )
 
-let adjusted = newscore
+let last_recent_update_time = t.last_recent_update_time or '1971-01-01'
+
+//let mrl = max([@recent_timestamp, last_recent_update_time])
+let mrl = last_recent_update_time
+let dtni = date_timestamp(@now_iso)
+let dtlru = date_timestamp(last_recent_update_time)
+let dt_since_last = (dtni - dtlru)/1000
+
+// exp-falloff pagerank
+let newscore_recent = sum(
+    for v in votes filter v.to_uid==target_user.uid and v.vote==1
+    //and v.t_c > @recent_timestamp
+
+    let voter = (for u in users filter u.uid==v.uid return u)[0]
+    let voterrank = voter.pagerank_recent or 0
+    let voterbonus = (voter.uid==5108?1:0) + voterrank
+    let score = (voter.recent_votes_gave?voterbonus/voter.recent_votes_gave:0)*.95
+
+    let td = (dtni - date_timestamp(v.t_cc))/1000
+    let coef = pow(time_factor, td)
+
+    return score * coef
+)
+
+let total_activities = (t.recent_threads or 0) + (t.recent_posts or 0)
+let total_activities_w_votes = total_activities + (t.recent_votes or 0)
+let total_activities_plain = (t.nthreads or 0)+(t.nposts or 0)+(t.nlikes or 0)
+let tawvp = total_activities_plain*.5 + total_activities_w_votes * 2
+
+let trust_factor = 1 - pow(0.85, tawvp)
+let unit_pr = total_activities?newscore_recent / total_activities:0
+
+let trust_score = unit_pr*trust_factor + (1-trust_factor)*(100/1000000)
+// in the beginning everyone have 100 points
+
+//----
+
+let recent_threads = sum(
+    for i in threads filter i.uid==uid and i.t_c >= mrl
+
+    let coef = pow(time_factor, (dtni - date_timestamp(i.t_c))/1000)
+    return coef
+) + (t.recent_threads or 0) * pow(time_factor, dt_since_last)
+
+let recent_posts = sum(
+    for i in posts filter i.uid==uid and i.t_c >= mrl
+
+    let coef = pow(time_factor, (dtni - date_timestamp(i.t_c))/1000)
+    return coef
+) + (t.recent_posts or 0) * pow(time_factor, dt_since_last)
+
+let recent_votes = sum(
+    for i in votes filter i.to_uid==uid and i.vote==1 and i.t_cc >= mrl
+
+    let coef = pow(time_factor, (dtni - date_timestamp(i.t_cc))/1000)
+    return coef
+) + (t.recent_votes or 0) * pow(time_factor, dt_since_last)
+
+let recent_votes_gave = sum(
+    for i in votes filter i.uid==uid and i.vote==1 and i.t_cc >= mrl
+
+    let coef = pow(time_factor, (dtni - date_timestamp(i.t_cc))/1000)
+    return coef
+) + (t.recent_votes_gave or 0) * pow(time_factor, dt_since_last)
+
+
+//----
+
+let new_vc = (for j in view_counters filter j.targ==t._id return j.c)[0] or 0
+let vc = (t.old_vc or 0) + new_vc
 
 update t with {
-    t_next_pr_update:t_now + 1200*1000,
-    pagerank:adjusted,
+    t_next_pr_update:t_now,
+    pagerank:newscore,
+    pagerank_recent:newscore_recent,
+    trust_score:trust_score,
+
+    trust_factor:trust_factor,
+
+    last_recent_update_time:@now_iso,
+
+    recent_threads,
+    recent_posts,
+    recent_votes,
+    recent_votes_gave,
+
+    total_activities,
+    total_activities_w_votes,
+    total_activities_plain,
+    tawvp,
+
+    new_vc,
+    vc,
+
 } in users
 
 return {name:NEW.name, pr:NEW.pagerank}
     ''')
-    res = aql(qr, silent=True, raise_error=False)
+    res = aql(qr, silent=True, raise_error=False,
+        # recent_timestamp=time_iso_now(-86400*365),
+        now_iso=time_iso_now(),
+    )
     return len(res)
 
 uf_registry = {}
@@ -1054,12 +1335,14 @@ def _update_forever():
         itvl = max(0.3, itvl)
 
 # dispatch(update_forever)
-dispatch(update_forever_generator(
-    update_thread_hackernews_batch, 'hackernews(t)', 10))
-dispatch(update_forever_generator(
-    update_post_hackernews_batch, 'hackernews(p)', 10))
-dispatch(update_forever_generator(
-    update_user_pagerank_batch, 'user pagerank', 15))
+def dispatch_database_updaters():
+    time.sleep(3)
+    dispatch(update_forever_generator(
+        update_thread_hackernews_batch, 'hackernews(t)', 10))
+    dispatch(update_forever_generator(
+        update_post_hackernews_batch, 'hackernews(p)', 10))
+    dispatch(update_forever_generator(
+        update_user_pagerank_batch, 'user pagerank', 15))
 
 
 def update_thread_votecount(tid):
@@ -1726,6 +2009,7 @@ def _():
 
 @register('viewed_target')
 def _():
+    raise Exception('api abandoned')
     j = g.j
     ty, _id = parse_target(j['target'])
 
@@ -1750,6 +2034,32 @@ def _():
     else:
         raise Exception('unsupported target')
     return {'error':False, 'info':'nicework'}
+
+aqlc.create_collection('view_counters')
+@register('viewed_target_v2')
+def _():
+    targ = es('target')
+    if not targ:
+        raise Exception ('no target specified')
+
+    uasl = g.user_agent_string.lower()
+
+    if 'bot' in uasl\
+        or 'archiver' in uasl\
+        or 'noua' == uasl:
+        print_err('viewed_target_v2 request for', j['target'],
+            'seems to be from a bot.', uasl)
+        return {'error':False, 'info':'botlike'}
+
+    if not g.using_browser:
+        print_err('someone without a browser tried viewed_target_v2()')
+        return {'error':False, 'info':'browserless'}
+
+    print_info('trying to increment_view_counter_v2 for', targ, uasl)
+
+    c = aql("upsert {targ:@targ} insert {targ:@targ , c:1} update {c:OLD.c+1} in view_counters return NEW.c", silent=True, targ=targ)[0]
+
+    return {'error':False, 'info':'nicework', 'c':c}
 
 def must_be_logged_in():
     if not g.logged_in: raise Exception('you are not logged in')

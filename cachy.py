@@ -1,4 +1,7 @@
 import cachetools, cachetools.func, time, threading, traceback
+from flaskthreads import AppContextThread
+
+Thread = AppContextThread
 
 hashkey = cachetools.keys.hashkey
 tm = time.monotonic
@@ -37,7 +40,7 @@ class StaleBuffer:
                 self.ts = tm()
                 self.l.release()
 
-        t = threading.Thread(target=wrapper, daemon=True)
+        t = Thread(target=wrapper, daemon=True)
         t.start()
 
     def get(self):

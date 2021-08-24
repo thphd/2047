@@ -5,19 +5,19 @@
 
   <form class="register">
     <div class="formline">
-      <label>用户名</label>
-      <input type="text" id="username" value="{{username}}">
+      <label>{{zh('用户名(登录)')}}</label>
+      <input type="text" id="username" value="{{username}}" autocomplete="username">
     </div>
 
     <div class="formline">
-      <label>密码</label>
-      <input type="password" id="password" value="">
+      <label>{{zh('密码(登录)')}}</label>
+      <input type="password" id="password" value="" autocomplete="current-password">
     </div>
 
     <div class="formline">
-      <button type="button" id="login">登录</button>
-      <a href="/t/7388">忘记密码</a>
-      <a href="/register">注册新账号</a>
+      <button type="button" id="login">{{zh('登录')}}</button>
+      <a href="/t/7388">{{zh('忘记密码')}}</a>
+      <a href="/register">{{zh('注册新账号')}}</a>
 
     </div>
 
@@ -25,6 +25,12 @@
     <!-- <label></label> -->
 
   </form>
+
+  <div class="formline">
+    <span style="margin-right:0.5em">{{zh('语言 (LANG)')}} </span>
+    {{macros.language_selector()}}
+  </div>
+
   <br>
 
   <div class="post_content">

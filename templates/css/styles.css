@@ -57,7 +57,7 @@ div#site_name {/* color: #ffffff; */font-family: arial;/* display: inline-block;
 
 .details .meta {
   font-size: 12px;
-  color: #b6b6b6;
+  color: #0000004f;
   justify-content: flex-start;
   align-items: center;
   flex-flow: row;
@@ -144,8 +144,7 @@ span.last_commented_date {
   margin: 0px 0;
   border-style: solid;
   border-width: 1px 0 0 0;
-  /* padding: 14px 17px; */
-  border-color: #efefef;
+  border-color: #8787871a;
   /* border-radius: 0; */
   /* background: rgb(245 245 245); */
   /* background: linear-gradient(0deg, hsl(0 0% 96% / 1) 0%,  rgba(255,255,255,1) 100%); */
@@ -346,6 +345,7 @@ span.floor_num {color: #652929;}
     /* height: 100%; */
     max-width: 100%;
     /* max-height: 400px; */
+    border-style: none;
 }
 
 .threads {
@@ -362,8 +362,8 @@ span.floor_num {color: #652929;}
 .post_content a {
     text-decoration: none;
     color: #0088ff;
-    margin-left: 2px;
-    margin-right: 2px;
+    /* margin-left: 2px; */
+    /* margin-right: 2px; */
     /* display: inline-block; */
     /* word-wrap: break-word; */
 }
@@ -562,11 +562,11 @@ a.threadlist_title {
 
 
 .chosen {
-    background-color: #fffff6;
+    backdrop-filter: sepia(1);
 }
 
 .meta .date {
-    color: #bfbfbf;
+    color: #00000059;
 }
 
 .last_commented_date.date {
@@ -1619,7 +1619,7 @@ input[type="text"],input[type="password"] {
 }
 
 .padded {
-    padding: 14px 17px;
+    padding: 11px 17px;
 }
 
 .weekly_best_votes {
@@ -1674,7 +1674,7 @@ input[type="text"],input[type="password"] {
 }
 
 .foldable {
-    max-height: 500px;
+    max-height: 1000px;
     overflow: hidden;
 }
 
@@ -1731,7 +1731,8 @@ input[type="text"],input[type="password"] {
     width: 24px;
     height: 24px;
     vertical-align: middle;
-    border-radius: 13%;
+    border-radius: 10%;
+    margin: 2px;
 }
 
 
@@ -2188,12 +2189,135 @@ a.after_linkbox {
 
 
 .adbox {
-    width: 128px;
-    margin: 6px;
-    border-radius: 5px;
+    max-width: 96px;
+    margin: 4px;
+    border-radius: 3px;
     overflow: hidden;
 }
 
 .adbox a {
     display: flex;
+}
+
+.bigrednumber.green {
+    color: #3ea61282;
+}
+
+.adboxlist {
+    display: flex;
+    flex-direction: row;
+    flex-flow: wrap;
+}
+
+.reddish {color-interpolation-filters: srgb;}
+
+#runcode_result {
+    background-color: #f0f0f0;
+    padding: .5em;
+    line-height: 1.2;
+    font-family: monospace;
+    font-size: 10px;
+    max-height: 300px;
+    overflow-y: scroll;
+    white-space: pre;
+}
+
+#overlay_notif_list {
+    position: fixed;
+    /* display: none; */
+    /* width: 100%; */
+    padding: 0 10px;
+    height: 100%;
+    top: 46px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* background-color: rgb(189 140 0 / 5%); */
+    z-index: 2;
+    /* cursor: pointer; */
+    pointer-events: none;
+}
+
+.overlay_notif_box {
+    max-width: 600px;
+    margin: 4px auto;
+    background-color: #fffffff0;
+    padding: .3em;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    border-radius: 5px;
+    backdrop-filter: blur(2px);
+    border-style: solid;
+    border-color: #00000045;
+}
+
+.overlay_notif_icon {
+    /* width: 20px; */
+    /* height: 20px; */
+    /* margin-right: 10px; */
+}
+
+.overlay_notif_icon_inner {
+    width: 20px;
+    height: 20px;
+    background-color: green;
+    border-radius: 50%;
+    position: relative;
+    margin-right: 10px;
+}
+
+.lastone {
+    border-bottom-width: 1px;
+}
+
+.line_of_avatars {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.blacklist>* {
+    /* max-height: 10px; */
+    /* padding: 1px 0; */
+    /* overflow-y: clip; */
+    /* opacity: .2; */
+    display: none;
+    /* visibility: hidden; */
+}
+
+.blacklist:after {
+    content: "author blacklisted";
+    /* visibility: visible; */
+    font-size: 10px;
+    opacity: .2;
+    /* margin: auto; */
+    /* max-height: 10px; */
+    /* position: relative; */
+}
+
+.flex_center {
+    justify-content: center;
+}
+
+.line_below_item {
+    border-bottom-style: solid;
+    border-color: #8b8b8b2b;
+}
+
+.delusional {
+    /* background-color: #ff54b317; */
+}
+
+.delusional::after {
+    border-style: dashed;
+    border-width: 5px;
+    border-color: #ff54b370;
+    color: #ff54b37a;
+    padding: .5em;
+    /* width: fit-content; */
+    /* height: 100%; */
+    display: block;
+    position: absolute;
+    content: "delusional";
+    font-weight: bold;
 }

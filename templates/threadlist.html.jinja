@@ -73,7 +73,7 @@ for(var i=0;i<tabs.length;i++){k(i)}
 </div>
 {%endmacro%}
 
-
+{#-------------------------------------------------------------#}
 
 {%extends 'base.html.jinja'%}
 {%block content%}
@@ -168,6 +168,17 @@ for(var i=0;i<tabs.length;i++){k(i)}
   </div>
 
   <div class="box">
+    <div class="boxtitle" title='按照社会信用分'>
+      {{zhen('社会信用榜','Most Liked')}}
+      <a class="after_linkbox" href="/t/14123">{{
+        zhen('了解更多','Learn More')}}</a>
+    </div>
+    <div class="navigator_quote">
+      {{list_users(get_high_trust_score_users_random(12))}}
+    </div>
+  </div>
+
+  <div class="box">
     <div class="boxtitle" title='按照被点赞的次数'>
       {{zhen('高赞用户','Most Liked')}}
     </div>
@@ -186,12 +197,21 @@ for(var i=0;i<tabs.length;i++){k(i)}
       {{zhen('守望','Keep Watch')}} <a class="after_linkbox" href="/t/9387">{{
         zhen('了解更多','Learn More')}}</a>
     </div>
+
     <div class="bigrednumber">
-      {{days_since('2020-04-19')}}
+      {{days_between('2020-04-19','2021-08-15')}}
     </div>
     <div class="below_bigrednumber">
-      days since 2020-4-19
+      days between 2020-4-19<br> and 2021-8-15
     </div>
+
+    <div class="bigrednumber green">
+      {{days_since('2021-08-15')}}
+    </div>
+    <div class="below_bigrednumber">
+      days since 2021-8-15
+    </div>
+
   </div>
 
   <div class="box">
@@ -212,23 +232,7 @@ for(var i=0;i<tabs.length;i++){k(i)}
       <a class="after_linkbox" href="/translations">{{
         zhen('帮助翻译','Help Translate')}}</a>
     </div>
-    <div class="dropdown">
-      {% set al = trans.allowed_languages %}
-
-      <button class="dropbtn">{{
-          al[g.locale].name
-          if g.locale in al
-          else 'Not specified'
-        }}</button>
-
-      <div class="dropdown-content">
-        {% for lang in al %}
-          {% if not al[lang].name.startswith('*')%}
-            <a href="javascript:set_locale('{{lang}}')">{{al[lang].name}}</a>
-          {%endif%}
-        {% endfor %}
-      </div>
-    </div>
+    {{macros.language_selector()}}
   </div>
 
 
@@ -236,17 +240,21 @@ for(var i=0;i<tabs.length;i++){k(i)}
   {%if ads%}
   <div class="box">
     <div class="boxtitle">
-      广告 <a class="after_linkbox" href="/t/12386">关于广告</a>
+      {{zh('广告')}} <a class="after_linkbox" href="/t/12386">关于广告</a>
     </div>
-    {%for ad in ads%}
-      <div class="adbox">
-        <a href="{{ad.url}}" target="_blank"><img
-          src="{{ad.image}}"
-          alt="{{ad.alt}}"
-          style="width:100%;"
-          ></a>
-      </div>
-    {%endfor%}
+
+    <div class="adboxlist">
+      {%for ad in ads%}
+        <div class="adbox">
+          <a href="{{ad.url}}" title="{{ad.alt}}" target="_blank"><img
+            src="{{ad.image}}"
+            alt="{{ad.alt}}"
+            style="width:100%;"
+            ></a>
+        </div>
+      {%endfor%}
+    </div>
+
   </div>
   {%endif%}
 

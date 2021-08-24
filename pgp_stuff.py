@@ -1,14 +1,15 @@
 from commons import *
 import os
 
-init_directory('./temp')
+def pgp_check():
+    init_directory('./temp')
 
-# gpg must exist on your system
-status = os.system('gpg --version')
-if status==0:
-    print_up('gpg is found')
-else:
-    print_err('can\'t find gpg')
+    # gpg must exist on your system
+    status = os.system('gpg --version')
+    if status==0:
+        print_up('gpg is found')
+    else:
+        print_err('can\'t find gpg')
 
 def verify_publickey_message(pk, msg):
     # obtain a temp filename

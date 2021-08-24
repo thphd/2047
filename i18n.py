@@ -2,7 +2,7 @@ import inspect
 from cachetools.func import *
 from functools import *
 from cachy import stale_cache
-import re
+import re, os, time
 
 def pp(*a):
     assert len(a)>=2
@@ -20,9 +20,9 @@ allowed_languages_attribs = ala = [
     en *English en-us
 
     zh-cn 大陆中文 zh
-    zh-hk 香港中文 zh-tw zh
-    zh-tw 台灣中文 zh-hk zh
-    zh-sg 新加坡中文 zh
+    zh-hk 香港中文 zh-tw zh-cn
+    zh-tw 台灣中文 zh-hk zh-cn
+    zh-sg 新加坡中文 zh-cn
 
     en-us English(US) en-gb en
     en-gb English(UK) en-us en
@@ -74,8 +74,9 @@ def find_fallback_order(target_lang) -> list:
 for lang in allowed_languages:
     fbo = find_fallback_order(lang)
     allowed_languages[lang]['fallback_order'] = fbo
-    print(f'fallback_order for {lang} is {fbo}')
 
+    if __name__ == '__main__':
+        print(f'fallback_order for {lang} is {fbo}')
 
 class Translations:
     '''
@@ -108,6 +109,8 @@ class Translations:
         self.allowed_languages = allowed_languages
         self.get_current_locale = gcl
 
+        self.scanned = False
+
     @lru_cache(maxsize=1024)
     def fallback(self, target_lang:str, avail_langs:tuple) -> str:
         '''
@@ -137,7 +140,7 @@ class Translations:
 
         raise Exception(f'non of the fallbacks of {target_lang} found in avail_langs {avail_langs}')
 
-    def mark_for_translate_gen(self, lang, ci=1):
+    def mark_for_translate_gen(self, lang):
         '''
         returns a function that labels the enclosing text
         to be of a certain language and returns translations
@@ -150,7 +153,7 @@ class Translations:
         st = self.s
         st2 = self.s2
 
-        caller_index = ci
+        # caller_index = ci
 
         assert lang in self.allowed_languages
         # if 'mft' in self.allowed_languages[lang]:
@@ -245,6 +248,73 @@ class Translations:
         sal = self.allowed_languages
         return s in sal
 
+    def scan_dir_and_extract(self, dirname=None):
+        '''
+        scan files in dirname to extract translation calls then add to d
+        '''
+
+        t = time.time()
+        gcl = self.get_current_locale
+        self.get_current_locale = lambda:'zh'
+
+        sources = []
+        if dirname is None:
+            dirn = os.path.dirname(os.path.abspath(__file__))
+        else:
+            dirn = os.path.abspath(dirname)
+        print('trying to find sources in', dirn)
+
+        zh = self.mark_for_translate_gen('zh')
+        en = self.mark_for_translate_gen('en')
+
+        for (dirpath, dirnames, filenames) in os.walk(dirn):
+            files = [(os.path.join(dirpath,f),f) for f in filenames if
+                f.endswith('.py')
+                or f.endswith('.jinja')
+            ]
+            sources+=files
+            if not len(files):
+                dirnames.clear()
+
+        for fullpath, fn in sources:
+            with open(fullpath, 'r', encoding='utf-8') as f:
+                # print('reading', fn)
+                cont = f.read()
+            lines = cont.split('\n')
+
+            foundlist = []
+            for idx, line in enumerate(lines):
+                founds = re.findall(r'''(?<![a-z])(zhen|enzh|zh|en) *?\( *?((["'])(?:\\\3|(?:(?!\3)).)*(\3)) *?,? *?((["'])(?:\\\6|(?:(?!\6)).)*(\6))? *?\)''',
+                    line)
+
+                if founds:
+                    for group in founds:
+                        foundlist.append((idx+1, group))
+
+            for lineno, found in foundlist:
+                # print(fn, found[1-1], found[2-1], found[5-1])
+                f_name = found[0]
+                str1 = eval(found[1])
+                str2 = eval(found[4]) if found[4] else None
+
+                print(fn, lineno, f_name, str1, str2)
+
+                if f_name=='zhen':
+                    zh(str1,('en', str2))
+                elif f_name=='enzh':
+                    en(str1,('zh', str2))
+                elif f_name=='en':
+                    en(str1)
+                elif f_name=='zh':
+                    zh(str1)
+
+                self.s2[str1] = {'filename':fn, 'lineno':lineno}
+
+        print(f'took {time.time()-t:.2f}s to parse all occurences')
+
+        self.get_current_locale = gcl
+
+        self.scanned = True
 
 class DefaultTranslations(Translations):
     def __init__(self, *a, **kw):
@@ -335,12 +405,10 @@ if __name__ == '__main__':
     print(trans.list_allowed_languages())
 
     zh = trans.mark_for_translate_gen('zh')
-    zh2 = trans.mark_for_translate_gen('zh',ci=2)
     en = trans.mark_for_translate_gen('en')
-    en2 = trans.mark_for_translate_gen('en',ci=2)
 
-    zhen = lambda a,b:zh2(a,('en', b))
-    enzh = lambda a,b:en2(a,('zh', b))
+    zhen = lambda a,b:zh(a,('en', b))
+    enzh = lambda a,b:en(a,('zh', b))
 
     pp(trans.fallback, 'zh', ('en',))
     pp(trans.fallback, 'zh', ('en', 'zh-tw'))
@@ -362,3 +430,5 @@ if __name__ == '__main__':
     current_locale = 'zh'
 
     hello()
+
+    trans.scan_dir_and_extract()

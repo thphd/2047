@@ -24,8 +24,9 @@ print('written to', basename)
 if not args.upload:
     exit()
 
+nope = 'conversations histories messages logs passwords invitations exams answersheets operations notifications questions challenge_submissions'\
+.split(' ')
 def accept(fn):
-    nope = 'conversations histories messages logs passwords invitations exams answersheets operations notifications questions blacklist'.split(' ')
     # for obvious reasons
     for k in nope:
         if k in fn:

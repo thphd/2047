@@ -32,6 +32,10 @@
             <div class="linkbox_left">
               <span class='opaque5'>{{tn.lang}}:</span>
               <span>{{tn.string}}</span>
+
+              <a class='opaque5 padlr' href=
+                "javascript:update_translation('{{tn.string}}','{{tn.lang}}','{{tn.original}}')"
+                >修改</a>
             </div>
 
 
@@ -53,7 +57,11 @@
 
                 <span>{{format_time_datetime(tn.t_c)}}</span>
               {%else%}
-                <span>Hardcoded</span>
+                {%if tn.filename and tn.lineno%}
+                  <span>{{tn.filename}}:{{tn.lineno}}</span>
+                {%else%}
+                  <span>Hardcoded</span>
+                {%endif%}
               {%endif%}
             </div>
 

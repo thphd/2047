@@ -30,7 +30,8 @@ import mimetypes as mt
 from commons import *
 from aql import *
 wait_for_database_online()
-fix_view_loss(None)
+
+dispatch(fix_view_loss(None))
 
 from medals import get_medals, get_user_medals
 
@@ -38,14 +39,22 @@ import flask
 from flask import Flask, g, abort # session
 from flask import render_template, request, send_from_directory, make_response
 
-from api import api_registry, get_categories_info, get_url_to_post, get_url_to_post_given_details
+from api import api_registry, get_categories_info, get_url_to_post, get_url_to_post_given_details, create_all_necessary_collections
 from api import *
+
+dispatch(create_all_necessary_collections)
+dispatch(dispatch_database_updaters)
+
+from pgp_stuff import pgp_check
+dispatch(pgp_check)
 
 import i18n_api
 
 from session import save_session,load_session
 
 from app import app
+import leet
+import trust_score
 
 import sb1024_encryption
 
@@ -69,11 +78,19 @@ def hash_these(path_arr, pattern='*.*'):
     resource_files_hash = calculate_etag(resource_files_contents)
     return resource_files_hash
 
-resource_files_hash = hash_these(['templates/css/', 'templates/js/'])
-print_info('resource_files_hash:', resource_files_hash)
+resource_files_hash = ''
+images_resources_hash = ''
 
-images_resources_hash = hash_these(['templates/images/'], '*.png')
-print_info('images_resources_hash:', images_resources_hash)
+def rfh():
+    global resource_files_hash, images_resources_hash
+
+    hash_these(['templates/css/', 'templates/js/'])
+    print_info('resource_files_hash:', resource_files_hash)
+
+    hash_these(['templates/images/'], '*.png')
+    print_info('images_resources_hash:', images_resources_hash)
+
+dispatch(rfh)
 
 def route_static(frompath, topath, maxage=1800):
     @route('/'+frompath+'/<path:path>')
@@ -133,6 +150,8 @@ def create_all_necessary_indices():
         for ai in a:
             print('creating index on',coll,[ai])
             aqlc.create_index(coll, type='persistent', fields=[ai], unique=unique, sparse=False)
+
+    ciut('view_counters', ['targ'])
 
     ciut('threads', ['tid'])
     ciut('threads', ['bigcats','pinned'], unique=False)
@@ -385,6 +404,7 @@ class Paginator:
 
     def get_thread_list_uncached(self,
         locale='',
+        mode='',
         by='category',
         category='all',
         tagname='yadda',
@@ -432,7 +452,7 @@ class Paginator:
                     category=category
                 )
 
-            mode='thread' if category!=4 else 'thread_water'
+            mode = mode or ('thread' if category!=4 else 'thread_water')
 
         elif by=='tag':
             filter.append('filter @tagname in i.tags and i.delete==null', tagname=tagname)
@@ -940,7 +960,7 @@ def before_request():
 
         if random.random()>0:
             time.sleep(1+random.random()*2)
-            return ('rate limit exceeded', 429)
+            return ('rate limit exceeded ali very stupid', 429)
         elif random.random()>0.02:
             return (b'please wait a moment before accesing this page'+base64.b64encode(os.urandom(int(random.random()*256))), 200)
         else:
@@ -1003,6 +1023,8 @@ def get_all_threads():
     categories=get_categories_info()
 
     threadlist = remove_hidden_from_visitor(threadlist)
+    mark_blacklisted(threadlist)
+    threadlist = sink_deleted(threadlist)
 
     return render_template_g('threadlist.html.jinja',
         page_title='所有分类',
@@ -1162,11 +1184,13 @@ def get_category_threads(cid):
             abort(404, 'bigcat not exist')
         bigcatism = bigcats
 
-    tlds = iif(
-        cid!=4 and cid!='water',
-        thread_list_defaults,
-        thread_list_defaults_water,
+    tlds, mode = iif(
+        # cid!=4 and cid!='water' and cid!='inner',
+        cid=='main',
+        (thread_list_defaults, 'thread'),
+        (thread_list_defaults_water, 'thread_water'),
     )
+
 
     pagenumber = rai('page') or tlds['pagenumber']
     pagesize = rai('pagesize') or tlds['pagesize']
@@ -1177,6 +1201,7 @@ def get_category_threads(cid):
     # print(request.args)
 
     threadlist, pagination = pgnt.get_thread_list(
+        mode=mode,
         by='category', category=cid,
         sortby=sortby,
         order=order,
@@ -1209,6 +1234,9 @@ def get_category_threads(cid):
 
     if cid=='main':
         threadlist = remove_hidden_from_visitor(threadlist)
+
+    mark_blacklisted(threadlist)
+    threadlist = sink_deleted(threadlist)
 
     return render_template_g('threadlist.html.jinja',
         page_title=catobj['name'],
@@ -1374,6 +1402,8 @@ def get_thread(tid):
         t=thobj,
         # threadcount=count,
         viewed_target='thread/'+str(tid) if not user_is_self else '',
+
+        viewed_target_v2 = thobj['_id'],
 
     )
 
@@ -1671,6 +1701,16 @@ def _userpage(uid):
     return length(for u in users filter u.trust_score>@pr return u)''',
     silent=True,pr=key(uobj, 'trust_score')or 0)[0]
 
+    if key(uobj, 'delete'):
+        ban_information = aql('''
+        for i in operations filter i.op=='ban_user' and i.target==@uid
+        sort i.t_c desc
+        return i
+        ''', silent=True, uid=uid)
+    else:
+        ban_information = []
+
+    uobj['ban_information'] = ban_information
 
     invitations = None
     pagination = None
@@ -1704,8 +1744,10 @@ def _userpage(uid):
 
     if not user_is_self:
         viewed_target='user/'+str(uobj['uid'])
+        viewed_target_v2 = uobj['_id']
     else:
         viewed_target=''
+        viewed_target_v2=''
 
     return render_template_g('userpage.html.jinja',
         page_title=uobj['name'],
@@ -1715,6 +1757,7 @@ def _userpage(uid):
 
         sc_ts = sc_ts, # showcase_threads
         viewed_target=viewed_target,
+        viewed_target_v2=viewed_target_v2,
         pagination = pagination,
     )
 
@@ -1998,6 +2041,26 @@ def notification_page():
 
 def e(s): return make_response({'error':s}, 500)
 
+
+rld = {}
+def ratelimit(uid, k=1):
+    global rld
+    tn = time.time()
+    if uid not in rld:
+        rld[uid] = [tn, 0]
+
+    lt, ls = rld[uid]
+
+    dt = tn-lt
+
+    ls *= 0.95**dt
+    ls += k
+
+    rld[uid] = [tn, ls]
+
+    return ls
+
+
 @app.route('/api', methods=['GET', 'POST'])
 def apir():
     # method check
@@ -2039,8 +2102,8 @@ def apir():
         if request.referrer and request.referrer.startswith(request.host_url):
             pass
         else:
-            log_err(request.referrer)
-            log_err(request.host_url)
+            log_err('referrer:'+str(request.referrer))
+            log_err('hosturl:'+request.host_url)
             return e('use a referrer field or the request will be considered an CSRF attack')
 
     # is the function registered?
@@ -2048,10 +2111,24 @@ def apir():
     if action not in api_registry:
         return e('action function not registered')
 
+    rate = ratelimit(g.selfuid, 1)
+    if g.selfuid>0 and rate>5:
+        log_err(f'api rate limit: {g.selfuid} {g.current_user and g.current_user["name"]}\naction: {action}\n{j}')
+
+        aql('insert @i into logs', i={
+            'event':'ratelimit',
+            't_c':time_iso_now(),
+            'uid':g.selfuid,
+            'name':g.current_user and g.current_user['name'],
+            'action':action,
+            'body':j,
+        })
+        return e("ratelimit exceeded")
+
     # thread-local access to json body
     g.j = j
 
-    printback = action not in 'ping viewed_target browser_check render_poll'.split(' ') and 'render' not in action.lower()
+    printback = action not in 'ping viewed_target viewed_target_v2 browser_check render_poll'.split(' ') and 'render' not in action.lower()
 
     if printback:
         print_up('API >>', j)
@@ -2348,6 +2425,8 @@ def entjsonwfield(key,field):
 @app.route('/member/<string:uname>/e/<string:ty>')
 def pkey_uname(uname, ty):
     u = get_user_by_name(uname)
+    if not u:
+        raise Exception('user not exist')
     return pkey(u['uid'], ty)
 
 @app.route('/u/<int:uid>/e/<string:ty>')
@@ -2357,6 +2436,8 @@ def pkey_uid(uid, ty):
 @app.route('/public_key/<string:uname>')
 def pkey_un(uname):
     u = get_user_by_name(uname)
+    if not u:
+        raise Exception('user not exist')
     return pkey(u['uid'],'public_key')
 
 def doc2resp(doc):
@@ -2395,7 +2476,7 @@ def show_links():
         links = linksd,
     )
 
-@stale_cache(maxsize=128, ttr=3, ttl=1800)
+@stale_cache(maxsize=256, ttr=3, ttl=1800)
 def get_oplog(target=None, raw=False):
     query = f'''
     for i in operations

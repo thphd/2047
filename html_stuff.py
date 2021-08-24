@@ -142,7 +142,9 @@ def sanitizeAttrValue(tag, name, value):
 
     elif name=='class':
         if vl in ['youtube-player','youtube-player-unprocessed',
-        'poll-instance-unprocessed','comment_section_unprocessed','yellow','parody']:
+        'poll-instance-unprocessed','comment_section_unprocessed',
+        'twitter-tweet',
+        'yellow','parody']:
             return value
         if vl.startswith('lang'):
             return value

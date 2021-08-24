@@ -3,7 +3,8 @@
 {%macro titlify(u)%}{%
   if u.name%}{{u.name}} ({{u.uid}})
 {{spf(zhen('被赞 $0 次','Liked $0 Time$es0'))(u.nlikes or 0)}}
-{{zh('声望')}} {{pagerank_format(u) or 0}}{%endif
+{{zh('声望')}} {{pagerank_format(u) or 0}}
+{{zh('社会信用分')}} {{trust_score_format(u) or 0}}{%endif
 %}{%endmacro%}
 
 {%macro avatar_url(u)
@@ -11,7 +12,7 @@
   %}{%set aurl =
     ('/avatar/'~u.uid~'.png'~ etag_postfix)
 
-    if u.has_avatar!=False
+    if u.has_avatar
 
     else '/images/avatar-max-img.png'
   %}{{aurl}}{%endmacro%}
@@ -81,9 +82,15 @@
   {%endfor%}
 {%endmacro%}
 
+{%macro daily_quota(u)%}
+  <span>
+    ({{daily_number_posts_cached(u.uid)}}/{{daily_limit_posts_cached(u.uid)}},
+    {{daily_number_threads_cached(u.uid)}}/{{daily_limit_threads_cached(u.uid)}})
+  </span>
+{%endmacro%}
 
 {# one line of post #}
-{%macro post(p, metas, avatar_user=False, item_id=False, leftmost=False, left=True)%}
+{%macro post(p, metas, avatar_user=False, item_id=False, leftmost=False, left=True, classes='')%}
 
 {% set _idt = p.tid if 'threadlist' in metas %}
 {% set _ide = 'editor' if 'editor' in metas %}
@@ -91,7 +98,13 @@
 
 {% set _ids = (item_id or _ide or _idt or _idp) %}
 
-<div class="threadlistitem padded{{ ' deleted' if ((p.delete or p.blacklist) and t) else ''}} {{'conv_delete' if p.delete and 'conversation' in metas else ''}} {{'thread_header' if 'thread_header' in metas else ''}} {{'unread' if p.unread else ''}}" id="{{_ids}}">
+<div class="{{classes}} threadlistitem padded {{
+      'delusional' if (p.delusional) else ''}} {{
+      'deleted' if (p.delete and t) else '' }} {{
+      'conv_delete' if p.delete and 'conversation' in metas else '' }} {{
+      'thread_header' if 'thread_header' in metas else '' }} {{
+      'unread' if p.unread else ''
+      }}" id="{{_ids}}">
 
     {%if 'thread_votes' in metas%}
     <div class="leftmost">
@@ -520,6 +533,10 @@
     <a class='adminstuff undelete' href="javascript:mark_delete('{{'u'~targ}}')">{{zhen('取消删除','Undelete')}}</a>
 
   {%endif%}
+
+  {%if mode=='post'%}
+    <a class='adminstuff viewcode' href="/oplog/{{targ}}">{{zhen('管理记录','Oplog')}}</a>
+  {%endif%}
 {%endif%}
 {%endmacro%}
 
@@ -555,8 +572,10 @@
   <div class="post_content {{'foldable' if foldable else ''}}">
     {%if p.delete%}
       <s>{{zhen('标记为删除','Marked as deleted')}}</s>
+    {#
     {%elif p.blacklist%}
       <s>{{zhen('此人被你黑名单','User in your blacklist')}}</s>
+    #}
     {%else%}
       {{(convert_markdown(p.content or '')|safe)}}
     {%endif%}
@@ -587,9 +606,11 @@
   {%endif%}
 {%endmacro%}
 
-{# one line of post, used in postlist without a thread #}
+{# one line of post, used in postlist with/without a thread #}
 {%macro post_postlist_threadless(p, in_thread=False)%}
-  {%call post(p, metas=[], avatar_user=p.user, item_id=p._key)%}
+  {%call post(p, metas=[], avatar_user=p.user, item_id=p._key,
+      classes = 'blacklist' if p.blacklist else ''
+    ) %}
 
   <div class="meta upper">
     {# publisher #}
@@ -704,7 +725,8 @@
 {%macro post_threadlist(t)%}
   {%call post(t, metas=[],
     avatar_user=t.user, item_id=t.tid,
-    leftmost=leftmost_vote(t))%}
+    leftmost=leftmost_vote(t),
+    classes='blacklist' if t.blacklist else '')  %}
 
   {%set tid = t.tid%}
   {%set turl = '/t/' ~ tid ~
@@ -902,22 +924,33 @@
     }}</a>
     {%endif%}
 
-    {%if pagerank_format(u) %}
-    <a href='/u/{{u.uid}}' class="pagerank">{{
-      spf(zhen('声望 $0','Rep $0'))(pagerank_format(u))
-    }}</a>
-      {% set total_activities = ((u.nthreads or 0) + (u.nposts or 0))%}
-      {% set trust_factor = 1 - 0.95**total_activities %}
-      {% set unit_pr = u.pagerank*1000/total_activities %}
-
-      {%if g.selfuid==5108 and total_activities %}
-          <span>rep/(t+p): {{
-            '%.3f'|format(unit_pr )
-          }} tf {{'%.3f'|format(trust_factor)
-        }} k {{'%.3f'|format(trust_factor*unit_pr)}}</span>
+    {%if u.pagerank or u.pagerank_recent %}
+      {%if pagerank_format(u) %}
+      <a href='/u/{{u.uid}}' class="pagerank">{{
+        spf(zhen('声望 $0','Rep $0'))(pagerank_format(u))
+      }}</a>
       {%endif%}
 
-      {% set trust_score = (((u.trust_score or 0)*1000*1000)|int)%}
+      {%if g.selfuid==5108%}
+        {{daily_quota(u)}}
+      {%endif%}
+
+      {% set unit_pr = (u.total_activities or 0) and
+         ((u.pagerank_recent or 0)/(u.total_activities or 0)) %}
+
+      {%if g.selfuid==5108 %}
+          <span style='font-size:9px;'>
+            {# rp {{'%.3f'|format(u.pagerank*1000)}} #}
+            repr {{'%.3f'|format((u.pagerank_recent or 0)*1000)}}
+            /actv {{'%.3f'|format(u.total_activities or 0)}}
+            = {{'%.3f'|format(unit_pr*1000)}}
+            *tf({{'%.3f'|format(u.tawvp or 0)}}){{'%.3f'|format(u.trust_factor or 0)}}
+            =ts(calc) {{'%.3f'|format((u.trust_factor or 0)*unit_pr*1000000)}}
+            ts {{'%.3f'|format((u.trust_score or 0)*1000000)}}
+          </span>
+      {%endif%}
+
+      {% set trust_score = trust_score_format(u)%}
       {%if trust_score%}
         <span>{{zh('信用分')}} {{trust_score}}</span>
       {%endif%}
@@ -1254,4 +1287,24 @@
   </div>
 
 </div>
+{%endmacro%}
+
+{%macro language_selector()%}
+  <div class="dropdown">
+    {% set al = trans.allowed_languages %}
+
+    <button class="dropbtn">{{
+        al[g.locale].name
+        if g.locale in al
+        else 'Not specified'
+      }}</button>
+
+    <div class="dropdown-content">
+      {% for lang in al %}
+        {% if not al[lang].name.startswith('*')%}
+          <a href="javascript:set_locale('{{lang}}')">{{al[lang].name}}</a>
+        {%endif%}
+      {% endfor %}
+    </div>
+  </div>
 {%endmacro%}

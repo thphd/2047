@@ -8,20 +8,27 @@
 {%endif%}
 
 {%for medal in medals%}
-<div style="text-align: center;" class=" padlr" id="{{medal.name}}">
-  <p><span style="font-size:26px;">{{medal.name}}</span></p>
-  <p>{{medal.brief}}</p>
-</div>
+  <div class="line_below_item">
+    <div class="padlr flex_center">
 
-<div class="threadlist">
-  {%for u in medal.listusers%}
-  {%if u%}
-    {{macros.post_userlist(u)}}
-  {%else%}
+      <div style="text-align: center;" id="{{medal.name}}">
+        <p><span style="font-size:26px;">{{medal.name}}</span></p>
+        <p>{{medal.brief}}</p>
+      </div>
 
-  {%endif%}
-  {%endfor%}
-</div>
+
+      <div class="line_of_avatars flex_center">
+        {%for user in medal.listusers%}
+          {{macros.avatar(user, class='follower_avatar', no_decoration=True)}}
+        {%endfor%}
+      </div>
+
+      <br>
+
+
+    </div>
+  </div>
+
 
 {%endfor%}
 {%endblock%}

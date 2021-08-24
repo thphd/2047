@@ -1,0 +1,44 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+
+<div class="threadlistitem">
+    <div class="post_content padded">
+
+      <p>下表根据当前计算规则自动生成</p>
+
+      <p>关于社会信用分的更多信息在<a href="/t/14123">这里</a></p>
+
+      <p>全站信用分统计在<a href="/u/all?sortby=trust_score">这里</a></p>
+
+      <p>
+        <table>
+          <thead>
+            <th>社会信用分</th>
+            <th>每48h评论数</th>
+            <th>每48h主题数</th>
+          </thead>
+
+          <tbody>
+            {%for ts, lp, lt, is_me in limits %}
+
+              {%if is_me%}
+              <tr style="background-color:#fed;">
+                {%else%}
+                <tr >
+
+                {%endif%}
+                <td >{{ts}}{{'<' if is_me else ''}}</td>
+                <td >{{lp}}</td>
+                <td >{{lt}}</td>
+              </tr>
+            {%endfor%}
+          </tbody>
+
+        </table>
+
+
+      </p>
+
+    </div>
+</div>
+{%endblock%}

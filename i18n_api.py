@@ -118,6 +118,9 @@ def at2d2():
 
 @stale_cache(ttr=3, ttl=120) # code to database form
 def d2at():
+    if not trans.scanned:
+        trans.scan_dir_and_extract()
+
     d = trans.d
     l = []
     for original,langs in d.items():
@@ -131,9 +134,14 @@ def d2at():
         # fn,ln  = ts2o['filename'], ts2o['lineno']
 
         for lang, string in langs.items():
-            groups.append(
-                dict(lang=lang, string=string))
-                # dict(lang=lang, string=string, filename=fn, lineno=ln))
+            nd = dict(lang=lang, string=string)
+            if original in trans.s2:
+                nd['filename'] = trans.s2[original]['filename']
+                nd['lineno'] = trans.s2[original]['lineno']
+                nd['original'] = original
+                # dict(lang=lang, string=string, filename=fn, lineno=ln)
+            groups.append(nd)
+
     return l
 
 trans.get_d2 = at2d2

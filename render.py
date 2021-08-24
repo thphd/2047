@@ -96,7 +96,14 @@ def replace_ytb_f(match):
 
     ts = ('?t='+str(ts)) if ts else ''
 
-    return f'''<div class="youtube-player-unprocessed" data-id="{vid}" data-ts="{ts}"></div><a target="_blank" href="https://youtu.be/{vid}{ts}">去YouTube上播放</a>'''.format(vid)
+    return f'''<a target="_blank" href="https://youtu.be/{vid}{ts}">https://youtu.be/{vid}{ts}</a><div class="youtube-player-unprocessed" data-id="{vid}" data-ts="{ts}"></div>'''.format(vid)
+
+twitter_extractor_regex = r"^(https://twitter.com/[a-zA-Z0-9_]*?/status/\d+).*?$"
+def replace_twitter_f(match):
+    turl = match.group(1)
+
+    k = f'''<a href="{turl}">{turl}</a><blockquote class="twitter-tweet" data-conversation="true" data-dnt="true"><a href="{turl}">{turl}</a></blockquote>'''
+    return k
 
 def replace_soundcloud_f(match):
 
@@ -112,6 +119,10 @@ def replace_pincong(s):
 def replace_ytb(s):
     s = re.sub(combined_youtube_extractor_regex,
         replace_ytb_f, s, flags=re.MULTILINE)
+    return s
+
+def replace_twitter(s):
+    s = re.sub(twitter_extractor_regex, replace_twitter_f, s, flags=re.M)
     return s
 
 @lru_cache(maxsize=4096)
@@ -185,6 +196,7 @@ elif 1:
         # s = replace_ats(s)
         # s = replace_pincong(s)
         s = replace_ytb(s)
+        s = replace_twitter(s)
         s = replace_polls(s)
         # html = mistletoe.markdown(s)
         html, _collected = frend(s)

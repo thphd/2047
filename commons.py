@@ -1,15 +1,4 @@
-# useful definitions in one place
-
-import os, hashlib, binascii as ba
-import base64, re
-import time
-from colors import *
-# from functools import lru_cache
-
-from cachetools.func import *
-from cachy import stale_cache
-
-def iif(a,b,c):return b if a else c
+from commons_static import *
 
 import flask
 from flask import Flask, g, abort # session
@@ -49,56 +38,36 @@ def ras(k):
     v = key(request.args,k)
     return str(v) if v else ''
 
-import json
-def obj2json(obj):
-    return json.dumps(obj, ensure_ascii=False, sort_keys=True, indent=2)
 
-# @stale_cache(ttr=1, ttl=30)
-def readfile(fn, mode='rb', *a, **kw):
-    with open(fn, mode, *a, **kw) as f:
-        return f.read()
+# translations
 
-def writefile(fn, data, mode='wb', *a, **kw):
-    with open(fn,mode,*a,**kw) as f:
-        f.write(data)
+from i18n import DefaultTranslations, spf
 
-def removefile(fn):
+def get_current_locale():
     try:
-        os.remove(fn)
-    except Exception as e:
-        print(e)
-        print('failed to remove', fn)
-    else:
-        return
-
-import threading
-
-def dispatch(f):
-    t = threading.Thread(target=f, daemon=True)
-    t.start()
-
-def init_directory(d):
-    try:
-        os.mkdir(d)
-    except FileExistsError as e:
-        print_err('directory {} already exists.'.format(d), e)
-    else:
-        print_info('directory {} created.'.format(d))
-
-def key(d, k):
-    if k in d:
-        return d[k]
-    else:
-        return None
-
-def intify(s, name=''):
-    try:
-        return int(s)
+        locale = g.locale if hasattr(g, 'locale') else 'zh'
     except:
-        if s:
-            # print_err('intifys',s,name)
-            pass
-        return 0
+        locale = 'zh'
+
+    if locale not in trans.allowed_languages:
+        locale = 'zh'
+
+    return locale
+def get_current_locale(): return g.locale
+
+trans = DefaultTranslations(get_current_locale)
+dict_of_languages = {
+    k:v['name']
+    for k,v in trans.allowed_languages.items()
+    if not v['name'].startswith('*') or k=='expl'
+}
+if __name__ == '__main__':
+    print(trans.list_allowed_languages())
+
+zh = zh_ = trans.mark_for_translate_gen('zh')
+en = en_ = trans.mark_for_translate_gen('en')
+zhen = lambda a,b:zh_(a,('en', b))
+enzh = lambda a,b:en_(a,('zh', b))
 
 # everything time related
 
@@ -152,6 +121,9 @@ def days_since(ts):
     dt = now - then
     return dt.days
 
+def days_between(ts0, ts1):
+    return abs(days_since(ts0) - days_since(ts1))
+
 def seconds_since(ts):
     then = dfshk(ts)
     now = dtn(working_timezone)
@@ -184,19 +156,22 @@ def format_time_relative_fallback(s):
     ps = int(past.total_seconds())
 
     if past < dttd(seconds=60):
-        return '几秒前'
+        return zhen('几秒前','seconds ago')
     if past < dttd(seconds=3600):
-        return str(ps // 60) + '分钟前'
+        return spf(zhen('$0 分钟前','$0 min ago'))(str(ps // 60))
     if past < dttd(seconds=3600*24):
-        return str(ps // 3600) + '小时前'
+        return spf(zhen('$0 小时前','$0 h ago'))(str(ps // 3600))
     if past < dttd(seconds=86400*200):
         # days = str((ps // 86400))
         # return days + '天前'
-        return f'{dt.month}月{dt.day}日'
+        # return f'{dt.month}月{dt.day}日'
+        return spf(zhen('$0月$1日','$em0 $1'))(dt.month, dt.day)
     # if past < dttd(seconds=86400*365):
 
     else:
-        return f'{dt.year}年{dt.month}月{dt.day}日'
+        # return f'{dt.year}年{dt.month}月{dt.day}日'
+        return spf(zhen('$0年$1月$2日',"$em1 $2 '$yy0"))(
+            dt.year, dt.month, dt.day)
         return format_time_dateonly(s)
 
 def format_time_absolute_fallback(s):
@@ -263,13 +238,6 @@ def check_hash_salt_pw(hashstr, saltstr, string):
     return chash == hexstr2bytes(hashstr)
 
 from render import *
-
-def get_environ(k):
-    k = k.upper()
-    if k in os.environ:
-        return os.environ[k]
-    else:
-        return None
 
 # render with globals
 from flask import render_template
@@ -405,21 +373,21 @@ def linkify(s):
 common_links = linkify('''
 新手指南 /t/7623 如题
 用户名录 /u/all 本站用户名册
-评论集合 /p/all 全站评论集合
+社会信用分 /u/all?sortby=trust_score 试点项目
+创建投票 /t/9564 应用户强烈要求
 老用户 /t/7108 原2049用户取回账号方式
 勋章墙 /medals 荣光
-邀请码 /t/7109 获取邀请码
+黑名单 /t/9807 真/言论自由
 删帖 /c/deleted 本站被删帖子
 管理员 /t/7408 成为管理员
+l337 /leet 做题家
 数据备份 /t/7135 论坛数据库备份
 服务条款 /t/7110 违者封号
 题库 /questions 考试题目编撰
 实体编辑 /entities 公钥上传/其他杂项数据
-创建投票 /t/9564 应用户强烈要求
 链接 /links 2047网址导航
 语录 /quotes 你不是一个人在战斗
 oplog /oplog 管理日志
-黑名单 /t/9807 真/言论自由
 英雄 /hero BE4的实验性项目
 维尼查 /ccpfinder 镰和锤子不可兼得
 云上贵州 /guizhou 年轻人不讲武德
@@ -438,7 +406,7 @@ XsDen https://xsden.info/ 講粵語嘅討論區
 英雄 https://nodebe4.github.io/hero/ 人民英雄永垂不朽
 迷雾通 https://community.geph.io/ 迷雾通官方交流社区
 2049备份 https://2049bbs.github.io/ 本站前身
-昌维 https://changwei.me/ changwei
+1亩3分地 https://www.1point3acres.com/ 马基雅维利
 ''')
 
 site_name='2047论坛，自由人的精神角落'
@@ -493,9 +461,9 @@ def can_do_to(u1, operation, u2id):
 def parse_target(s, force_int=True):
     s = s.split('/')
     if len(s)!=2:
-        raise Exception('target string failed to split')
+        raise Exception(en('target string failed to split', zh='目标字符串分割失败'))
     if not (len(s[0]) and len(s[1])):
-        raise Exception('splitted parts have zero length(s)')
+        raise Exception(en('splitted parts have zero length(s)', zh='分割后其中一部分长度为零'))
 
     targ = s[0]
     _id = int(s[1]) if force_int else s[1]
@@ -515,6 +483,10 @@ def is_pincong_org():
 def pagerank_format(u):
     pr = key(u, 'pagerank') or 0
     return int(pr*1000)
+
+def trust_score_format(u):
+    ts = key(u, 'trust_score') or 0
+    return int(ts*1000000)
 
 def redact(s):
     out = []
@@ -676,6 +648,7 @@ def get_links():
             if not hasstr('name') or not hasstr('url'): continue
 
             dl = {}
+            dl['_key'] = link['_key']
             dl['name'] = obj['name']
             dl['url'] = obj['url']
 
@@ -786,6 +759,52 @@ def get_water_threads():
 def is_water_thread(tid):
     wt = get_water_threads()
     return tid in wt
+
+@stale_cache(ttr=600, ttl=1800)
+def get_high_trust_score_users():
+    l1 = aql('''
+        for u in users
+        sort u.trust_score desc
+        limit 500
+        filter u.delete==null and u.trust_score>0
+        return u
+    ''', silent=True)
+    l2 = l1.map(lambda u:u['trust_score'])
+    return l1,l2
+
+@stale_cache(ttr=5, ttl=60)
+def get_high_trust_score_users_random_pre(k):
+    htsu, scores = get_high_trust_score_users()
+    scores = scores.map(lambda k:math.sqrt(k))
+    idxes = random.choices(list(range(len(htsu))), weights=scores, k=2*k)
+
+    d = {}
+    l = []
+    for i in idxes:
+        if i not in d:
+            l.append(i)
+            d[i] = True
+        if len(l)>=k:
+            break
+
+    htsu = [htsu[idx] for idx in l]
+    return htsu
+
+def get_high_trust_score_users_random(k):
+    htsu = get_high_trust_score_users_random_pre(k)
+    if g.current_user:
+        shouldinsert = True
+        for i in htsu:
+            if i['uid']==g.selfuid:
+                shouldinsert = False
+                break
+        if shouldinsert:
+            htsu.append(g.current_user)
+
+    htsu = sorted(htsu, key=lambda u:-u['trust_score'])
+    htsu = htsu.map(
+        lambda d:{'user':d, 'n': trust_score_format(d)})
+    return htsu
 
 if __name__ == '__main__':
     print('filtgen')
