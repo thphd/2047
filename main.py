@@ -28,6 +28,8 @@ import requests as r
 import mimetypes as mt
 
 from commons import *
+print = qprint
+
 from aql import *
 wait_for_database_online()
 
@@ -84,10 +86,10 @@ images_resources_hash = ''
 def rfh():
     global resource_files_hash, images_resources_hash
 
-    hash_these(['templates/css/', 'templates/js/'])
+    resource_files_hash = hash_these(['templates/css/', 'templates/js/'])
     print_info('resource_files_hash:', resource_files_hash)
 
-    hash_these(['templates/images/'], '*.png')
+    images_resources_hash = hash_these(['templates/images/'], '*.png')
     print_info('images_resources_hash:', images_resources_hash)
 
 dispatch(rfh)
@@ -95,6 +97,8 @@ dispatch(rfh)
 def route_static(frompath, topath, maxage=1800):
     @route('/'+frompath+'/<path:path>')
     def _(path):
+        path = re.split('v=.*?\/', path).join('')
+
         cc = topath+'/'+path
         if not os.path.exists(cc):
             abort(404, 'File not found')
@@ -141,14 +145,14 @@ def create_all_necessary_indices():
     # create index
     def ci(coll,aa):
         for a in aa:
-            print('creating index on',coll,a)
+            qprint('creating index on',coll,a)
             aqlc.create_index(coll, type='persistent', fields=a,
                 unique=False,sparse=False)
 
     # create index with unique=True
     def ciut(coll, a, unique=True):
         for ai in a:
-            print('creating index on',coll,[ai])
+            qprint('creating index on',coll,[ai])
             aqlc.create_index(coll, type='persistent', fields=[ai], unique=unique, sparse=False)
 
     ciut('view_counters', ['targ'])
@@ -1421,7 +1425,7 @@ def sink_deleted(postlist):
     newlist = []
     badapple = []
     for i in postlist:
-        if key(i, 'blacklist') or key(i, 'delete'):
+        if key(i, 'blacklist') or key(i, 'delete') or key(i, 'spam'):
             badapple.append(i)
         else:
             newlist.append(i)

@@ -27,7 +27,7 @@ if not is_pincong_org() else
   {#<meta http-equiv="onion-location" content="{{tor_address}}{{path_url}}" />#}
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/css/normalize.css">
-  <link rel="stylesheet" href="/css/styles.css?v={{resource_files_hash}}">
+  <link rel="stylesheet" href="/css/v={{resource_files_hash}}/styles.css">
   <link rel="stylesheet" href="/css/labnol_youtube.css">
   {%if not is_pincong_org()%}
     <link rel="icon" type="image/png" href="{{icon_url}}">
@@ -329,7 +329,7 @@ if not is_pincong_org() else
   <div id='viewed_target_v2' style='display:none;'>{{viewed_target_v2}}</div>
   <div id='browser_check' style='display:none;'>{{'1' if g.using_browser else ''}}</div>
   <script src="/js/md5.js" charset="utf-8"></script>
-  <script src="/js/util.js?v={{resource_files_hash}}" charset="utf-8"></script>
+  <script src="/js/v={{resource_files_hash}}/util.js" charset="utf-8"></script>
 
   {# code highlighting #}
   <link rel="stylesheet" href="/highlight/styles/atom-one-light.css">

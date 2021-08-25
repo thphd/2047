@@ -16,7 +16,7 @@ challenge_props =cprops= '''
     .map(lambda l:l.split(':')).filter(lambda l:len(l)==2) \
     .map(lambda l:l[0].strip())
 
-print(cprops)
+print_info(cprops)
 props_exp = r'^(names):.*?$'.replace('names', cprops.join('|'))
 
 def parse_leet_challenge(fn):
@@ -161,7 +161,7 @@ class LeetChallenge:
             try:
                 res = eat(i)
             except Exception as e:
-                print(e)
+                print_err(e)
                 raise Exception(f'输入格式不合法: "{i}"')
             else:
                 if res:
@@ -282,8 +282,8 @@ class LeetChallenges:
 
         # print(fns, fullfns)
         for fn, fullfn in zip(fns, fullfns):
-            print(fn, fullfn)
-            
+            print_up(fn, fullfn)
+
             lc = LeetChallenge(fullfn)
 
             forefn = fn.split('_')[0]

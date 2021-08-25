@@ -639,7 +639,6 @@ def _():
     spam_detected = False
     if is_spam(content):
         spam_detected = True
-        content = "<span style='color:red;'>[detected as spam by our AI]</span>\n\n" + content
 
         if current_user_doesnt_have_enough_likes():
             aql('update @u with @u in users', u={
@@ -715,6 +714,10 @@ def _():
             tid=tid,
             _key=str(new_pid),
         )
+
+        if spam_detected:
+            newpost['spam']=True
+
         inserted = aql('insert @p in posts return NEW', p=newpost)[0]
         inserted['content']=None
 
@@ -790,9 +793,6 @@ def _():
         title = es('title').strip()
         title_length_check(title)
 
-        if spam_detected:
-            title = '[SPAM]' + title
-
         mode = es('mode')
         mode = None if mode!='question' else mode
         assert mode in [None, 'question']
@@ -854,6 +854,7 @@ def _():
             cid = cid,
             title = title,
         )
+        if spam_detected: newthread['spam']=True
 
         inserted = aql('insert @p in threads return NEW', p=newthread)[0]
         inserted['content']=None

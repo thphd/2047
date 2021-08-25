@@ -47,3 +47,6 @@ ads/
 
 database_up_python_main.bat
 leet_challenges/
+
+spamgoods.*
+spamdb.*

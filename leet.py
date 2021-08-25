@@ -99,7 +99,7 @@ def _():
     lcn = es('challenge_name')
     is_submission = eb('is_submission')
 
-    print(input_text)
+    print_info(input_text)
 
     if lcn not in lcs.d:
         raise Exception('challenge not found')

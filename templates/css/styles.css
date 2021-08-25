@@ -2321,3 +2321,11 @@ a.after_linkbox {
     content: "delusional";
     font-weight: bold;
 }
+
+.spam {
+    border-width: 2px;
+    border-style: dashed;
+    border-color: #ff00c32b;
+    /* background-color: #ff00001f; */
+    /* opacity: .5; */
+}

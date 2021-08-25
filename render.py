@@ -1,6 +1,6 @@
 from cachetools.func import *
 from cachy import stale_cache
-
+import threading
 import re
 
 # extract non-markdown urls
@@ -125,10 +125,16 @@ def replace_twitter(s):
     s = re.sub(twitter_extractor_regex, replace_twitter_f, s, flags=re.M)
     return s
 
+# @lru_cache(maxsize=4096)
+# def extract_ytb(s):
+#     groups = re.findall(combined_youtube_extractor_regex, s, flags=re.MULTILINE)
+#     return [g[0] or g[1] for g in groups]
+
 @lru_cache(maxsize=4096)
 def extract_ytb(s):
-    groups = re.findall(combined_youtube_extractor_regex, s, flags=re.MULTILINE)
-    return [g[0] or g[1] for g in groups]
+    res, collected = frend(s)
+    return collected['youtube_players']
+
 youtube_extraction_test_string="""
 youtu.be/DFjD8iOUx0I
 https://youtu.be/DFjD8iOUx0I
@@ -190,20 +196,20 @@ elif 1:
 
     # @lru_cache(maxsize=2048)
     def just_markdown(s):
-        s = replace_pal(s)
-        s = replace_tal(s)
+        # s = replace_pal(s)
+        # s = replace_tal(s)
 
         # s = replace_ats(s)
         # s = replace_pincong(s)
-        s = replace_ytb(s)
-        s = replace_twitter(s)
-        s = replace_polls(s)
+        # s = replace_ytb(s)
+        # s = replace_twitter(s)
+        # s = replace_polls(s)
         # html = mistletoe.markdown(s)
         html, _collected = frend(s)
 
         return html
 
-    @lru_cache(maxsize=512)
+    @lru_cache(maxsize=1024)
     def convert_markdown(s):
         out = just_markdown(s)
 
@@ -253,6 +259,7 @@ import mistletoe
 from html_stuff import parse_html, sanitize_html
 from mistletoe import Document
 from mistletoe.span_token import SpanToken,RawText
+from mistletoe.block_token import BlockToken
 from mistletoe.html_renderer import HTMLRenderer
 from mistletoe.ast_renderer import ASTRenderer
 
@@ -263,15 +270,98 @@ class AtUser(SpanToken):
     precedence = 1 # default 5
     def __init__(self, match):
         self.username = match.group(1)
-        self.children = (RawText(self.username),)
+        # self.children = (RawText(self.username),)
+
+class PostMention(SpanToken):
+    pattern = re.compile(post_autolink_regex)
+    parse_inner = False
+    parse_group = 1 # useful only when parse_inner = 1
+    precedence = .5 # default 5
+    def __init__(self, match):
+        self.id = match.group(1)
+
+class ThreadMention(SpanToken):
+    pattern = re.compile(thread_autolink_regex)
+    parse_inner = False
+    parse_group = 1 # useful only when parse_inner = 1
+    precedence = .5 # default 5
+    def __init__(self, match):
+        self.id = match.group(1)
+
+class Cnmb(BlockToken):
+    pattern = re.compile(r'cnm(.+?)b$')
+
+    # pattern = re.compile(r' {0,3}(?:([-_*])\s*?)(?:\1\s*?){2,}$')
+    def __init__(self, matches):
+        self.content = matches[0]
+
+    @classmethod
+    def start(cls, line):
+        return cls.pattern.match(line)
+
+    @staticmethod
+    def read(lines):
+        return [next(lines)]
+
+class YoutubePlayer(Cnmb):
+    pattern = re.compile(combined_youtube_extractor_regex)
+
+    def __init__(self, matches):
+        line = matches[0].strip()
+        g = self.pattern.match(line).group
+        url = g(0)
+        vid = g(1) or g(2) or g(3)
+
+        ts = None
+        if vid==g(1):
+            timestamp_found = re.search(r'\?t=([0-9]{1,})', url)
+            if timestamp_found:
+                ts = timestamp_found.group(1)
+                ts = int(ts)
+
+        ts = ('?t='+str(ts)) if ts else ''
+
+        self.url = url
+        self.replacement = f'''<a target="_blank" href="https://youtu.be/{vid}{ts}">youtu.be/{vid}{ts}</a><div class="youtube-player-unprocessed" data-id="{vid}" data-ts="{ts}"></div>'''
+
+class TwitterFrame(Cnmb):
+    pattern = re.compile(twitter_extractor_regex)
+
+    def __init__(self, matches):
+        line = matches[0].strip()
+        g = self.pattern.match(line).group
+        url = g(0)
+        twid = g(1)
+
+        self.url = url
+        turl = url
+
+        self.replacement = f'''<a href="{turl}">{turl}</a><blockquote class="twitter-tweet" data-conversation="true" data-dnt="true"><a href="{turl}">{turl}</a></blockquote>'''
+
+class PollInstance(Cnmb):
+    pattern = re.compile(r'#{0,1}poll(\d{1,16})(?=\s|\t|$)')
+
+    def __init__(self, matches):
+        line = matches[0].strip()
+        g = self.pattern.match(line).group
+
+        self.pollid = g(1)
+        self.replacement = f'<div class="poll-instance-unprocessed" data-id="{self.pollid}"></div>'
+
 
 class FlavoredRenderer(HTMLRenderer):
     def __init__(self):
-        # very bad interface design
-        super().__init__(AtUser)
+        # bad interface design ?
+        super().__init__(PollInstance, YoutubePlayer, TwitterFrame, Cnmb,
+            AtUser, PostMention, ThreadMention)
 
+        self.init_collection()
+
+    def init_collection(self):
         self.collected = {
-            'at_user_list':[]
+            'at_user_list':[],
+            'youtube_players':[],
+            'twitter_frames':[],
         }
 
     def render_at_user(self, token):
@@ -283,14 +373,40 @@ class FlavoredRenderer(HTMLRenderer):
         # un = flask.escape(un)
         return f'<a href="/member/{un}">@{un}</a>'
 
-flavored_renderer = FlavoredRenderer()
+    def render_post_mention(self, token):
+        tid = token.id
+        return f'<a href="/p/{tid}">#{tid}</a>'
 
-@lru_cache(maxsize=2048)
+    def render_thread_mention(self, token):
+        tid = token.id
+        return f'<a href="/t/{tid}">/t/{tid}</a>'
+
+    def render_cnmb(self, token):
+        return f'<a href="#">{token.content}</a>'
+
+    def render_youtube_player(self, token):
+        self.collected['youtube_players'].append(token.url)
+        return token.replacement
+
+    def render_twitter_frame(self, token):
+        self.collected['twitter_frames'].append(token.url)
+        return token.replacement
+
+    def render_poll_instance(self, token):
+        return token.replacement
+
+# flavored_renderer = FlavoredRenderer()
+renderlock = threading.Lock()
+
+@lru_cache(maxsize=4096)
 def frend(md):
-    with FlavoredRenderer() as ren:
-        # again very bad interface design
-        rend = ren.render(Document(md))
-        coll = ren.collected
+    with renderlock:
+        with FlavoredRenderer() as ren:
+        # with flavored_renderer as ren:
+            # again very bad interface design
+            rend = ren.render(Document(md))
+            coll = ren.collected
+
     return rend, coll
 
 

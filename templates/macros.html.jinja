@@ -101,6 +101,7 @@
 <div class="{{classes}} threadlistitem padded {{
       'delusional' if (p.delusional) else ''}} {{
       'deleted' if (p.delete and t) else '' }} {{
+      'spam' if p.spam else '' }} {{
       'conv_delete' if p.delete and 'conversation' in metas else '' }} {{
       'thread_header' if 'thread_header' in metas else '' }} {{
       'unread' if p.unread else ''
@@ -570,6 +571,12 @@
 
 {%macro contentify(p, foldable=False)%}
   <div class="post_content {{'foldable' if foldable else ''}}">
+    {%if p.spam%}
+      <div style='color:pink;font-style:italic;'>
+        [ content flagged as spam by AI ]
+      </div>
+    {%endif%}
+
     {%if p.delete%}
       <s>{{zhen('标记为删除','Marked as deleted')}}</s>
     {#
@@ -736,13 +743,18 @@
     <a href="{{turl}}" class="threadlist_title">{{
       '[已标记为删除] ' if t.delete else ''
     }}{{
+      '[SPAM] ' if t.spam else ''
+    }}{{
       '↑' if t.t_manual and
         format_time_datetime(t.t_manual)>=format_time_datetime(t.t_hn)
       else ''
     }}{{t.title}}</a>
 
     {%if t.youtube%}
+      {#
       <a class='tltyw' rel='noreferrer' href="https://www.youtube.com/watch?v={{t.youtube}}"><img class='threadlist_title_youtube' src="/images/youtube_small.png" alt=""></a>
+      #}
+      <a class='tltyw' href="{{turl}}"><img class='threadlist_title_youtube' src="/images/youtube_small.png" alt=""></a>
     {%endif%}
 
   </div>

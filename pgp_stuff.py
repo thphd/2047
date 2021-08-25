@@ -31,14 +31,14 @@ def verify_publickey_message(pk, msg):
     # remove armor
     status = os.system(f'gpg --dearmor {pkfn}')
     if status != 0:
-        print('status:', status)
+        qprint('status:', status)
         cleanup()
         raise Exception('failed to dearmor the public key (there might be something wrong with your public key)')
 
     # verify
     status = os.system(f'gpg --no-default-keyring --keyring {pkbinfn} --verify {msgfn}')
     if status != 0:
-        print('status:', status)
+        qprint('status:', status)
         cleanup()
         raise Exception('failed to verify the message (your public key is okay but the signature you supplied does not match the public key, or is of a wrong format)')
 

@@ -3,6 +3,30 @@ import colorama
 
 colorama.init()
 
+import threading
+
+_pq = []
+_pqc = threading.Condition()
+
+def qprint(*a,**kw):
+    with _pqc:
+        _pq.append((a, kw))
+        _pqc.notify()
+
+def async_printer():
+    while 1:
+        with _pqc:
+            while len(_pq)==0:
+                _pqc.wait()
+            a,kw = _pq.pop(0)
+            print(*a, **kw)
+
+def dispatch(f):
+    t = threading.Thread(target=f, daemon=True)
+    t.start()
+
+dispatch(async_printer)
+
 def colored_print_generator(*a,**kw):
     def colored_print(*items,**incase):
         text = ' '.join(map(lambda i:str(i), items))
@@ -11,7 +35,7 @@ def colored_print_generator(*a,**kw):
         # (to prevent emojis from crashing CMD
         text = text.encode(encoding='gbk', errors='replace').decode(encoding='gbk')
 
-        print(colored(text, *a,**kw),**incase)
+        qprint(colored(text, *a,**kw),**incase)
     return colored_print
 
 def colored_format_generator(*a,**kw):

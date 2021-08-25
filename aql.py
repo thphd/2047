@@ -40,7 +40,7 @@ class AQLController:
                 return resp
             else:
                 if not raise_error:
-                    print(str(resp))
+                    print_err(str(resp))
                     return False
                 else:
                     em = resp['errorMessage']
@@ -120,7 +120,7 @@ class AQLController:
         return res
 
     def change_view_properties(self, viewname, **kw):
-        print(f'attempting to change view properties on {self.dbname}/{viewname}')
+        print_info(f'attempting to change view properties on {self.dbname}/{viewname}')
         resp = self.request('PATCH',
             '/_db/'+self.dbname+'/_api/view/'+viewname
             +'/properties#ArangoSearch',
@@ -137,8 +137,8 @@ class AQLController:
             try:
                 one = self.aql('return 1')[0]
             except Exception as e:
-                print(e)
-                print('fail #' + str(i) + '\n')
+                print_err(e)
+                print_up('fail #' + str(i) + '\n')
                 i+=1
                 time.sleep(1)
             else:

@@ -107,7 +107,7 @@ function xhr(method, dest, data){
           rej (this.status + ' '+this.statusText+ '\n' + resp.error)
         }else{
           if(this.status==0){
-            var statusText='(Connection Failed, maybe try again)'
+            var statusText='Connection Failed / 连接失败'
           }
           rej(this.status +' '+ (this.statusText||statusText) + '\n' + this.responseText.slice(100))
         }
@@ -155,7 +155,7 @@ function upload_file(target){
   xhrObj.upload.addEventListener("load", function(){
     // display_notice('')
     isa.set_text('完成')
-    isa.destruct()
+    isa.delay_destruct(500)
     window.location.reload()
   }, false);
   // display_notice('正在上传到服务器...')
@@ -177,17 +177,21 @@ function api(j, display){
   return p.then(r=>{
     if(!display){
       isa.set_text('成功')
-      isa.destruct()
+      isa.delay_destruct(500)
     }
     return r
   })
   .catch(e=>{
     if(!display){
       isa.set_text('失败')
-      isa.destruct()
+      isa.delay_destruct(500)
     }
     throw e
   })
+}
+
+function alert_via_isa(s){
+  var eisa = isa_error(s.toString(),2000)
 }
 
 function aa(action, j, display){
@@ -435,7 +439,7 @@ function logout(){
     action:'logout'
   })
   .then(res=>{
-    if(window.location.href.includes('/m') || 
+    if(window.location.href.includes('/m') ||
       window.location.href.includes('/n')){
       window.location.href='/'
     }else{
@@ -731,7 +735,7 @@ function update_votecount(targ){
   .then(res=>{
     window.location.reload()
   })
-  .catch(alert)
+  .catch(alert_via_isa)
 }
 
 var upvote_buttons = gebcn(document)('upvote')
@@ -785,7 +789,7 @@ foreach(upvote_buttons)(e=>{
         cl.add('self_voted')
         self_voted = true
       })
-      .catch(alert)
+      .catch(alert_via_isa)
       .then(reset_things)
     }else{
       api({
@@ -804,7 +808,7 @@ foreach(upvote_buttons)(e=>{
         cl.remove('self_voted')
         self_voted = false
       })
-      .catch(alert)
+      .catch(alert_via_isa)
       .then(reset_things)
     }
   }
@@ -1151,7 +1155,7 @@ function process_all_youtube_reference(element2){
     api({
       action:'render_poll',
       pollid:did,
-    })
+    }, true)
     .then(res=>{
       e.innerHTML = res.html
     })
