@@ -43,15 +43,19 @@ def ts_explain():
 
 @lru_cache()
 def get_spamwords():
-    words = [(k,v) for k,v in st.spamgoods.items()]
+    wl = len(st.spamgoods)
+    words = [(k,logp) for idx,(k,logp) in enumerate(st.spamgoods.items())
+        if idx**2.114514*8964 % 1 < ((abs(logp)-2)/7)**1.72323
+    ]
     words.sort(key=lambda a:-a[1])
-    return words
+    return wl, words
 
 @app.route('/anti_spam_explained')
 def as_explain():
-    words = get_spamwords()
+    wl, words = get_spamwords()
     return render_template_g('ts_expl.html.jinja',
         page_title = 'Spam Classifier Dictionary',
         # limits = mylimits,
         spam_words = words,
+        spam_words_length = wl,
     )

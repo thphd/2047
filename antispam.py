@@ -24,13 +24,6 @@ def preproc(text):
                 grams[gram2] = 0
             grams[gram2]+=1
 
-            # if gl>2:
-            #     gram3 = gram2[0] +'*'*(gl-2) + gram2[-1]
-            #
-            #     if gram3 not in grams:
-            #         grams[gram3] = 0
-            #     grams[gram3]+=1
-
     return grams,len(allcnt)
 
 class SpamTrainer:
@@ -115,16 +108,6 @@ class SpamTrainer:
 
         print(len(final_grams), 'in final_grams')
 
-        # for k in final_grams.copy():
-        #     fgk = final_grams[k]
-        #     if fgk[2]<1:
-        #         del final_grams[k]
-        #     else:
-        #         # times appeared /= total words
-        #         fgk[2] /= spam_length+good_length
-
-        print(len(final_grams), 'in final_grams')
-
         spamgoods = {}
 
         for k,v in final_grams.items():
@@ -140,8 +123,6 @@ class SpamTrainer:
     def score_text(self, *texts):
         sg = self.spamgoods
 
-        # spamscore = .5
-        # goodscore = .5
 
         spamlog = 0
         goodlog = 0
@@ -164,8 +145,6 @@ class SpamTrainer:
         goodscore = math.exp(goodlog)
 
         sumscore = spamscore+goodscore
-
-
         return spamscore/sumscore, goodscore/sumscore
         # return spamscore,goodscore
 
@@ -227,50 +206,13 @@ if __name__ == '__main__':
     3573,3572,3575,4180,4288,4378,4437,4436,4488,4489,4538,4535,4526,4537
     ]
 
-    # known_goods = [4,
-    # 5,
-    # 6,
-    # 8,10, 4556, 4634, 450, 426,75,76, 10965,10969,10979]
-
-    # known_goods+= [9, 13, 21, 22, 27, 37, 39, 40, 44, 62, 76, 82, 95]
-    # known_spams+= [16, 17, 20, 23, 26, 34, 36, 43, 46, 48, 58, 97]
-    #
-    # known_goods+=  [14, 40]
-    # known_spams+=  [16, 17, 20, 23, 26, 31, 36, 43, 46]
-    #
-    # known_goods+=  [54, 87, 88, 90]
-
-    # st.addgoods(known_goods)
     st.addspams(known_spams)
-
-    # st.addspams(list(st.known_spams.keys()))
-
-    # st.save()
-    # st.load()
-
-    def delspam(k):
-        st.addgoods([k])
-
-    delspam(3045)
-    delspam(3172)
-    delspam(9102)
-    delspam(9360)
-    delspam(6075)
-    delspam(6033)
-    delspam(5898)
-    delspam(381)
-    delspam(8123)
-    delspam(8165)
-    delspam(8168)
-    delspam(3163)
 
     print('make_dict...')
     st.make_dict()
     print('save...')
     st.save()
 
-
-    # print(list(st.known_spams.keys()))
     print(f'got {len(st.known_goods)}good  {len(st.known_spams)}spam')
 
     lenallt = aql('return count(for i in threads return 1)')[0]
@@ -281,17 +223,12 @@ if __name__ == '__main__':
     underkill = 0
     g,s = [],[]
 
+    # scan thru all threads
     for i in range(lenallt):
         t = aql(f'for i in threads sort i.t_c desc limit {i},1 return i', silent=True)[0]
         tid = t['tid']
 
-
-        # if t['tid'] in st.known_goods or t['tid'] in st.known_spams:
-        #
-        #     print('good' if t['tid'] in st.known_goods else '####spam',t['tid'], t['title'])
-        #
-        #     continue
-
+        # add thread to [goods] if good enough via some metric
         if 1:
             if 'votes' in t and t['votes']>=8:
                 if len(t['content'])>200 and (('delete' not in t)
@@ -309,79 +246,70 @@ if __name__ == '__main__':
         spam,good = st.score_text(t['title'], t['content'])
         tid = t['tid']
 
-        # is_spam = spam>0.5
-
-        # if spam > 0.6:
-        #
-        #     print(f"{spam:.4f}/{1-spam:.4f} #{t['tid']} {'###SPAM### ' if is_spam else '' } {t['title']}")
-
         if i % 20==0:
             print(f"{i} {t['tid']} {spam:.7f}/{good:.7f}")
 
-        if 1: # quiz mode
 
-            if spam >0.99:
-                print(f"spam{spam:.7f} #{t['tid']}# ###CONSIDERED SPAM### {t['title']}")
-                # print(t['content'])
+        if spam >0.99:
+            print(f"spam{spam:.7f} #{t['tid']}# ###CONSIDERED SPAM### {t['title']}")
+            # print(t['content'])
 
-            threshold = told = 0.99999
-            # elif 0.05<good<0.95:
-            if spam < told and tid in st.known_spams:
-                print('UNDERKILL!!!',f'{spam:.7f}', tid,  t['title'])
-                underkill+=1
+        threshold = told = 0.99999
+        # elif 0.05<good<0.95:
+        if spam < told and tid in st.known_spams:
+            print('UNDERKILL!!!',f'{spam:.7f}', tid,  t['title'])
+            underkill+=1
 
-            if spam>told and tid not in st.known_spams:
-                if tid in st.known_goods:
-                    print('OVERKILL!!!',f'{spam:.7f}', tid, t['title'])
-                    overkill+=1
+        # if CONSIDERED as spam but not included in [spams]
+        if spam>told and tid not in st.known_spams:
 
-                print(f"{good:.7f} {t['tid']}, {t['title']}")
-                print(t['content'])
+            # if overkill
+            if tid in st.known_goods:
+                print('OVERKILL!!!',f'{spam:.7f}', tid, t['title'])
+                overkill+=1
 
+            print(f"{good:.7f} {t['tid']}, {t['title']}")
+            print(t['content'])
 
-                print('tid in spam, good:', tid in st.known_spams, tid in st.known_goods)
+            print('tid in spam, good:', tid in st.known_spams, tid in st.known_goods)
 
-                end = 0
-                while 1:
-                    print(tid, 'is this good?')
-                    ss = input().lower()
-                    if 'y' in ss:
-                        # g.append(t['tid'])
+            # ask whether this thread should be considered as good instead
+            end = 0
+            while 1:
+                print(tid, 'is this good?')
+                ss = input().lower()
+                if 'y' in ss:
+                    # g.append(t['tid'])
 
-                        st.addgoods([tid])
-                        break
-                    elif 'n' in ss:
-                        # s.append(t['tid'])
-                        st.addspams([tid])
-                        break
-                    elif 'i' in ss:
-                        print('ignore', tid)
-
-                        if tid in st.known_goods:
-                            del st.known_goods[tid]
-                        if tid in st.known_spams:
-                            del st.known_spams[tid]
-                        break
-
-                    elif 'l' in ss:
-                        # learn
-                        st.make_dict()
-                        st.save()
-                        continue
-
-                    elif 'q' in ss:
-                        end = 1
-                        break
-                    else:
-                        continue
-                if end:
+                    st.addgoods([tid])
                     break
+                elif 'n' in ss:
+                    # s.append(t['tid'])
+                    st.addspams([tid])
+                    break
+                elif 'i' in ss:
+                    print('ignore', tid)
+
+                    if tid in st.known_goods:
+                        del st.known_goods[tid]
+                    if tid in st.known_spams:
+                        del st.known_spams[tid]
+                    break
+
+                elif 'l' in ss:
+                    # learn
+                    st.make_dict()
+                    st.save()
+                    continue
+
+                elif 'q' in ss:
+                    end = 1
+                    break
+                else:
+                    continue
+            if end:
+                break
 
     print(f'got {len(st.known_goods)}good  {len(st.known_spams)}spam')
     print(f'overkills {overkill} underkills {underkill}')
     st.save()
-
-
-            # print(f"{t['tid']},")
-
-# print(spamts)

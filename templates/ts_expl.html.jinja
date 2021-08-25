@@ -48,7 +48,7 @@
 {%if spam_words%}
 <div class="threadlistitem">
     <div class="post_content padded">
-      <p>为节省篇幅，本表只列出{{spam_words|length}}个条目中的一部分。</p>
+      <p>为节省篇幅，本表只列出{{spam_words_length}}个条目中的{{spam_words|length}}个。</p>
 
 
       <p>
@@ -60,14 +60,11 @@
       </p>
 
       {%for word, logp in spam_words%}
-        {%if (loop.index**2 * 9757.8173946105) % 1
-            < ((logp|abs-2)/7)**2 %}
         <div class="pmspair {{'negative' if logp<0 else ''}}"
           style="opacity:{{clip01((logp/7)|abs)}}">
           <span class="pmskeyname">{{word}}</span>
           <span class="pmsvalue">{{'%.3f'|format(logp)}}</span>
         </div>
-        {%endif%}
       {%endfor%}
 
       <p>令人感到遗憾的是，本表顶部是台湾，底部是中国。</p>
