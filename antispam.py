@@ -31,6 +31,8 @@ class SpamTrainer:
         self.known_goods = {}
         self.known_spams = {}
 
+        self.known_ignore = {5983, 5976}
+
         self.tc = {}
 
     def get_one_thread(self, tid):
@@ -112,7 +114,7 @@ class SpamTrainer:
 
         for k,v in final_grams.items():
             j = math.log(v[0]) - math.log(v[1])
-            if (j>5 or j<-2) and v[2]>8:
+            if (j>5 or j<-2):
                 spamgoods[k] = j
 
         self.spamgoods = spamgoods
@@ -246,7 +248,7 @@ if __name__ == '__main__':
         spam,good = st.score_text(t['title'], t['content'])
         tid = t['tid']
 
-        if i % 20==0:
+        if i % 50==0:
             print(f"{i} {t['tid']} {spam:.7f}/{good:.7f}")
 
 
@@ -261,7 +263,8 @@ if __name__ == '__main__':
             underkill+=1
 
         # if CONSIDERED as spam but not included in [spams]
-        if spam>told and tid not in st.known_spams:
+        if spam>told and (tid not in st.known_spams) and \
+            (tid not in st.known_ignore):
 
             # if overkill
             if tid in st.known_goods:

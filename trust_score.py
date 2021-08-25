@@ -45,7 +45,7 @@ def ts_explain():
 def get_spamwords():
     wl = len(st.spamgoods)
     words = [(k,logp) for idx,(k,logp) in enumerate(st.spamgoods.items())
-        if idx**2.114514*8964 % 1 < ((abs(logp)-2)/7)**1.72323
+        if idx**2.114514*8964 % 1 < ((abs(logp)-2)/5)**1.72323
     ]
     words.sort(key=lambda a:-a[1])
     return wl, words
