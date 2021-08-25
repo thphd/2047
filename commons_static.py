@@ -74,3 +74,10 @@ def get_environ(k):
         return os.environ[k]
     else:
         return None
+
+def clip(a,b):
+    def _clip(c):
+        return min(b,max(a, c))
+    return _clip
+
+clip01 = clip(0,1)

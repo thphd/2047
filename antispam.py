@@ -129,7 +129,7 @@ class SpamTrainer:
 
         for k,v in final_grams.items():
             j = math.log(v[0]) - math.log(v[1])
-            if (j>4 or j<-1) and v[2]>10:
+            if (j>5 or j<-2) and v[2]>8:
                 spamgoods[k] = j
 
         self.spamgoods = spamgoods

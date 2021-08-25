@@ -2329,3 +2329,11 @@ a.after_linkbox {
     /* background-color: #ff00001f; */
     /* opacity: .5; */
 }
+
+.negative .pmskeyname {
+    background: #6694c5;
+}
+
+.negative .pmsvalue {
+    color: #275f7b;
+}
