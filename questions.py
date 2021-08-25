@@ -64,8 +64,9 @@ def choose_questions(seed, nquestions):
             for i in questions
             sort i._key
             limit {chosen_idx},1
-            let user = (for u in users filter u.uid==i.uid return u)[0]
-            return merge(i, {{user}})
+            //let user = (for u in users filter u.uid==i.uid return u)[0]
+            //return merge(i, {{user}})
+            return i
         ''', silent=True)[0]
 
         if q['question'].startswith('!!'):
@@ -93,8 +94,8 @@ def insert_question(q):
 
 aqlc.create_collection('exams')
 
-min_pass_score = 4
-num_questions = 6
+min_pass_score = 3
+num_questions = 5
 time_to_submit = 20
 
 @app.route('/exam')
@@ -129,6 +130,18 @@ def list_questions():
         page_title='题库',
         questions = qs,
 
+    )
+
+@app.route('/choice_stats')
+def choice_stats():
+    must_be_admin()
+
+    cstat = get_choice_stats()
+
+    return render_template_g(
+        'choice_stats.html.jinja',
+        page_title = '选项统计',
+        cstat = cstat,
     )
 
 @register('submit_exam')
@@ -211,6 +224,49 @@ def _():
     qid = g.j['qid']
     modify_question(qid, qv)
     return {'error':False}
+
+@stale_cache(ttr=10, ttl=3600)
+def get_choice_stats():
+    res = aql("""
+for i in answersheets
+sort i.t_c desc
+filter i.examid!=null
+
+let exam = (for e in exams filter e._key==i.examid return e)[0]
+
+    for j in range(0, length(i.answers)-1)
+    let ans = i.answers[j]
+    let qid = exam.questions[j]._id
+
+    or (for k in questions filter k.question==exam.questions[j].question
+        return k._id)[0]
+
+    filter qid
+
+    let qchoice = exam.questions[j].choices[ans]
+
+    // determine each choice is correct or not
+    //let q = document(qid)
+    //let correct = (qchoice == q.choices[0])?1:0
+
+    //return {qchoice, correct, qid}
+
+    collect aqid=qid aggregate tot=count(qid) into result_groups = qchoice
+    let q = document(aqid)
+    let cstat = (
+        for qchoice in result_groups collect aqc=qchoice with count into n
+        let fraction = n/tot
+        sort fraction desc
+
+        // determine each choice is correct or not
+        let correct = (aqc == q.choices[0])?1:0
+        return {choice:aqc, count:n, fraction, correct}
+    )
+    sort tot desc
+    return {qid:aqid, question:q.question, uid:q.uid, choices:cstat, total:tot}
+    """, silent=True)
+    return res
+
 
 if __name__ == '__main__':
     print(qs)

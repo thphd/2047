@@ -1,0 +1,40 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+
+<div class="threadlist padlr">
+
+<div class="post_content" style="font-size:10px">
+
+  {%for q in cstat%}
+
+  <p>
+    {{macros.username(get_user_by_id_cached(q.uid))}}
+
+    {%if q.question.startswith('!!')%}
+      !!
+    {%endif%}
+    <br>
+
+    <a href="/questions#{{q.qid.split('/')[1]}}">{{q.qid}}</a>
+
+    ({{q.total}}人)
+
+  </p>
+
+  <ul>
+    {%for choice in q.choices%}
+      <li style="{{'color:green' if choice.correct else ''}}">
+        <div style='display:inline-block;'>
+            {{convert_markdown(choice.choice)|safe}}
+        </div>
+       ({{choice.count}}人, {{(choice.fraction*100)|int}}%)
+      </li>
+    {%endfor%}
+  </ul>
+
+  {%endfor%}
+
+</div>
+
+</div>
+{%endblock%}

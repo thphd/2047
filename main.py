@@ -217,6 +217,7 @@ def create_all_necessary_indices():
     ci('blacklist',[['uid','to_uid'],['uid','enabled'],['to_uid','enabled']])
 
     ci('comments',indexgen([[],['parent'],['parent','deleted'],['uid']],['t_c']))
+    ci('questions',indexgen([[],['question']],['t_c']))
 
 is_integer = lambda i:isinstance(i, int)
 is_string = lambda i:isinstance(i, str)

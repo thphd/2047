@@ -1,12 +1,37 @@
 import cachetools, cachetools.func, time, threading, traceback
 from flaskthreads import AppContextThread
+from flaskthreads.thread_helpers import has_app_context, _app_ctx_stack, APP_CONTEXT_ERROR
 
-Thread = AppContextThread
+class AppContextThreadMod(threading.Thread):
+    """Implements Thread with flask AppContext."""
 
-hashkey = cachetools.keys.hashkey
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not has_app_context():
+            self.app_ctx = None
+            # raise RuntimeError(APP_CONTEXT_ERROR)
+        else:
+            self.app_ctx = _app_ctx_stack.top
+
+    def run(self):
+        if self.app_ctx is not None:
+            try:
+                self.app_ctx.push()
+                super().run()
+            finally:
+                self.app_ctx.pop()
+
+        else:
+            super().run()
+
+Thread = AppContextThreadMod
+
+# hashkey = cachetools.keys.hashkey
 tm = time.monotonic
 
-Lock = threading.Lock
+empty = 0
+idle = 1
+dispatching = 2
 
 # buffer that refreshes in the bkgnd
 class StaleBuffer:
@@ -15,8 +40,8 @@ class StaleBuffer:
         self.a = None
 
         self.ts = tm()
-        self.l = Lock()
-        self.state = 'empty'
+        self.l = threading.Lock()
+        self.state = empty
 
         self.f = f
 
@@ -24,91 +49,86 @@ class StaleBuffer:
         self.ttl = ttl
         assert ttl>ttr
 
-    def dispatch_refresh(self):
-        def wrapper():
-            try:
-                r = self.f()
-            except Exception as e:
-                traceback.print_exc()
-                self.l.acquire()
-                self.state = 'nodispatch'
-                self.l.release()
-            else:
-                self.l.acquire()
-                self.state = 'nodispatch'
+    def refresh_threaded(self):
+        try:
+            r = self.f()
+        except Exception as e:
+            traceback.print_exc()
+            with self.l:
+                self.state = idle
+        else:
+            with self.l:
+                self.state = idle
                 self.a = r
                 self.ts = tm()
-                self.l.release()
 
-        t = Thread(target=wrapper, daemon=True)
+    def dispatch_refresh(self):
+        t = Thread(target=self.refresh_threaded, daemon=True)
         t.start()
 
     def get(self):
-        ttl = self.ttl
-        ttr = self.ttr
-        f = self.f
-        now = tm()
+        # ttl = self.ttl
+        # ttr = self.ttr
+        # f = self.f
+
+        # last = self.ts
+        # now = tm()
+        # past = now - last
+        past = tm() - self.ts
+        state = self.state
+
 
         # we couldn't afford expensive locking everytime, so
-        if self.state=='nodispatch' and now - self.ts < ttr:
+        if state==idle and past < self.ttr or state==dispatching:
             return self.a
 
-        if self.state=='dispatching':
-            return self.a
-
-        self.l.acquire()
-
-        try:
-            # cache is empty
-            if self.state == 'empty':
-                self.a = f()
-                self.ts = now
-                self.state = 'nodispatch'
-
-            # cache is not empty, no dispatch on the way
-            elif self.state == 'nodispatch':
-                # is fresh?
-                now = now
-                if now - self.ts>ttl:
-                    # too old.
-                    self.a = f()
-                    self.ts = now
-
-                elif now - self.ts>ttr:
-                    # kinda old
-                    self.dispatch_refresh()
-                    self.state = 'dispatching'
-                    # use the stale version
-
-                else:
-                    # data is fresh
-                    pass
-
-            # cache is not empty, dispatch on the way
-            elif self.state == 'dispatching':
-                # return the stale version until dispatch finishes
-                pass
-
-        except Exception as e:
-            self.l.release()
-            raise e
         else:
-            r = self.a
-            self.l.release()
-        return r
+            with self.l:
+                # cache is empty
+                if state == empty:
+                    self.a = self.f()
+                    self.ts = tm()
+                    self.state = idle
+
+                # cache is not empty, no dispatch on the way
+                elif state == idle:
+                    # is cache fresh?
+                    if past > self.ttl:
+                        # too old.
+                        self.a = self.f()
+                        self.ts = tm()
+
+                    elif past > self.ttr:
+                        # kinda old
+                        self.state = dispatching
+                        self.dispatch_refresh()
+
+                    # # cache is fresh
+                    # else:
+                    #     pass
+
+                # elif self.state == 'dispatching':
+                #     pass
+                # else:
+                #     pass
+
+                return self.a
+
 
 if __name__ == '__main__':
     j = 1
     def k():
         global j
         j+=1
-        time.sleep(2)
+        time.sleep(1)
         return j
 
-    sb = StaleBuffer(k, ttr=3, ttl=6)
-    for i in range(20):
+    sb = StaleBuffer(k, ttr=1, ttl=6)
+    for i in range(10):
         print(sb.get(), sb.state)
-        time.sleep(0.5)
+        time.sleep(0.3)
+
+    print('stalebuf test end')
 
 def stale_cache(ttr=3, ttl=6, maxsize=128):
     def wrapper(f):
@@ -133,18 +153,18 @@ if __name__ == '__main__':
     j = 1
     k = 1
 
-    @stale_cache()
+    @stale_cache(ttr=1.5)
     def a(i):
         global j
         j+=1
-        time.sleep(1)
+        time.sleep(.5)
         return i*j
 
-    @stale_cache()
+    @stale_cache(ttr=3)
     def b(n):
         global k
         k+=1
-        time.sleep(1.5)
+        time.sleep(.7)
         return k*n
 
     for i in range(20):

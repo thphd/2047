@@ -44,6 +44,14 @@ def replace_ats(s): # replace occurence
 post_autolink_regex = r'</?[#p]/?([0-9]{1,16})>'
 thread_autolink_regex = r'</?t/?([0-9]{1,16})>'
 
+replace_autolink_regex = r'</?([pt])([0-9]{1,16})>'
+def replace_tal_form(s):
+    def f(match):
+        type = match.group(1)
+        id = match.group(2)
+        return f'</{type}/{id}>'
+    return re.sub(replace_autolink_regex, f, s, flags=re.M)
+
 # @lru_cache(maxsize=4096)
 def replace_pal(s):
     def f(match):
@@ -198,7 +206,7 @@ elif 1:
     def just_markdown(s):
         # s = replace_pal(s)
         # s = replace_tal(s)
-
+        s = replace_tal_form(s)
         # s = replace_ats(s)
         # s = replace_pincong(s)
         # s = replace_ytb(s)
@@ -276,7 +284,7 @@ class PostMention(SpanToken):
     pattern = re.compile(post_autolink_regex)
     parse_inner = False
     parse_group = 1 # useful only when parse_inner = 1
-    precedence = .5 # default 5
+    precedence = 6 # default 5
     def __init__(self, match):
         self.id = match.group(1)
 
@@ -284,7 +292,7 @@ class ThreadMention(SpanToken):
     pattern = re.compile(thread_autolink_regex)
     parse_inner = False
     parse_group = 1 # useful only when parse_inner = 1
-    precedence = .5 # default 5
+    precedence = 6 # default 5
     def __init__(self, match):
         self.id = match.group(1)
 

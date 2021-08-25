@@ -30,7 +30,8 @@
             {%endfor%}
           </div>
           <div class="qcat">
-            （{{q.category}}）by {{macros.username(q.user,class='opaque5')}}
+            {%set user = get_user_by_id_cached(q.uid)%}
+            （{{q.category}}）by {{macros.username(user,class='opaque5')}}
           </div>
         </div>
 
