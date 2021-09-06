@@ -1,0 +1,5 @@
+templates/css/normalize.css linguist-vendored
+templates/highlight/** linguist-vendored
+templates/js/ace/** linguist-vendored
+templates/js/md5.js linguist-vendored
+templates/js/relaxed-json.js linguist-vendored
