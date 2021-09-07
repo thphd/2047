@@ -90,8 +90,8 @@ def _():
         raise Exception('输入太长')
 
     tlr = key(g.current_user, 't_last_runcode')
-    if tlr and tlr>time_iso_now(-10):
-        raise Exception('两次运行代码间隔应大于10秒')
+    if tlr and tlr>time_iso_now(-5):
+        raise Exception('两次运行代码间隔应大于5秒')
 
     else:
         aql('for i in users filter i.uid==@uid update i with {t_last_runcode:@t} in users', uid=g.selfuid, t=time_iso_now(), silent=True)

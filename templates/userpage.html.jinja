@@ -2,7 +2,7 @@
 {%block content%}
 
 <div class="threadlist">
-  {%call macros.post(u,[])%}
+  {%call macros.post_new(u, avatar_user=u)%}
 
   <div class="userpage_lr">
     <div class="userpage_let">
@@ -264,7 +264,7 @@
       黑名单（被你加入黑名单的人无法回复你的thread或者@你，你也看不到他们的post）
     </div>
     <div class="">
-      {%for i in get_blacklist()%}
+      {%for i in get_blacklist(u.uid)%}
       {{macros.username(i.user)}}
       {%endfor%}
     </div>

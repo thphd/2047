@@ -10,7 +10,12 @@ def show_quotes():
     )
 
 @stale_cache(ttr=10, ttl=900)
-def get_quotes():
+def get_quotes():return get_quotes_raw()
+
+@stale_cache(ttr=30, ttl=900)
+def get_quotes_slow():return get_quotes_raw()
+
+def get_quotes_raw():
     quotes = aql('''
 for i in entities
 
@@ -54,5 +59,5 @@ return merge(i, {user})
     return q
 
 def get_quote():
-    quotes = get_quotes()
+    quotes = get_quotes_slow()
     return random.choice(quotes)

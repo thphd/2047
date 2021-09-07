@@ -2,7 +2,7 @@ import re
 import time
 from app import app
 from commons import *
-
+from api_commons import *
 from flask import g, make_response
 
 def create_all_necessary_collections():
@@ -59,7 +59,7 @@ def make_notification_uids(uids, from_uid, why, url, **kw):
         print_err('likely spam, no notifications sent')
         return
 
-    haters = get_reversed_blacklist()
+    haters = get_reversed_blacklist(from_uid) + get_blacklist(from_uid)
     haters = [i['uid'] for i in haters]
 
     uids = [i for i in uids if i not in haters]
@@ -191,7 +191,7 @@ def get_user_by_id_admin(uid):
         k=uid, silent=True)
     return uo[0] if uo else False
 
-@stale_cache(ttr=60, ttl=1800, maxsize=1024)
+@stale_cache(ttr=15, ttl=1800, maxsize=4096)
 def get_user_by_id_cached(uid):
     return get_user_by_id(uid)
 
@@ -454,19 +454,6 @@ def increment_view_counter(target_type, _id):
 @register('logout')
 def _():
     return {'logout':True}
-
-def content_length_check(content, allow_short=False):
-    maxlen = 40000
-    if len(content)>maxlen:
-        raise Exception('content too long {}/{}'.format(len(content), maxlen))
-    if (len(content)<2 and allow_short==False) or len(content)==0:
-        raise Exception('content too short')
-
-def title_length_check(title):
-    if len(title)>140:
-        raise Exception('title too long')
-    if len(title)<2:
-        raise Exception('title too short')
 
 def get_thread(tid):
     thread = aql('for t in threads filter t.tid==@k return t',
@@ -1364,13 +1351,19 @@ let nfavs = length(for f in favorites filter f.pointer==t._id return f)
 let rv = t.recovered_votes or 0
 let upv= length(for v in votes filter v.type=='thread' and v.id==t.tid and v.vote==1 return v) + rv
 let nreplies = length(for p in posts filter p.tid==t.tid return p)
-let t_u = ((for p in posts filter p.tid==t.tid and p.delete==null sort p.t_c desc limit 1 return p)[0].t_c or t.t_c)
+
+let last_reply = (for p in posts filter p.tid==t.tid and p.delete==null sort p.t_c desc limit 1 return p)[0]
+
+let last_reply_uid = last_reply.uid
+let t_u = (last_reply.t_c or t.t_c)
 
 let mvp = (for p in posts filter p.tid==t.tid sort p.votes desc limit 1 return p)[0]
+
 // mvp = max vote post, mv = max vote (of that post)
 // mvu = uid of mvp, amv = absolute max vote (of both the mvp and the thread)
 update t with {
     votes:upv, nreplies, t_u,
+    last_reply_uid, last_reply_pid:last_reply._key,
     mvp:mvp._key, mv:mvp.votes or 0, mvu:mvp.uid,
     amv: max([mvp.votes or 0, upv or 0]), nfavs, bigcats}
 in threads
@@ -1689,20 +1682,31 @@ def _():
     elif 'conversation' in target_type:
         cobj = aqlc.from_filter('conversations','i.convid==@cid and i.uid==@uid',cid=_id, uid=uid)[0]
 
+    elif 'message' in target_type:
+        mobj = aqlc.from_filter('messages', 'i._key==@k', k=_id)[0]
+
     else:
         raise Exception('target type not supported')
 
+    noperm = 'you don\'t have the required permissions for this operation'
+
     if 'post' in target_type:
         if not can_do_to(uobj,'delete',pobj['uid']) and not can_do_to(uobj, 'delete', tobj['uid']):
-            raise Exception('you don\'t have the required permissions for this operation')
+            raise Exception(noperm)
 
     elif 'thread' in target_type:
         if not can_do_to(uobj,'delete',pobj['uid']):
-            raise Exception('you don\'t have the required permissions for this operation')
+            raise Exception(noperm)
 
     elif 'conversation' in target_type:
         if not can_do_to(uobj, 'delete', cobj['uid']):
-            raise Exception('you don\'t have the required permissions for this operation')
+            raise Exception(noperm)
+
+    elif 'message' in target_type:
+        if not(mobj['uid']==uid or mobj['to_uid']==uid):
+            raise Exception(noperm)
+
+    upd = False
 
     if target_type=='thread':
         upd = aql('for i in threads filter i.tid==@_id\
@@ -1754,15 +1758,21 @@ def _():
         if len(upd)<1:
             raise Exception('pid not found')
 
+    elif target_type=='message':
+        upd = aql('update @k with {delete:true} in messages return NEW', k=mobj)
+    elif target_type=='umessage':
+        upd = aql('update @k with {delete:null} in messages return NEW', k=mobj)
+
     else:
         raise Exception('target type not supported')
 
-    aql('insert @k in operations',k={
-        'uid':uid,
-        'op':'mark_delete',
-        'target':target,
-        't_c':time_iso_now(),
-    })
+    if 'message' not in target_type:
+        aql('insert @k in operations',k={
+            'uid':uid,
+            'op':'mark_delete',
+            'target':target,
+            't_c':time_iso_now(),
+        })
 
     return upd[0]
 
@@ -2008,33 +2018,35 @@ def _():
     j = g.j
     return {'error':False,'setbrowser':1}
 
-@register('viewed_target')
-def _():
-    raise Exception('api abandoned')
-    j = g.j
-    ty, _id = parse_target(j['target'])
-
-    uasl = g.user_agent_string.lower()
-
-    if 'bot' in uasl\
-        or 'archiver' in uasl\
-        or 'noua' == uasl:
-        print_err('viewed_target request for', j['target'],
-            'seems to be from a bot.', uasl)
-        return {'error':False, 'info':'nicework'}
-
-    if not g.using_browser:
-        print_err('someone without a browser tried viewed_target()')
-        return {'error':False, 'info':'nicework'}
-
-    print_info('trying to increment_view_counter for', j['target'], uasl)
-    if ty=='thread':
-        increment_view_counter('thread', _id)
-    elif ty=='user':
-        increment_view_counter('user', _id)
-    else:
-        raise Exception('unsupported target')
-    return {'error':False, 'info':'nicework'}
+# @register('viewed_target')
+# def _():
+#     raise Exception('api abandoned')
+#     j = g.j
+#     ty, _id = parse_target(j['target'])
+#
+#     uasl = g.user_agent_string.lower()
+#
+#     if ('bot' in uasl
+#         or 'archiver' in uasl
+#         or 'noua' == uasl
+#         or 'webmeup' == uasl):
+#         print_err('viewed_target request for', j['target'],
+#             'seems to be from a bot.', uasl)
+#         return {'error':False, 'info':'nicework'}
+#
+#     if not g.using_browser:
+#         print_err('someone without a browser tried viewed_target()')
+#         return {'error':False, 'info':'nicework'}
+#
+#     print_info('trying to increment_view_counter for', j['target'], g.user_agent_string)
+#
+#     if ty=='thread':
+#         increment_view_counter('thread', _id)
+#     elif ty=='user':
+#         increment_view_counter('user', _id)
+#     else:
+#         raise Exception('unsupported target')
+#     return {'error':False, 'info':'nicework'}
 
 aqlc.create_collection('view_counters')
 @register('viewed_target_v2')
@@ -2043,20 +2055,22 @@ def _():
     if not targ:
         raise Exception ('no target specified')
 
-    uasl = g.user_agent_string.lower()
+    uas = g.user_agent_string
+    uasl = uas.lower()
 
-    if 'bot' in uasl\
-        or 'archiver' in uasl\
-        or 'noua' == uasl:
+    if ('bot' in uasl
+        or 'archiver' in uasl
+        or 'noua' == uasl
+        or 'webmeup' in uasl):
         print_err('viewed_target_v2 request for', j['target'],
-            'seems to be from a bot.', uasl)
+            'seems to be from a bot.', uas)
         return {'error':False, 'info':'botlike'}
 
-    if not g.using_browser:
-        print_err('someone without a browser tried viewed_target_v2()')
-        return {'error':False, 'info':'browserless'}
+    # if not g.using_browser:
+    #     print_err('someone without a browser tried viewed_target_v2()')
+    #     return {'error':False, 'info':'browserless'}
 
-    print_info('trying to increment_view_counter_v2 for', targ, uasl)
+    print_up('trying to increment_view_counter_v2 for', targ, uas)
 
     c = aql("upsert {targ:@targ} insert {targ:@targ , c:1} update {c:OLD.c+1} in view_counters return NEW.c", silent=True, targ=targ)[0]
 
@@ -2370,7 +2384,7 @@ def _():
 
     enabled = False if delete else True
 
-    curr = get_blacklist()
+    curr = get_blacklist(uid)
 
     mbs = max_blacklist_size = 25
     if len(curr)>=mbs and enabled == True:
@@ -2399,22 +2413,27 @@ def _():
 
     return error_false
 
-def get_blacklist():
+@ttl_cache(ttl=5)
+def get_blacklist(uid):
     list = aql('''for i in blacklist filter i.uid==@uid and i.enabled == true
     let user = (for u in users filter u.uid==i.to_uid return u)[0]
-    return merge(i, {user})''', uid=g.selfuid, silent=True)
+    return merge(i, {user})''', uid=uid, silent=True)
     return list
 
-def get_reversed_blacklist(): # who hates me
+def get_blacklist_set(uid):
+    return set(i['to_uid'] for i in get_blacklist(uid))
+
+@ttl_cache(ttl=5)
+def get_reversed_blacklist(uid): # who hates me
     list = aql('''for i in blacklist filter i.to_uid==@uid and i.enabled == true
     let user = (for u in users filter u.uid==i.uid return u)[0]
-    return merge(i, {user})''', uid=g.selfuid, silent=True)
+    return merge(i, {user})''', uid=uid, silent=True)
     return list
 
 @register('get_blacklist')
 def _():
     must_be_logged_in()
-    list = get_blacklist()
+    list = get_blacklist(g.selfuid)
     return {'blacklist':[(l['user']['name'],l['to_uid']) for l in list]}
 
 def im_in_blacklist_of(uid, reversed=False):
@@ -2433,6 +2452,7 @@ def im_in_blacklist_of(uid, reversed=False):
         return True
     return False
 
+@stale_cache(ttr=5, ttl=1800)
 def get_blacklist_all():
     return aql('''for i in blacklist filter i.enabled==true
     let user = (for u in users filter u.uid==i.uid return u)[0]
@@ -2453,7 +2473,7 @@ def listbl():
     r = all.map(lambda a:' '.join([
         a['t_c'],
         a['user']['name'],
-        'blacklisted',
+        '-->',
         a['to_user']['name'],
     ]))
     r = '\n'.join(r)
@@ -2485,6 +2505,6 @@ def _():
     err = target - dur
 
     pingtime = max(1, pingtime + err * 0.3)
-    # print('==={:4.4f}'.format(durbuf), 'pingtime {:4.4f}'.format(pingtime))
+    print_up(f'PING duration {durbuf:4.2f} pingtime {pingtime:4.2f}')
     ping_itvl = int(pingtime*1000)
     return {'ping':'pong','interval':ping_itvl}

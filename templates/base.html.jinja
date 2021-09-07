@@ -126,10 +126,10 @@ if not is_pincong_org() else
     </style>
   {%endif%}
 
-  {%if 0%}
+  {%if is_pincong_org()%}
     <style>
       .outerbox {
-        background-image:url('/images/pincong_bkgnd.svg');
+        background-image:url('/images/pincong_bkgnd_mod.svg');
       }
     </style>
   {%endif%}
@@ -285,7 +285,8 @@ if not is_pincong_org() else
           <div class="copyright">
             <span>{{zhen('访问者IP','Visitor IP')}} {{g.display_ip_address}} </span>
             <a href="/t/7623">{{zhen('为什么显示IP？','Why show IP?')}}</a>
-            <span class='opaque5'> {{g.get_elapsed()}}ms</span>
+            <span class='opaque5'> {{
+              g.time_elapsed_before_render}}/{{g.get_elapsed()}}ms</span>
           </div>
 
         </div>

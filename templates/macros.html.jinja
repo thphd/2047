@@ -12,9 +12,10 @@
   %}{%set aurl =
     ('/avatar/'~u.uid~'.png'~ etag_postfix)
 
-    if u.has_avatar
+    if u.has_avatar or etag_postfix
 
-    else '/images/avatar-max-img.png'
+    else '/avatar/'~u.uid~'.png' or '/images/avatar-max-img.png'
+
   %}{{aurl}}{%endmacro%}
 
 {%macro avatar(u, class="", plain=False, show_title=True, no_decoration=False)%}
@@ -89,8 +90,58 @@
   </span>
 {%endmacro%}
 
+{# one line of post, new version #}
+{%macro post_new(
+  p,
+  metas=[],
+  avatar_user=False,
+  item_id=False,
+  leftmost=False,
+  left=True,
+  classes=''
+  )%}
+
+{% set _id = item_id or ''%}
+
+<div class="{{classes}} threadlistitem padded {{
+'delusional' if (p.delusional) else ''}} {{
+'deleted' if (p.delete and t) else '' }} {{
+'spam' if p.spam else '' }} {{
+'conv_delete' if p.delete and 'conversation' in metas else '' }} {{
+'thread_header' if 'thread_header' in metas else '' }} {{
+'unread' if p.unread else ''
+}}" {%if _id%}id="{{_id}}"{%endif%} >
+
+  {%if leftmost%}{{leftmost}}{%endif%}
+
+  {%if left%}
+  <div class="left">
+    {# editor avatar should be current logged in user's #}
+
+    {{avatar(
+      avatar_user,
+      show_title = False if p.hide_personal_title else True,
+      )
+    }}
+
+  </div>
+  {%endif%}
+
+  <div class="right">
+    <div class="details">
+      {%if caller%}
+        {{caller()}}
+      {%else%}
+        no caller() found
+      {%endif%}
+    </div>
+  </div>
+</div>
+
+{%endmacro%}
+
 {# one line of post #}
-{%macro post(p, metas, avatar_user=False, item_id=False, leftmost=False, left=True, classes='')%}
+{%macro post_deprecated(p, metas, avatar_user=False, item_id=False, leftmost=False, left=True, classes='')%}
 
 {% set _idt = p.tid if 'threadlist' in metas %}
 {% set _ide = 'editor' if 'editor' in metas %}
@@ -142,7 +193,9 @@
       or u
       or (p.name and p)
       or g.logged_in
-      or {"uid":5132})
+      or {"uid":5132},
+      show_title = False if p.hide_personal_title else True,
+      )
     }}
     {%endif%}
 
@@ -524,18 +577,28 @@
   {{post(p, ['upper','publisher_upper','brief_upper','under_vote','publish_date_linkto','link_to','postlist','at_reply','edit_post','display_edit_status','post','view_post_code','delete_post'])}}
 {%endmacro%}
 
-{%macro delete_post(p, mode='post', t=False)%}
-{%set targ = ('post/'~p._key) if mode=='post' else ('thread/'~p.tid)%}
-{%if can_do_to(g.logged_in, 'delete', p.uid) or (t and can_do_to(g.logged_in, 'delete', t.uid))%}
-  {%if not p.delete%}
-    <a class='adminstuff delete' href="javascript:mark_delete('{{targ}}')">{{zhen('删除','Delete')}}</a>
-
+{%macro delete_post_button(targ_string, deleted=False, note='')%}
+  {%if not deleted%}
+    <a class='adminstuff delete' href="javascript:mark_delete('{{targ_string}}')">{{zhen('删除','Delete')}}{{note}}</a>
   {%else%}
-    <a class='adminstuff undelete' href="javascript:mark_delete('{{'u'~targ}}')">{{zhen('取消删除','Undelete')}}</a>
-
+    <a class='adminstuff undelete' href="javascript:mark_delete('{{'u'~targ_string}}')">{{zhen('取消删除','Undelete')}}</a>
   {%endif%}
+{%endmacro%}
 
-  {%if mode=='post'%}
+{%macro delete_post(p, mode='post', t=False)%}
+{%if mode=='post'%}
+  {%set targ = ('post/'~p._key) %}
+{%elif mode=='thread'%}
+  {%set targ = ('thread/'~p.tid) %}
+{%elif mode=='message'%}
+  {%set targ = ('message/'~p._key) %}
+{%endif%}
+
+{%if can_do_to(g.logged_in, 'delete', p.uid) or (t and can_do_to(g.logged_in, 'delete', t.uid))%}
+
+  {{delete_post_button(targ, p.delete)}}
+
+  {%if mode=='post' and (p.delete or g.is_admin)%}
     <a class='adminstuff viewcode' href="/oplog/{{targ}}">{{zhen('管理记录','Oplog')}}</a>
   {%endif%}
 {%endif%}
@@ -615,15 +678,15 @@
 
 {# one line of post, used in postlist with/without a thread #}
 {%macro post_postlist_threadless(p, in_thread=False)%}
-  {%call post(p, metas=[], avatar_user=p.user, item_id=p._key,
-      classes = 'blacklist' if p.blacklist else ''
+  {%call post_new(p, avatar_user=p.user, item_id=p._key,
+      classes = ('blacklist' if p.blacklist else '')
     ) %}
 
   <div class="meta upper">
     {# publisher #}
     {%if p.user%}
     {{username(p.user)}}
-    {{brief(p.user)}}
+    {%if not p.hide_brief%}{{brief(p.user)}}{%endif%}
     {%endif%}
   </div>
 
@@ -663,7 +726,7 @@
 
 {# one line of post(thread), used in postlist's thread header #}
 {%macro post_postlist_header(t, left=False)%}
-  {%call post(t, metas=[], left=left)%}
+  {%call post_new(t, left=left, avatar_user=t.user)%}
     {%if left==True%}
       <div class="meta upper">
         {{username(t.user) if t.user}}
@@ -730,7 +793,7 @@
 
 {# one line of thread, used in threadlist #}
 {%macro post_threadlist(t)%}
-  {%call post(t, metas=[],
+  {%call post_new(t,
     avatar_user=t.user, item_id=t.tid,
     leftmost=leftmost_vote(t),
     classes='blacklist' if t.blacklist else '')  %}
@@ -759,7 +822,8 @@
 
   </div>
 
-  {%set url_to_last = get_url_to_post_given_details(t.tid,t.last._key,t.count or 0)%}
+  {%set url_to_last = get_url_to_post_given_details(
+      t.tid,t.last_reply_pid,t.count or 0)%}
 
   <div class="meta">
     {{category_bubble(t, class='category_name_threadlist', color_class=False)}}
@@ -801,7 +865,7 @@
       {{format_time_relative_fallback(t.t_c)}}
     </a>
 
-    {%if t.count%}
+    {%if t.count and ('lastuser' in t)%}
     {{username(t.lastuser, href=url_to_last)}}
 
     {# last commented date #}
@@ -851,7 +915,7 @@
       <div class="thread_contrib">
         <a class='votenumber' href="/p/{{t.mvp}}">▲{{t.mv}}</a>
         <div class="thread_contributer">
-          {{avatar({"uid": t.mvu}, no_decoration=True)}}
+          {{avatar(get_user_by_id_cached(t.mvu), no_decoration=True)}}
         </div>
       </div>
     </div>
@@ -882,13 +946,13 @@
 {%endmacro%}
 
 {# one line of user, used in userpage #}
-{%macro post_userpage(p)%}
+{%macro post_userpage_deprecated(p)%}
   {{post(p, [])}}
 {%endmacro%}
 
 {# one line of user, used in userlist #}
 {%macro post_userlist(u)%}
-{%call post(u, metas=[], avatar_user=u, item_id=u.uid)%}
+{%call post_new(u, avatar_user=u, item_id=u.uid)%}
   <div class="post_content">
     {{username(u, class='userlist_name')}}
 
@@ -974,14 +1038,78 @@
 
 
 {# one line of conv, used in convlist #}
-{%macro post_conversation(p)%}
+{%macro post_conversation2(p)%}
   {{post(p, ['conversation','conversation_with','conversation_date','conversation_delete'])}}
 {%endmacro%}
 
 {# one line of message, used in messagelist #}
-{%macro post_message(p)%}
+{%macro post_message_deprecated(p)%}
   {{post(p, ['message'])}}
 {%endmacro%}
+
+{%macro post_message(p)%}
+
+{%call post_new(p, avatar_user=p.user, item_id=p._key)%}
+
+  <div class="post_content">
+    {{convert_markdown(p.content)|safe}}
+  </div>
+
+  <div class="meta">
+    <span>由</span>
+    {# sender #}
+    {{username(p.user)}}
+
+    <span>发送给</span>
+    {# receiver #}
+    {{username(p.to_user)}}
+
+    {# date #}
+    <span>
+      {{format_time_dateifnottoday(p.t_c)}}
+    </span>
+
+    {{delete_post_button('message/'~p._key, p.delete, note='（不可恢复）')}}
+
+  </div>
+{%endcall%}
+{%endmacro%}
+
+{# one line of conversation, used in convlist #}
+{%macro post_conversation(p)%}
+  {%set avuser =( p.last.user if p.last.to_uid==g.logged_in.uid else p.last.to_user) or g.current_user%}
+
+  {%set content = p.last.content %}
+  {%call post_new(p, avatar_user=avuser)%}
+  <div class="post_content">
+    <a href="/m/{{p.convid}}" class="conv_title">
+      {{content[0:200] +
+        ('' if (content|length)<200 else
+        ('... <i>('~content|length~' chars)</i>')|safe)
+      }}
+    </a>
+  </div>
+
+  <div class="meta">
+
+      {%set sent = 1 if p.last.uid==g.logged_in.uid else 0 %}
+      <span>{{"发给" if sent else "来自"}}</span>
+      {{username(p.last.to_user) if sent else username(p.last.user)}}
+
+
+      <span>{{format_time_dateifnottoday(p.last.t_c)}}</span>
+
+      {%if not p.delete%}
+        <a href="javascript:mark_delete('conversation/{{p.convid}}')" class='adminstuff'>屏蔽对话</a>
+      {%else%}
+        <a href="javascript:mark_delete('uconversation/{{p.convid}}')" class='adminstuff'>取消屏蔽</a>
+      {%endif%}
+
+  </div>
+
+  {%endcall%}
+{%endmacro%}
+
 
 {%macro array_usernames(arr)%}
   {%for u in arr%}{%if loop.index0%}{%if
@@ -993,7 +1121,7 @@
 
 {# one line of notification, used in notification_list #}
 {%macro post_notification(p)%}
-  {%call post(p, avatar_user=p.from_user, metas=['notification'])%}
+  {%call post_new(p, avatar_user=p.from_user)%}
   <div class="post_content">
     {%if p.why == 'reply_thread'%}
       {%if not p.from_users%}
@@ -1055,13 +1183,25 @@
 {%endmacro%}
 
 {# one line of editor, used in postlist #}
-{%macro post_postlist_editor(p)%}
+{%macro post_postlist_editor_deprecated(p)%}
   {{post(p, ['editor'])}}
 {%endmacro%}
 
+{# inline editor #}
+{%macro post_postlist_editor(p, mode='thread', target=False)%}
+  {%call post_new(p, avatar_user=g.current_user)%}
+    {%if target!=False%}
+      {{editor(target)}}
+    {%elif mode=='thread'%}
+      {{editor('thread/'~p.tid)}}
+    {%endif%}
+  {%endcall%}
+{%endmacro%}
+
+
 {# one line of targeted editor #}
 {%macro post_targeted_editor(p)%}
-  {{post(p, ['targeted_editor'])}}
+  {{post_postlist_editor(p, target=p.target)}}
 {%endmacro%}
 
 {%macro category_bubble(c, class='category_name',color_class=True)%}

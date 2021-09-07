@@ -5,7 +5,7 @@ from colors import *
 # from functools import lru_cache
 
 from cachetools.func import *
-from cachy import stale_cache
+from cachy import *
 
 def iif(a,b,c):return b if a else c
 
@@ -34,16 +34,35 @@ def removefile(fn):
     try:
         os.remove(fn)
     except Exception as e:
-        print(e)
-        print('failed to remove', fn)
+        print_err(e)
+        print_err('failed to remove', fn)
     else:
         return
 
 import threading
 
 def dispatch(f):
-    t = threading.Thread(target=f, daemon=True)
-    t.start()
+    return tpe.submit(f)
+    # t = AppContextThreadMod(target=f, daemon=True)
+    # # t = threading.Thread(target=f, daemon=True)
+    # t.start()
+
+def dispatch_with_retries(f):
+    n = 0
+    def wrapper():
+        nonlocal n
+        while 1:
+            try:
+                f()
+            except Exception as e:
+                print_err(e)
+                n+=1
+                time.sleep(0.5)
+                print_up(f'{f.__name__}() retry #{n}')
+            else:
+                print_down(f'{f.__name__}() success on attempt #{n}')
+                break
+    return tpe.submit(wrapper)
 
 def init_directory(d):
     try:
@@ -81,3 +100,27 @@ def clip(a,b):
     return _clip
 
 clip01 = clip(0,1)
+
+import zlib
+
+def calculate_checksum(bin): return zlib.adler32(bin).to_bytes(4,'big')
+def calculate_checksum_base64(bin):
+    csum = calculate_checksum(bin)
+    chksum_encoded = base64.b64encode(csum).decode('ascii')
+    return chksum_encoded
+
+def calculate_checksum_base64_replaced(bin):
+    return calculate_checksum_base64(bin).replace('+','-').replace('/','_')
+
+def calculate_etag(bin):
+    chksum_encoded = calculate_checksum_base64_replaced(bin)
+    return chksum_encoded
+
+if __name__ == '__main__':
+    k = time.time()
+    def hello():
+        if time.time() - k < 2:
+            raise Exception('nah')
+
+    dispatch_with_retries(hello)
+    time.sleep(4)

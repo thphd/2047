@@ -555,13 +555,21 @@ if (editor_target){
             break;
 
             case 'strike':
-              et.setRangeText(`~~${st}~~`,ss,se,'preserve')
-              et.setSelectionRange(ss+2, se+2)
+              et.setRangeText(`<s>${st}</s>`,ss,se,'preserve')
+              et.setSelectionRange(ss+3, se+3)
             break;
 
             case 'code':
-              et.setRangeText(`\`${st}\``,ss,se,'preserve')
-              et.setSelectionRange(ss+1, se+1)
+              var lines = st.split(`\n`)
+              if (lines.length<=1){
+                et.setRangeText(`\`${st}\``,ss,se,'preserve')
+                et.setSelectionRange(ss+1, se+1)
+              }else{
+                var out = `\n\`\`\`text\n${st}\n\`\`\`\n`
+                et.setRangeText(out,ss,se,'preserve')
+                et.setSelectionRange(ss+9, ss+9+st.length)
+              }
+
             break;
 
             case 'link':
@@ -593,15 +601,31 @@ if (editor_target){
             break;
 
             case 'quote':
-              var stt = st.trim()
+              // var stt = st.trim()
+              var stt = st
               var lstt = stt.length
-              if(bst[ss-1]=='\n'){
-                et.setRangeText(`> ${stt}\n`,ss,se,'preserve')
-                et.setSelectionRange(ss+2, ss+2+lstt)
+
+              var lines = stt.split('\n')
+              // print(lines.length)
+
+              if(lstt.length==0){
+                et.setRangeText('\n>\n', ss, se, 'preserve')
+                et.setSelectionRange(ss+1, ss+1)
+
               }else{
-                et.setRangeText(`\n> ${stt}\n`,ss,se,'preserve')
-                et.setSelectionRange(ss+3, ss+3+lstt)
+                if(lines.length<=5){
+                  var out = foreach(lines)(line=>`> ${line}`).join('\n')
+                  out = `\n${out}\n`
+                  et.setRangeText(out, ss, se, 'preserve')
+                  et.setSelectionRange(ss+1, ss+out.length-1)
+                }else{
+                  var prefix = `\n<blockquote>\n\n`
+                  var out = `${prefix}${stt}\n\n</blockquote>\n`
+                  et.setRangeText(out, ss, se, 'preserve')
+                  et.setSelectionRange(ss+prefix.length, ss+prefix.length+lstt)
+                }
               }
+
             break;
 
           default:
@@ -892,10 +916,27 @@ function at_reply(k,un){
     var uname = un
   }
 
-  var url = `/p/${k}`
+  var editor_text = text
+  var et = editor_text
+  var ss = et.selectionStart
+  var se = et.selectionEnd
 
-  text.value += `${text.value?' ':''}@${uname} <#${k}> `
-  text.focus()
+  // selected text
+  var st = et.value.substr(ss, se-ss)
+  // print(st)
+  var stl = st.length
+  var bst = et.value.substr(0, ss)
+  var ast = et.value.substr(se)
+
+  et.focus()
+
+  var replacement = ` @${uname} <#${k}> `
+
+  et.setRangeText(replacement, ss, se, 'preserve')
+  et.setSelectionRange(ss+replacement.length, ss+replacement.length)
+
+  // text.value += `${text.value?' ':''}@${uname} <#${k}> `
+  // text.focus()
 }
 
 // post colorify
@@ -1704,33 +1745,36 @@ function favorite(targ, del){
   .catch(alert)
 }
 
-var user_browser_active = false
+var user_browser_active = false;
 
-function activityWatcher(){
+(function activityWatcher(){
   var activity_counter = 0
-    //The function that will be called whenever a user is active
-    function activity(){
-      activity_counter++;
-      if(activity_counter>1){
-        user_browser_active = true
-      }
-    }
 
   //An array of DOM events that should be interpreted as
   //user activity.
   var activityEvents = [
     'mousedown', 'mousemove', 'keydown',
-    'scroll', 'touchstart'
+    'scroll',
+    'touchstart',
   ];
 
   //add these events to the document.
   //register the activity function as the listener parameter.
   activityEvents.forEach(function(eventName) {
-    document.addEventListener(eventName, activity, true);
+    //The function that will be called whenever a user is active
+    function activity(){
+      activity_counter++;
+      if(activity_counter>1){
+        user_browser_active = true
+        document.removeEventListener(eventName, activity)
+      }
+      print(eventName, activity_counter)
+    }
+    document.addEventListener(eventName, activity, {
+      passive:true,
+    });
   });
-}
-
-activityWatcher();
+})();
 
 function update_translation(sample, locale, original){
   var curr_lang = locale || get_meta('locale')

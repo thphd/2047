@@ -1,29 +1,10 @@
-from logging.config import dictConfig
-
-dictConfig({
-    'version': 1,
-    'formatters': {'default': {
-        'format': '%(levelname)s/%(module)s %(message)s',
-    }},
-    'handlers': {'wsgi': {
-        'class': 'logging.StreamHandler',
-        'stream': 'ext://flask.logging.wsgi_errors_stream',
-        'formatter': 'default'
-    }},
-    'root': {
-        'level': 'INFO',
-        'handlers': ['wsgi']
-    }
-})
+import logger_config
 
 import time,os,sched,random,threading,traceback,datetime
 import re,base64
 import zlib
 
 import requests as r
-
-# import Identicon
-# Identicon._crop_coner_round = lambda a,b:a # don't cut corners, please
 
 import mimetypes as mt
 
@@ -33,7 +14,7 @@ print = qprint
 from aql import *
 wait_for_database_online()
 
-dispatch(fix_view_loss(None))
+dispatch_with_retries(fix_view_loss(None))
 
 from medals import get_medals, get_user_medals
 
@@ -44,11 +25,11 @@ from flask import render_template, request, send_from_directory, make_response
 from api import api_registry, get_categories_info, get_url_to_post, get_url_to_post_given_details, create_all_necessary_collections
 from api import *
 
-dispatch(create_all_necessary_collections)
-dispatch(dispatch_database_updaters)
+dispatch_with_retries(create_all_necessary_collections)
+dispatch_with_retries(dispatch_database_updaters)
 
 from pgp_stuff import pgp_check
-dispatch(pgp_check)
+dispatch_with_retries(pgp_check)
 
 import i18n_api
 
@@ -83,7 +64,7 @@ def hash_these(path_arr, pattern='*.*'):
 resource_files_hash = ''
 images_resources_hash = ''
 
-def rfh():
+def calculate_resource_files_hash():
     global resource_files_hash, images_resources_hash
 
     resource_files_hash = hash_these(['templates/css/', 'templates/js/'])
@@ -92,12 +73,12 @@ def rfh():
     images_resources_hash = hash_these(['templates/images/'], '*.png')
     print_info('images_resources_hash:', images_resources_hash)
 
-dispatch(rfh)
+dispatch_with_retries(calculate_resource_files_hash)
 
 def route_static(frompath, topath, maxage=1800):
     @route('/'+frompath+'/<path:path>')
     def _(path):
-        path = re.split('v=.*?\/', path).join('')
+        path = re.split('v=.+?\/', path).join('')
 
         cc = topath+'/'+path
         if not os.path.exists(cc):
@@ -119,16 +100,16 @@ def route_static(frompath, topath, maxage=1800):
 
         if maxage!=0:
             resp.headers['Cache-Control']= \
-                f'max-age={str(maxage)}, stale-while-revalidate=86400'
+                f'max-age={str(maxage)}, stale-while-revalidate={str(maxage*10)}'
 
         return resp
 
 route_static('static', 'static')
-route_static('images', 'templates/images', 3600*12)
-route_static('pr_images', 'ads/images', 3600*12)
-route_static('css', 'templates/css', 3600)
-route_static('js', 'templates/js', 3600)
-route_static('highlight', 'templates/highlight', 3600*6)
+route_static('images', 'templates/images', 3600*24*5)
+route_static('pr_images', 'ads/images', 3600*24*5)
+route_static('css', 'templates/css', 3600*24*5)
+route_static('js', 'templates/js', 3600*24*5)
+route_static('highlight', 'templates/highlight', 3600*24*5)
 route_static('jgawb', 'jgawb', 1800)
 route_static('jicpb', 'jicpb', 1800)
 
@@ -202,7 +183,7 @@ def create_all_necessary_indices():
         ['t_u'],
     ))
 
-    ci('messages',indexgen([['convid'],['to_uid'],[]],['t_c']))
+    ci('messages',indexgen([['convid'],['to_uid']],['t_c']))
 
     ci('notifications',indexgen([['to_uid'],['to_uid','from_uid','why','url']],['t_c']))
     ci('avatars',[['uid']])
@@ -210,7 +191,7 @@ def create_all_necessary_indices():
     ci('aliases',[['is','name'],['name','is']])
     ci('operations',indexgen([['target'],[]], ['t_c']))
     ci('followings', indexgen([['uid','follow'],['to_uid','follow']],['t_c']))
-    ci('favorites', indexgen([['uid']], ['t_c','pointer']))
+    ci('favorites', indexgen([['uid'],[]], ['t_c','pointer']))
     ci('polls', [['t_c']])
     ci('poll_votes', [['pollid', 'uid'],['pollid', 'choice']])
 
@@ -341,7 +322,7 @@ class Paginator:
         qsc+=filter
 
         qsc+=QueryString('''
-            let user = (for u in users filter u.uid==i.uid return u)[0]
+            //let user = (for u in users filter u.uid==i.uid return u)[0]
             let self_voted = length(for v in votes filter v.uid==@selfuid and v.id==to_number(i._key) and v.type=='post' and v.vote==1 return v)
 
             let favorited = length(for f in favorites
@@ -369,7 +350,9 @@ class Paginator:
             qsc+=QueryString('''
                 sort i.{sortby} {order}
                 limit {start},{count}
-                return merge(i, {{user, self_voted, t,
+                return merge(i, {{
+                    //user,
+                    self_voted, t,
                     favorited, ncomments, comments}})
                 '''.format(
                     sortby = sortby,order=order,start=start,count=count,
@@ -388,27 +371,35 @@ class Paginator:
 
             pagination_obj = self.get_pagination_obj(count, pagenumber, pagesize, order, path, sortby, mode=mode)
 
-            remove_duplicate_brief(postlist)
+            add_users(postlist)
             mark_blacklisted(postlist)
             postlist = sink_deleted(postlist)
+
+            remove_duplicate_brief(postlist)
 
             return postlist, pagination_obj
 
         else:
             qsc+=QueryString('''
-            return merge(i, {user, self_voted, t, favorited})
+            return merge(i, {
+                //user,
+                self_voted, t, favorited})
             ''')
 
             postlist = aql(qsc.s, silent=True, **qsc.kw)
+            add_users(postlist)
             remove_duplicate_brief(postlist)
             return postlist
 
-    @stale_cache(maxsize=128, ttr=3, ttl=30)
     def get_thread_list(self, *a, **k):
-        return self.get_thread_list_uncached(*a, locale=g.locale, **k)
+        tl, po= self.get_thread_list_cached(*a, **k, locale=g.locale)
+        return tl.copy(), po.copy()
+
+    @stale_cache(maxsize=256, ttr=3, ttl=30)
+    def get_thread_list_cached(self, *a, locale=None, **k):
+        return self.get_thread_list_uncached(*a,**k)
 
     def get_thread_list_uncached(self,
-        locale='',
         mode='',
         by='category',
         category='all',
@@ -419,7 +410,8 @@ class Paginator:
         pagesize=50,
         pagenumber=1,
         path='',
-        ids=[]):
+        ids=[],
+        ):
 
         ts = time.time()
 
@@ -485,12 +477,12 @@ class Paginator:
         )
 
         qsc.append('''
-            let user = (for u in users filter u.uid == i.uid return u)[0]
+            //let user = (for u in users filter u.uid == i.uid return u)[0]
             let count = i.nreplies
 
-            let fin = (for p in posts filter p.tid == i.tid sort p.t_c desc limit 1 return p)[0]
+            //let fin = (for p in posts filter p.tid == i.tid sort p.t_c desc limit 1 return p)[0]
 
-            let ufin = (for j in users filter j.uid == fin.uid return j)[0]
+            //let ufin = (for j in users filter j.uid == fin.uid return j)[0]
             let c = (for c in categories filter c.cid==i.cid return c)[0]
 
             //let mvu = ((i.mvu and i.mv>2) ?(for u in users filter u.uid == i.mvu return u)[0]: null)
@@ -506,16 +498,24 @@ class Paginator:
             ''', selfuid=g.selfuid)
 
             qsc.append('''
-                return merge(i, {user:user, last:unset(fin,'content'), lastuser:ufin, cname:c.name, count:count,
+                return merge(i, {
+                //user:user, lastuser:ufin, last:unset(fin,'content'),
+                cname:c.name, count:count,
                 favorited, self_voted})
             ''')
 
             threadlist = aql(qsc.s, silent=True, **qsc.kw)
+
+            add_users(threadlist)
+            threads_fill_lastuser(threadlist)
+            remove_duplicate_brief(threadlist)
             return threadlist
 
         else:
             qsc.append('''
-                return merge(i, {user:user, last:unset(fin,'content'), lastuser:ufin, cname:c.name, count:count})
+                return merge(i, {
+                //user:user, lastuser:ufin, last:unset(fin,'content'),
+                cname:c.name, count:count})
             ''')
 
             qss = querystring_simple = \
@@ -538,15 +538,18 @@ class Paginator:
                     t['youtube'] = ytb_videos[0] if len(ytb_videos) else None
                     t['content'] = None
 
+            add_users(threadlist)
+            threads_fill_lastuser(threadlist)
             remove_duplicate_brief(threadlist)
-
             return threadlist, pagination_obj
 
+    def get_pagination_obj(self, *a, **kw):
+        return self.get_pagination_obj_raw(*a, **kw, locale=g.locale)
 
-    @ttl_cache(maxsize=4096, ttl=120)
-    def get_pagination_obj(self,
+    @ttl_cache(maxsize=2048, ttl=120)
+    def get_pagination_obj_raw(self,
         count, pagenumber, pagesize, order, path, sortby,
-        mode='thread', postfix='', default_pagesize=None):
+        mode='thread', postfix='', default_pagesize=None, locale=None):
 
         # total number of pages
         total_pages = max(1, (count-1) // pagesize +1)
@@ -745,7 +748,7 @@ class UAFilter:
     def __init__(self):
         self.d = {}
         self.dt = {}
-        self.blacklist = ''
+        self.blacklist = {}
 
     def timedelta(self, ua):
         this_time = time.time()
@@ -767,7 +770,7 @@ class UAFilter:
         if ua in self.d:
             self.d[ua] *= factor
 
-    def judge(self, uastring, weight=1.):
+    def judge(self, uastring, weight=1., infostring=''):
         ua = uastring
 
         if ua in self.d:
@@ -784,11 +787,13 @@ class UAFilter:
         # print(self.d[ua])
 
         # print_err(self.d[ua])
-        if self.d[ua]>25:
+        if self.d[ua]>30:
             # self.d[ua]+=3*weight
 
-            if self.d[ua]>75 and (ua not in self.blacklist):
-                # self.blacklist+=ua
+            if self.d[ua]>50 and (ua not in self.blacklist):
+                with open('blacklisted.txt', 'a+') as f:
+                    f.write(time_iso_now()+' '+ua+' '+infostring+'\n')
+                self.blacklist[ua] = infostring
                 pass
 
             return False
@@ -821,18 +826,24 @@ def log_err(*a):
 
 @app.before_request
 def before_request():
+    hostname = request.host
+
     # redirection
-    if request.host[0:4]=='www.':
+    if hostname[0:4]=='www.':
         resp = make_response('For Aesthetics', 307)
-        goto = request.scheme+'://'+request.host[4:]+ request.full_path
+        goto = request.scheme+'://'+hostname[4:]+ request.full_path
         goto = goto[:-1] if goto[-1]=='?' else goto
         resp.headers['Location'] = goto
-        log_err('307 from',request.host,'to', goto)
+        log_err('307 from',hostname,'to', goto)
         return resp
 
+    rh = request.headers
+
     # request figerprinting
-    acceptstr = request.headers['Accept'] if 'Accept' in request.headers else 'NoAccept'
-    uas = str(request.user_agent) if request.user_agent else 'NoUA'
+    acceptstr = rh['Accept'] if 'Accept' in rh else 'NoAccept'
+
+    uas = rh['User-Agent'] if 'User-Agent' in rh else 'NoUA'
+
     g.user_agent_string = uas
     ipstr = request.remote_addr
 
@@ -852,7 +863,7 @@ def before_request():
 
     is_avatar = rpsw('/avatar/')
 
-    is_static = is_avatar or rpsw('/js/') or rpsw('/css/') or rpsw('/images/') or rpsw('/qr/')
+    is_static = is_avatar or rpsw('/js/') or rpsw('/css/') or rpsw('/images/') or rpsw('/qr/') or rpsw('/pr_images/')
 
     # rate limiting does not need to be applied to those paths
     non_critical_paths = (
@@ -867,14 +878,18 @@ def before_request():
     g.session = session
 
     if 'browser' not in session:
-        g.using_browser = False
+        ub = g.using_browser = False
     else:
-        g.using_browser = True
+        ub = g.using_browser = True
+
+    browserstr = 'browser' if ub else '==naked=='
 
     if 'locale' in session:
         g.locale = session['locale']
+        if g.locale=='zh':
+            g.locale = 'zh-cn'
     else:
-        g.locale = 'zh'
+        g.locale = 'zh-cn'
 
     salt = get_current_salt()
 
@@ -886,58 +901,57 @@ def before_request():
     g.current_user = False
     g.is_admin = False
 
-    if not(is_static) and 'uid' in session:
+    if (not is_static):
+        if 'uid' in session:
+            uid = int(session['uid'])
+            g.logged_in = get_user_by_id_admin(uid)
 
-        g.logged_in = get_user_by_id_admin(int(session['uid']))
-        if g.logged_in:
+            if g.logged_in: # okay uid
+                cu = g.current_user = g.logged_in
+                g.selfuid = cu['uid']
 
-            g.current_user = g.logged_in
-            g.selfuid = g.logged_in['uid']
-            # print(g.selfuid,'selfuid')
-            g.is_admin = True if g.current_user['admin'] else False
+                g.is_admin = bool(cu['admin'])
 
-            if not is_static:
-                # print_info(g.logged_in['name'], 'browser' if g.using_browser else '')
-                log_info(f'({g.selfuid})', g.logged_in['name'], 'browser' if g.using_browser else '==naked==', salt)
+                # when is the last time you check your inbox?
+                if 't_inbox' not in cu: cu['t_inbox'] = '1989-06-04T00:00:00'
 
-            # when is the last time you check your inbox?
-            if 't_inbox' not in g.current_user:
-                g.current_user['t_inbox'] = '1989-06-04T00:00:00'
+                # when is the last time you check your notifications?
+                if 't_notif' not in cu: cu['t_notif'] = '1989-06-04T00:00:00'
 
-            # when is the last time you check your notifications?
-            if 't_notif' not in g.current_user:
-                g.current_user['t_notif'] = '1989-06-04T00:00:00'
+                if 'nnotif' not in cu: cu['nnotif'] = 0
+                if 'ninbox' not in cu: cu['ninbox'] = 0
 
-            if 'nnotif' not in g.current_user:
-                g.current_user['nnotif'] = 0
-            if 'ninbox' not in g.current_user:
-                g.current_user['ninbox'] = 0
+                cu['num_unread']=cu['ninbox']
+                cu['num_notif']=cu['nnotif']
 
-            g.current_user['num_unread']=g.current_user['ninbox']
-            g.current_user['num_notif']=g.current_user['nnotif']
 
-            # uaf.cooldown(uas)
-            # uaf.cooldown(acceptstr)
+                log_info(
+                    ipstr,
+                    f'({uid}) {cu["name"]}',
+                    browserstr,
+                    salt,
+                    hostname,
+                    )
+                return # done
 
-            # if you're logged in then end of story
+            else: # bad uid
+                pass
+        else: # no uid not static
+            log_info(
+                ipstr,
+                browserstr,
+                salt,
+                hostname,
+                )
+
+    else: # is static
+        if salt!='==nosalt==' and ub: # browser user
             return
 
-    # now seems you're not logged in. we have to be more strict to you
-    salt = g.session['salt'] if 'salt' in g.session else '==nosalt=='
-
-    if not is_static:
-        log_info(ipstr, 'browser' if g.using_browser else '==naked==', salt)
-
-
-    if non_critical_paths: # or g.using_browser:
-        # uaf.cooldown(uas)
-        # uaf.cooldown(acceptstr)
-        return
 
     weight = 1.
     if is_local:
-        # log_up(f'local [{uas}][{acceptstr}]')
-        weight *= 1.5 # be more strict on the tor side
+        weight *= 1.5 # be more strict on tor side
     if acceptstr=='NoAccept':
         weight *= 1.
 
@@ -945,35 +959,47 @@ def before_request():
     你们这样不行的啊！！
     '''
 
+    uasl = uas.lower()
+
+    okaybots = ['AdsBot-Google-Mobile','googlebot','blexbot','semrushbot','webmeup','ahrefsbot'].map(lambda k:k.lower())
+
+    def is_okay_bot(uas):
+        uas = uas.lower()
+        for botname in okaybots:
+            if botname in uas:
+                return True
+        return False
+
     # filter bot/dos requests
     allowed = (
-        uaf.judge(uas, weight) and
-        uaf.judge(acceptstr, weight) and
-        (uaf.judge(ipstr, weight) if not is_local else True)
+        # uaf.judge(uas, weight) and
+        # uaf.judge(acceptstr, weight) and
+        # is_okay_bot(uas) or
+        (uaf.judge(ipstr, weight, infostring=uas) if not is_local else True)
     )
+
     def uafd(k):
         if k in uaf.d:
             return uaf.d[k]
         else:
-            return -1
+            return 0
 
     if not allowed:
-        log_err('blocked [{}][{}][{}][{:.2f}][{:.2f}][{:.2f}]'.format(
-            uas, acceptstr[-50:],
-            ipstr, uafd(uas),
-            uafd(acceptstr), uafd(ipstr)))
+        log_err(f'block [{ipstr}]({uafd(ipstr):.2f}) {hostname} {uas}\n'
+        +f'bl:{list(uaf.blacklist.keys()).join(",")}')
 
-        if random.random()>0:
-            time.sleep(1+random.random()*2)
-            return ('rate limit exceeded ali very stupid', 429)
-        elif random.random()>0.02:
-            return (b'please wait a moment before accesing this page'+base64.b64encode(os.urandom(int(random.random()*256))), 200)
+
+        if not is_okay_bot(uas) and (ipstr in uaf.blacklist):
+
+            resp = make_response('rate limit exceeded', 307)
+            resp.headers['Location'] = 'https://shca.miit.gov.cn/'
+            return resp
         else:
-            pass
+            return make_response('rate limit exceeded', 429)
+
     else:
-        # m = uaf.get_max()
-        # log_up('max: [{}][{:.2f}]black[{}]'.format(m[0][-50:],m[1], uaf.blacklist))
-        log_up(f'now:[{uas[:50]}][{acceptstr[-50:]}][{ipstr}][{uafd(uas):.2f}, {uafd(acceptstr):.2f}, {uafd(ipstr):.2f}]')
+        # log_up(f'allow [{ipstr}]({uafd(ipstr):.1f}) {hostname} {uas}')
+        pass
 
 def tryint(str):
     try:
@@ -1334,7 +1360,7 @@ def get_thread_full(tid, selfuid=-1):
 
 def remove_duplicate_brief(postlist):
     # remove duplicate brief string within a page
-    bd = dict()
+    bd = set()
     for p in postlist:
         if isinstance(p, dict) and 'user' in p:
             pu = p['user'] or {}
@@ -1342,16 +1368,16 @@ def remove_duplicate_brief(postlist):
             if 'brief' in pu:
                 k = ('brief', pu['name'], pu['brief'])
                 if k in bd:
-                    pu['brief']=''
+                    p['hide_brief']=True
                 else:
-                    bd[k] = 1
+                    bd.add(k)
 
             if 'personal_title' in pu:
                 k = ('pt', pu['name'], pu['personal_title'])
                 if k in bd:
-                    pu['personal_title']=''
+                    p['hide_personal_title']=True
                 else:
-                    bd[k] = 1
+                    bd.add(k)
 
 # thread, list of posts
 @app.route('/t/<int:tid>')
@@ -1413,18 +1439,39 @@ def get_thread(tid):
     )
 
 def mark_blacklisted(postlist):
-    bl = get_blacklist().map(lambda k:k['to_uid'])
-    if 0 == len(bl):
+    bl_set = get_blacklist_set(g.selfuid)
+
+    if 0 == len(bl_set):
         return
 
     for idx, i in enumerate(postlist):
-        if i['uid'] in bl:
+        if i['uid'] in bl_set:
             # print('blacklisted', i)
-            postlist[idx]['blacklist'] = True
+            copy = postlist[idx].copy()
+            copy['blacklist'] = True
+            postlist[idx] = copy
+
+def add_users(postlist):
+    for i in postlist:
+        uid = key(i,'uid')
+        if uid:
+            i['user'] = get_user_by_id_cached(uid)
+        to_uid = key(i,'to_uid')
+        if to_uid:
+            i['to_user'] = get_user_by_id_cached(to_uid)
+
+def threads_fill_lastuser(threadlist):
+    tl = threadlist
+    for i in tl:
+        if 'last_reply_uid' in i:
+            lruid = i['last_reply_uid']
+            if lruid and is_integer(lruid):
+                i['lastuser'] = get_user_by_id_cached(lruid)
 
 def sink_deleted(postlist):
     newlist = []
     badapple = []
+
     for i in postlist:
         if key(i, 'blacklist') or key(i, 'delete') or key(i, 'spam'):
             badapple.append(i)
@@ -1822,10 +1869,12 @@ def route_get_avatar(uid):
             raise Exception('no data in avatar object found')
 
     else: # db no match
-        if 0:
+        if 1:
             # render an identicon
-            identicon = Identicon.render(str(uid*uid))
-            resp = make_response(identicon, 200)
+            from avatar_generation import render_identicon
+
+            img = render_identicon(str(uid*uid+uid))
+            resp = make_response(img, 200)
             resp = etag304(resp)
 
         else:
@@ -1837,7 +1886,7 @@ def route_get_avatar(uid):
 
             resp = make_response('', 307)
             resp.headers['Location'] = '/images/avatar-max-img.png'
-            resp.headers['Cache-Control']= 'max-age=43200, stale-while-revalidate=864000'
+            resp.headers['Cache-Control']= 'max-age=86400, stale-while-revalidate=864000'
             return resp
 
     resp.headers['Content-Type'] = 'image/png'
@@ -1847,7 +1896,7 @@ def route_get_avatar(uid):
     if 'no-cache' in request.args:
         resp.headers['Cache-Control']= 'no-cache'
     else:
-        resp.headers['Cache-Control']= 'max-age=43200, stale-while-revalidate=864000'
+        resp.headers['Cache-Control']= 'max-age=186400, stale-while-revalidate=1864000'
     return resp
 
     # # default: 307 to logo.png
@@ -1867,7 +1916,7 @@ def conversation_page():
 
     sort i.t_u desc
 
-    let last = (for m in messages filter m.convid==i.convid
+    let last = (for m in messages filter m.convid==i.convid and m.delete==null
     sort m.t_c desc limit 1 return m)[0]
 
     let count = length(for m in messages filter m.convid==i.convid
@@ -1919,14 +1968,19 @@ def messages_by_convid(convid):
 
     res = aql('''
     for i in messages
-    filter i.convid==@convid
+    filter i.convid==@convid and i.delete==null
     sort i.t_c desc
 
-    let user = (for u in users filter u.uid==i.uid return u)[0]
-    let to_user = (for u in users filter u.uid==i.to_uid return u)[0]
+    limit 100
 
-    return merge(i,{user, to_user})
+    //let user = (for u in users filter u.uid==i.uid return u)[0]
+    //let to_user = (for u in users filter u.uid==i.to_uid return u)[0]
+
+    //return merge(i,{user, to_user})
+    return i
     ''', convid=convid, silent=True)
+
+    add_users(res)
 
     last = res[0]
     u1n = last['user']['name']
@@ -2117,7 +2171,7 @@ def apir():
         return e('action function not registered')
 
     rate = ratelimit(g.selfuid, 1)
-    if g.selfuid>0 and rate>5:
+    if g.selfuid>0 and rate>5 and ('delete' in action or 'edit' in action):
         log_err(f'api rate limit: {g.selfuid} {g.current_user and g.current_user["name"]}\naction: {action}\n{j}')
 
         aql('insert @i into logs', i={
@@ -2159,27 +2213,29 @@ def apir():
 
     # set cookies accordingly
 
+    ss = False
     if 'setuid' in answer:
         g.session['uid'] = answer['setuid']
-        save_session(response)
+        ss = True
 
-    if 'setbrowser' in answer or ('browser' not in g.session and 'ping'==action):
+    if 'setbrowser' in answer or 'ping'==action:
         g.session['browser'] = 1
-        save_session(response)
+        ss = True
 
     if 'set_locale' in answer:
         g.session['locale'] = answer['set_locale']
-        save_session(response)
+        ss = True
 
     if 'salt' not in g.session:
         g.session['salt'] = get_random_hex_string(3)
-        save_session(response)
+        ss = True
 
     if 'logout' in answer:
         if 'uid' in g.session:
             del g.session['uid']
-            save_session(response)
+            ss = True
 
+    if ss: save_session(response)
     return response
 
 from imgproc import avatar_pipeline
@@ -2733,6 +2789,12 @@ def robots():
     resp = make_text_response(s)
     return resp
 
+@app.route('/templates/<path:path>')
+def templates(path):
+    return render_template_g(f'{path}.html.jinja',
+        page_title = path,
+    )
+
 @app.errorhandler(404)
 def e404(e):
     err = str(e) or str(e.original_exception) or str(e.original_exception.__class__.__name__)
@@ -2751,10 +2813,15 @@ def e5001(e):
         err=err,
     ), 500
 
+@app.after_request
+def after_request(response):
+    # save_session(response)
+    return response
+
 from template_globals import tgr; tgr.update(globals())
 
 if __name__ == '__main__':
-    dispatch(create_all_necessary_indices)
+    dispatch_with_retries(create_all_necessary_indices)
 
     port = get_environ('PORT') or 5000
 

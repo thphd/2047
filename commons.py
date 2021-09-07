@@ -11,12 +11,6 @@ def make_text_response(text):
     r.headers['Content-Language']= 'en-US'
     return r
 
-import zlib
-def calculate_etag(bin):
-    checksum = zlib.adler32(bin)
-    chksum_encoded = base64.b64encode(checksum.to_bytes(4,'big')).decode('ascii')
-    return chksum_encoded
-
 def etag304(resp):
     etag = calculate_etag(resp.data)
     # print(etag, request.if_none_match, request.if_none_match.contains_weak(etag))
@@ -85,6 +79,7 @@ def dtdt_from_stamp(stamp):
     return dtdt.fromisoformat(stamp)
 
 dfs = dtdt_from_stamp
+
 def dfshk(stamp):
     return dfs(stamp).replace(tzinfo=working_timezone)
 
@@ -174,6 +169,7 @@ def format_time_relative_fallback(s):
             dt.year, dt.month, dt.day)
         return format_time_dateonly(s)
 
+@lru_cache(maxsize=2048)
 def format_time_absolute_fallback(s):
     dt = dfshk(s)
     now = dtn(working_timezone)
@@ -244,6 +240,7 @@ from flask import render_template
 from template_globals import tgr
 def render_template_g(*a, **k):
     k.update(tgr)
+    g.time_elapsed_before_render = g.get_elapsed()
     return render_template(*a, **k)
 
 def eat_rgb(s, raw=False):
@@ -267,9 +264,9 @@ aqlc = AQLController(None, 'db2047')
 aql = aqlc.aql
 
 def wait_for_database_online():
-    print('waiting for database online...')
+    qprint('waiting for database online...')
     aqlc.wait_for_online()
-    print('database online.')
+    qprint('database online.')
 
 # site pagination defaults
 
@@ -687,7 +684,7 @@ def get_link_one():
     linksd, linksl = get_links()
     return random.choice(linksl)
 
-@stale_cache(ttr=20, ttl=1800)
+@stale_cache(ttr=60, ttl=1800)
 def get_weekly_best(start=7, stop=14, n=10):
     lastweek = format_time_iso(dfs(time_iso_now()) - dttd(days=start))
     lastweek2 = format_time_iso(dfs(time_iso_now()) - dttd(days=stop))
@@ -700,7 +697,7 @@ def get_weekly_best(start=7, stop=14, n=10):
     ''', silent=True)
     return wb
 
-@stale_cache(ttr=20, ttl=1800)
+@stale_cache(ttr=60, ttl=1800)
 def get_weekly_best_user(start=7, stop=14, n=10):
     lastweek = format_time_iso(dfs(time_iso_now()) - dttd(days=start))
     lastweek2 = format_time_iso(dfs(time_iso_now()) - dttd(days=stop))
@@ -719,7 +716,7 @@ def get_weekly_best_user(start=7, stop=14, n=10):
 
     return wbu
 
-@stale_cache(ttr=20, ttl=1800)
+@stale_cache(ttr=60, ttl=1800)
 def get_user_best_threads(uid):
     return aql('''
         for t in threads
@@ -770,10 +767,10 @@ def get_high_trust_score_users():
         filter u.delete==null and u.trust_score>0
         return u
     ''', silent=True)
-    l2 = l1.map(lambda u:u['trust_score'])
+    l2 = l1.map(lambda u:u['trust_score'] or 0)
     return l1,l2
 
-@stale_cache(ttr=5, ttl=60)
+@stale_cache(ttr=5, ttl=180)
 def get_high_trust_score_users_random_pre(k):
     htsu, scores = get_high_trust_score_users()
     scores = scores.map(lambda k:math.sqrt(k))
@@ -802,7 +799,7 @@ def get_high_trust_score_users_random(k):
         if shouldinsert:
             htsu.append(g.current_user)
 
-    htsu = sorted(htsu, key=lambda u:-u['trust_score'])
+    htsu = sorted(htsu, key=lambda u:-u['trust_score'] or 0)
     htsu = htsu.map(
         lambda d:{'user':d, 'n': trust_score_format(d)})
     return htsu

@@ -58,6 +58,9 @@ class AQLController:
         self.prepared = False
 
         self.session = r.Session()
+        a = r.adapters.HTTPAdapter(pool_connections=30, pool_maxsize=15,)
+        self.session.mount('http://', a)
+
         self.timeout = timeout
 
     def prepare(self):

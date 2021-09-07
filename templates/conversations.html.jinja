@@ -4,7 +4,9 @@
 <div class="threadlist">
 
   {%for c in conversations%}
+    {%if c and c.last and c.last.user and c.last.to_user%}
     {{macros.post_conversation(c)}}
+    {%endif%}
   {%endfor%}
 
 </div>

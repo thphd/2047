@@ -3,15 +3,22 @@ import colorama
 
 colorama.init()
 
+import logger_config
+import logging
+logger = logging.getLogger('2047')
+
 import threading
 
-_pq = []
-_pqc = threading.Condition()
+# _pq = []
+# _pqc = threading.Condition()
 
 def qprint(*a,**kw):
-    with _pqc:
-        _pq.append((a, kw))
-        _pqc.notify()
+    to_print = ' '.join((str(i) for i in a))
+    logger.info(to_print)
+
+    # with _pqc:
+    #     _pq.append((a, kw))
+    #     _pqc.notify()
 
 def async_printer():
     while 1:
@@ -19,32 +26,32 @@ def async_printer():
             while len(_pq)==0:
                 _pqc.wait()
             a,kw = _pq.pop(0)
-            print(*a, **kw)
+            # print(*a, **kw)
+            to_print = ' '.join((str(i) for i in a))
+            logger.info(to_print)
 
-def dispatch(f):
-    t = threading.Thread(target=f, daemon=True)
-    t.start()
+# def dispatch(f):
+#     t = threading.Thread(target=f, daemon=True)
+#     t.start()
 
-dispatch(async_printer)
+# dispatch(async_printer)
+
+def restrict_gbk(text):
+    # escape unsupported unicode in gbk
+    # (to prevent emojis from crashing CMD
+    return text.encode(encoding='gbk', errors='replace').decode(encoding='gbk')
 
 def colored_print_generator(*a,**kw):
     def colored_print(*items,**incase):
-        text = ' '.join(map(lambda i:str(i), items))
-
-        # escape unsupported unicode in current encoding
-        # (to prevent emojis from crashing CMD
-        text = text.encode(encoding='gbk', errors='replace').decode(encoding='gbk')
+        text = ' '.join((str(i) for i in items))
+        text = restrict_gbk(text)
 
         qprint(colored(text, *a,**kw),**incase)
     return colored_print
 
 def colored_format_generator(*a,**kw):
     def colored_format(s):
-        text = s
-
-        # escape unsupported unicode in current encoding
-        # (to prevent emojis from crashing CMD
-        text = text.encode(encoding='gbk', errors='replace').decode(encoding='gbk')
+        text = restrict_gbk(s)
 
         return colored(text, *a,**kw)
     return colored_format

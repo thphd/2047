@@ -217,7 +217,7 @@ elif 1:
 
         return html
 
-    @lru_cache(maxsize=1024)
+    @lru_cache(maxsize=4096)
     def convert_markdown(s):
         out = just_markdown(s)
 
@@ -266,10 +266,20 @@ else:
 import mistletoe
 from html_stuff import parse_html, sanitize_html
 from mistletoe import Document
-from mistletoe.span_token import SpanToken,RawText
+from mistletoe.span_token import SpanToken,RawText,AutoLink
 from mistletoe.block_token import BlockToken
 from mistletoe.html_renderer import HTMLRenderer
 from mistletoe.ast_renderer import ASTRenderer
+
+OldAutoLink = AutoLink
+class AutoLink(OldAutoLink):
+    def __init__(self, match):
+        content = match.group(self.parse_group)
+        self.children = (RawText(content),)
+        self.target = content
+        self.mailto = (0 and '@' in self.target) and 'mailto' not in self.target.casefold()
+
+mistletoe.span_token.AutoLink = AutoLink
 
 class AtUser(SpanToken):
     pattern = re.compile(at_extractor_regex)

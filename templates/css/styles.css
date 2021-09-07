@@ -1076,6 +1076,7 @@ a.adminstuff {}
 
 * {
     border-width: 1px;
+    /* border-style: none; */
 }
 
 .avatar_line {
@@ -2336,4 +2337,9 @@ a.after_linkbox {
 
 .negative .pmsvalue {
     color: #275f7b;
+}
+
+iframe {
+    border-style: dashed;
+    border-color: #0000000f;
 }
