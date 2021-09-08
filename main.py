@@ -63,15 +63,19 @@ def hash_these(path_arr, pattern='*.*'):
 
 resource_files_hash = ''
 images_resources_hash = ''
+ad_images_hash = ''
 
 def calculate_resource_files_hash():
-    global resource_files_hash, images_resources_hash
+    global resource_files_hash, images_resources_hash, ad_images_hash
 
     resource_files_hash = hash_these(['templates/css/', 'templates/js/'])
-    print_info('resource_files_hash:', resource_files_hash)
+    print_up('resource_files_hash:', resource_files_hash)
 
     images_resources_hash = hash_these(['templates/images/'], '*.png')
-    print_info('images_resources_hash:', images_resources_hash)
+    print_up('images_resources_hash:', images_resources_hash)
+
+    ad_images_hash = hash_these(['ads/images/'], '*.jpg')
+    print_up('ad_images_hash:', ad_images_hash)
 
 dispatch_with_retries(calculate_resource_files_hash)
 

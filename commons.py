@@ -799,7 +799,7 @@ def get_high_trust_score_users_random(k):
         if shouldinsert:
             htsu.append(g.current_user)
 
-    htsu = sorted(htsu, key=lambda u:-u['trust_score'] or 0)
+    htsu = sorted(htsu, key=lambda u:-(key(u,'trust_score') or 0))
     htsu = htsu.map(
         lambda d:{'user':d, 'n': trust_score_format(d)})
     return htsu

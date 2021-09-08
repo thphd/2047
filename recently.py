@@ -46,4 +46,4 @@ def get_exponential_falloff_spans_for_now():
     return res
 
 if __name__ == '__main__':
-    print(get_exponential_falloff_spans_for_now())
+    print(str(get_exponential_falloff_spans_for_now()).replace("'", '"'))

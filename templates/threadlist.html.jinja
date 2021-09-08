@@ -247,7 +247,7 @@ for(var i=0;i<tabs.length;i++){k(i)}
       {%for ad in ads%}
         <div class="adbox">
           <a href="{{ad.url}}" title="{{ad.alt}}" target="_blank"><img
-            src="{{ad.image}}"
+            src="{{ad.image}}?hash={{ad_images_hash}}"
             alt="{{ad.alt}}"
             style="width:100%;"
             ></a>

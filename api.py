@@ -1123,8 +1123,7 @@ def update_post_hackernews_batch():
     res = aql(qr, silent=True, raise_error=False)
     return len(res)
 
-def update_user_pagerank_batch():
-    qr = QueryString('''
+update_user_pagerank_qr = QueryString('''
 
 //let now = date_iso8601(date_now())
 //let t_now = date_timestamp(now)
@@ -1132,14 +1131,12 @@ let t_now = date_now()
 
 //let now_iso = @now_iso
 
-for t in users
-
 let uid = t.uid
 let time_factor = 0.99999985
 
-filter t.t_next_pr_update < t_now - 1800*1000 // update interval
-sort t.t_next_pr_update asc
-limit 30
+let update_interval = @update_interval // 30min
+let newuser_update_interval = 60*1000 // 60s
+let uidelta = update_interval - newuser_update_interval
 
 //nlikes: received
 //nliked: gave
@@ -1190,8 +1187,8 @@ let tawvp = total_activities_plain*.5 + total_activities_w_votes * 2
 let trust_factor = 1 - pow(0.85, tawvp)
 let unit_pr = total_activities?newscore_recent / total_activities:0
 
-let trust_score = unit_pr*trust_factor + (1-trust_factor)*(100/1000000)
-// in the beginning everyone have 100 points
+let trust_score = unit_pr*trust_factor + (1-trust_factor)*(200/1000000)
+// in the beginning everyone have 200 points
 
 //----
 
@@ -1229,7 +1226,7 @@ let new_vc = (for j in view_counters filter j.targ==t._id return j.c)[0] or 0
 let vc = (t.old_vc or 0) + new_vc
 
 update t with {
-    t_next_pr_update:t_now,
+    t_next_pr_update: t.t_c>@now_iso_24h?t_now-uidelta:t_now,
     pagerank:newscore,
 
     //last_recent_update_time:@now_iso,
@@ -1254,11 +1251,37 @@ update t with {
 } in users
 
 return {name:NEW.name, pr:NEW.pagerank}
+    ''', update_interval = 1800*1000)
+
+def update_user_pagerank_batch():
+    quantifier = QueryString('''
+    let t_now2 = date_now()
+    for t in users
+    filter t.t_next_pr_update < t_now2 - @update_interval
+    sort t.t_next_pr_update asc
+    limit 30
     ''')
-    res = aql(qr, silent=True, raise_error=False,
+
+    res = aql(quantifier+update_user_pagerank_qr,
+        silent=True, raise_error=False,
         # recent_timestamp=time_iso_now(-86400*365),
+        now_iso_24h=time_iso_now(-3600*24),
         # now_iso=time_iso_now(),
         efs = get_exponential_falloff_spans_for_now(),
+    )
+    return len(res)
+
+def update_user_pagerank_one(uid):
+    quantifier = QueryString('''
+    for t in users
+    filter t.uid==@uid
+    ''')
+
+    res = aql(quantifier+update_user_pagerank_qr,
+        silent=True, raise_error=False,
+        now_iso_24h=time_iso_now(-3600*24),
+        efs = get_exponential_falloff_spans_for_now(),
+        uid = uid,
     )
     return len(res)
 
@@ -1547,6 +1570,8 @@ def _():
                 t_c=timenow,
                 t_u=timenow,
 
+                t_cc = thread['t_c'],
+
                 pointer=pointer,
             )
             # put in db
@@ -1571,6 +1596,10 @@ def _():
 
         update_user_votecount(thread['uid'])
         update_user_votecount(g.current_user['uid'])
+
+        update_user_pagerank_one(thread['uid'])
+        # update_user_pagerank_one(g.current_user['uid'])
+
         return {'ok':vote_number}
 
     elif target_type=='post':
@@ -1599,6 +1628,8 @@ def _():
                 vote=vote_number,
                 t_c=timenow,
 
+                t_cc = post['t_c'],
+
                 pointer=pointer,
             )
             # put in db
@@ -1624,6 +1655,10 @@ def _():
 
         update_user_votecount(post['uid'])
         update_user_votecount(g.current_user['uid'])
+
+        update_user_pagerank_one(post['uid'])
+        # update_user_pagerank_one(g.current_user['uid'])
+
         return {'ok':vote_number}
 
     else:
