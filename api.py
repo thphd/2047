@@ -5,6 +5,8 @@ from commons import *
 from api_commons import *
 from flask import g, make_response
 
+from recently import *
+
 def create_all_necessary_collections():
     aqlc.create_collection('admins')
     aqlc.create_collection('operations')
@@ -564,8 +566,8 @@ def getcomments(k1,k2):
 def current_user_doesnt_have_enough_likes():
     return g.current_user['nlikes'] < 3 if 'nlikes' in g.current_user else True
 
-def dlp_ts(ts): return min(60, max(2, int(ts*0.025*2)))
-def dlt_ts(ts): return min(8, max(1, int(ts*0.003*2)))
+def dlp_ts(ts): return min(60, max(2 +0, int(ts*0.025*2)))
+def dlt_ts(ts): return min(10, max(2 +0, int(ts*0.003*2)))
 
 def daily_limit_posts(uid):
     user = get_user_by_id_cached(uid)
@@ -1128,7 +1130,7 @@ def update_user_pagerank_batch():
 //let t_now = date_timestamp(now)
 let t_now = date_now()
 
-let now_iso = @now_iso
+//let now_iso = @now_iso
 
 for t in users
 
@@ -1156,29 +1158,29 @@ let newscore = sum(
     return score
 )
 
-let last_recent_update_time = t.last_recent_update_time or '1971-01-01'
+//let last_recent_update_time = t.last_recent_update_time or '1971-01-01'
 
 //let mrl = max([@recent_timestamp, last_recent_update_time])
-let mrl = last_recent_update_time
-let dtni = date_timestamp(@now_iso)
-let dtlru = date_timestamp(last_recent_update_time)
-let dt_since_last = (dtni - dtlru)/1000
+//let mrl = last_recent_update_time
+//let dtni = date_timestamp(@now_iso)
+//let dtlru = date_timestamp(last_recent_update_time)
+//let dt_since_last = (dtni - dtlru)/1000
+
+let efs = @efs
 
 // exp-falloff pagerank
 let newscore_recent = sum(
-    for v in votes filter v.to_uid==target_user.uid and v.vote==1
-    //and v.t_c > @recent_timestamp
+    for ef in efs let earlier=ef[0],later=ef[1],multiplier=ef[2]
+        return sum(
+            for v in votes filter v.to_uid==target_user.uid and v.vote==1
+            and v.t_cc >= earlier and v.t_cc < later
 
-    let voter = (for u in users filter u.uid==v.uid return u)[0]
-    let voterrank = voter.pagerank_recent or 0
-    let voterbonus = (voter.uid==5108?1:0) + voterrank
-    let score = (voter.recent_votes_gave?voterbonus/voter.recent_votes_gave:0)*.95
-
-    let td = (dtni - date_timestamp(v.t_cc))/1000
-    let coef = pow(time_factor, td)
-
-    return score * coef
-)
+            let voter = (for u in users filter u.uid==v.uid return u)[0]
+            let voterrank = voter.pagerank_recent or 0
+            let voterbonus = (voter.uid==5108?1:0) + voterrank
+            let score = (voter.recent_votes_gave?voterbonus/voter.recent_votes_gave:0)*.95
+            return score
+        )*multiplier )
 
 let total_activities = (t.recent_threads or 0) + (t.recent_posts or 0)
 let total_activities_w_votes = total_activities + (t.recent_votes or 0)
@@ -1194,33 +1196,32 @@ let trust_score = unit_pr*trust_factor + (1-trust_factor)*(100/1000000)
 //----
 
 let recent_threads = sum(
-    for i in threads filter i.uid==uid and i.t_c >= mrl
-
-    let coef = pow(time_factor, (dtni - date_timestamp(i.t_c))/1000)
-    return coef
-) + (t.recent_threads or 0) * pow(time_factor, dt_since_last)
+    for ef in efs let earlier=ef[0],later=ef[1],multiplier=ef[2]
+        return count(
+            for i in threads filter i.uid==uid
+                and i.t_c >= earlier and i.t_c < later return i
+        )*multiplier )
 
 let recent_posts = sum(
-    for i in posts filter i.uid==uid and i.t_c >= mrl
-
-    let coef = pow(time_factor, (dtni - date_timestamp(i.t_c))/1000)
-    return coef
-) + (t.recent_posts or 0) * pow(time_factor, dt_since_last)
+    for ef in efs let earlier=ef[0],later=ef[1],multiplier=ef[2]
+        return count(
+            for i in posts filter i.uid==uid
+                and i.t_c >= earlier and i.t_c < later return i
+        )*multiplier )
 
 let recent_votes = sum(
-    for i in votes filter i.to_uid==uid and i.vote==1 and i.t_cc >= mrl
-
-    let coef = pow(time_factor, (dtni - date_timestamp(i.t_cc))/1000)
-    return coef
-) + (t.recent_votes or 0) * pow(time_factor, dt_since_last)
+    for ef in efs let earlier=ef[0],later=ef[1],multiplier=ef[2]
+        return count(
+            for i in votes filter i.to_uid==uid and i.vote==1
+                and i.t_cc >= earlier and i.t_cc < later return i
+        )*multiplier )
 
 let recent_votes_gave = sum(
-    for i in votes filter i.uid==uid and i.vote==1 and i.t_cc >= mrl
-
-    let coef = pow(time_factor, (dtni - date_timestamp(i.t_cc))/1000)
-    return coef
-) + (t.recent_votes_gave or 0) * pow(time_factor, dt_since_last)
-
+    for ef in efs let earlier=ef[0],later=ef[1],multiplier=ef[2]
+        return count(
+            for i in votes filter i.uid==uid and i.vote==1
+                and i.t_cc >= earlier and i.t_cc < later return i
+        )*multiplier )
 
 //----
 
@@ -1230,12 +1231,8 @@ let vc = (t.old_vc or 0) + new_vc
 update t with {
     t_next_pr_update:t_now,
     pagerank:newscore,
-    pagerank_recent:newscore_recent,
-    trust_score:trust_score,
 
-    trust_factor:trust_factor,
-
-    last_recent_update_time:@now_iso,
+    //last_recent_update_time:@now_iso,
 
     recent_threads,
     recent_posts,
@@ -1246,6 +1243,10 @@ update t with {
     total_activities_w_votes,
     total_activities_plain,
     tawvp,
+    pagerank_recent:newscore_recent,
+    trust_factor:trust_factor,
+
+    trust_score:trust_score,
 
     new_vc,
     vc,
@@ -1256,7 +1257,8 @@ return {name:NEW.name, pr:NEW.pagerank}
     ''')
     res = aql(qr, silent=True, raise_error=False,
         # recent_timestamp=time_iso_now(-86400*365),
-        now_iso=time_iso_now(),
+        # now_iso=time_iso_now(),
+        efs = get_exponential_falloff_spans_for_now(),
     )
     return len(res)
 
@@ -1267,9 +1269,12 @@ def update_forever_generator(update_function, name_string, balance_count=25):
         if name_string in uf_registry: return
         uf_registry[name_string] = 1
 
-        itvl = 1
+        # itvl = 1
+        logitvl = 0
 
         while 1:
+            itvl = math.exp(logitvl)
+
             time.sleep(itvl)
             l = 0
             try:
@@ -1279,48 +1284,14 @@ def update_forever_generator(update_function, name_string, balance_count=25):
                 print_info(f'update {name_string} failed, retry...')
                 continue
 
-            print_info(f'updated {name_string}: {l} itvl: {itvl:.2f}')
+            print_info(f'updated {name_string}: {l:3d} itvl: {itvl:3.2f}')
 
-            itvl *= max(0.9, 1+((balance_count-l)*0.005))
-            itvl = min(max(0.3, itvl), 600)
+            err = l - balance_count
+
+            logitvl = logitvl - err*0.01
+            logitvl = clip(-5, 8)(logitvl)
 
     return update_forever
-
-once = False
-def _update_forever():
-    global once
-    if once == True: return
-    once=True
-    itvl = 1
-    while 1:
-        time.sleep(itvl)
-        try:
-            l = update_thread_hackernews_batch()
-        except Exception as e:
-            print_err(e)
-            continue
-
-        print_info(f'updated hackernews(t): {l} itvl: {itvl:.2f}')
-
-        try:
-            l2 = update_post_hackernews_batch()
-        except Exception as e:
-            print_err(e)
-            continue
-
-        print_info(f'updated hackernews(p): {l2} itvl: {itvl:.2f}')
-
-        try:
-            l3 = update_user_pagerank_batch()
-        except Exception as e:
-            print_err(e)
-            continue
-
-        print_info(f'updated user pagerank: {l3} itvl: {itvl:.2f}')
-
-        l += l2 + l3
-        itvl *= max(0.9, 1+((25-l)*0.005))
-        itvl = max(0.3, itvl)
 
 # dispatch(update_forever)
 def dispatch_database_updaters():

@@ -787,10 +787,10 @@ class UAFilter:
         # print(self.d[ua])
 
         # print_err(self.d[ua])
-        if self.d[ua]>30:
+        if self.d[ua]>50:
             # self.d[ua]+=3*weight
 
-            if self.d[ua]>50 and (ua not in self.blacklist):
+            if self.d[ua]>100 and (ua not in self.blacklist):
                 with open('blacklisted.txt', 'a+') as f:
                     f.write(time_iso_now()+' '+ua+' '+infostring+'\n')
                 self.blacklist[ua] = infostring
