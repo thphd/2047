@@ -68,11 +68,11 @@ def gzipify(app):
             or len(rd) < minimum_size
             or ('br' not in ael and 'gzip' not in ael)
             or 'Content-Encoding' in rh
-            or 'image' in ctype
+            or ('image' in ctype and 'svg' not in ctype)
             ):
             pass
 
-        elif 'br' in ael:
+        elif 'br' in ael and ('application/json'in ctype or 'text/html' in ctype):
             response = compress_etag_response('br', rd)
 
         elif 'gzip' in ael:
