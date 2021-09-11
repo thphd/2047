@@ -148,16 +148,24 @@ get_poll_q = QueryString('''
 let votes = (
 for j in poll_votes
 filter j.pollid==poll._key
-collect choice = j.choice with count into k
-return {choice, nvotes:k}
+    for u in users filter u.uid==j.uid
+    collect choice = j.choice aggregate k=count(u), k2 = sum(u.pagerank), k3=sum(u.trust_score)
+    return {choice, nvotes:k, nvotes_pr:k2, nvotes_ts:k3}
 )
 
-let nvoters = length(
+let stats = (
 for j in poll_votes
 filter j.pollid==poll._key
-collect uid = j.uid with count into k
-return k
-)
+    for u in users filter u.uid==j.uid
+    collect uid = u.uid aggregate nn=count(u) into ulist = u
+    let u = ulist[0]
+    //return {pr:u.pagerank,ts:u.trust_score, n}
+    collect aggregate n=count(uid), ts = sum(u.trust_score), pr=sum(u.pagerank)
+    return {n, ts, pr}
+)[0]
+let pr_total = stats.pr
+let ts_total = stats.ts
+let nvoters = stats.n
 
 let selfvotes = (
 for j in poll_votes
@@ -165,7 +173,7 @@ filter j.pollid==poll._key and j.uid==@uid
 return j
 )
 
-return merge(poll, {votes, nvoters, selfvotes})
+return merge(poll, {votes, nvoters, selfvotes, pr_total, ts_total})
 ''')
 
 def poll_postprocess(poll):
@@ -181,12 +189,14 @@ def poll_postprocess(poll):
         if c not in d:
             d[c] = {'text': c}
 
+    # sumvotes_pr, sumvotes_ts = 0,0
     for v in votes:
         vc = v['choice']
         if vc not in d:
-            d[vc] = {'text': vc, 'nvotes':v['nvotes']}
-        else:
-            d[vc]['nvotes'] = v['nvotes']
+            d[vc] = {'text': vc}
+        d[vc].update(v)
+        # sumvotes_pr+=v['nvotes_pr']
+        # sumvotes_ts+=v['nvotes_ts']
 
     for v in selfvotes:
         vc = v['choice']
@@ -211,6 +221,7 @@ def get_poll(id, selfuid):
 # from flask import render_template
 # def render_poll(poll):
 #     return render_template('poll_one.html.jinja', poll=poll)
+
 
 if __name__ == '__main__':
     poll = str2p(test_text)

@@ -10,7 +10,13 @@
 
       <span class="">[{{l.op}}]</span>
       <span class="">[{{l.target}}]</span>
+
+      {%if l.cid -%}
+        <span>[->{{l.cid}}]</span>
+      {%- endif%}
+
       <span class=''>[{{format_time_datetime(l.t_c)}}]</span>
+
 
       {%if l.reason%}
       <span class="">reason: {{l.reason}}</span>

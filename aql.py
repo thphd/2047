@@ -25,6 +25,7 @@ def extract(key, d, default):
 # interface with arangodb.
 class AQLController:
     def request(self, method, endp, raise_error=True, **kw):
+        waittime = 0.3
         while 1:
             resp = self.session.request(
                 method,
@@ -39,15 +40,18 @@ class AQLController:
                 # server returned success
                 return resp
             else:
-                if not raise_error:
-                    print_err(str(resp))
-                    return False
+                em = resp['errorMessage']
+                if 'write-write' in em and 'conflict' in em:
+                    print_err('WWC: write-write conflict detected, retry...')
+                    print_up(f'wait for {waittime:.2f}s')
+                    time.sleep(waittime)
+                    waittime*=2
+                    continue
+
                 else:
-                    em = resp['errorMessage']
-                    if 'write-write' in em and 'conflict' in em:
-                        print_err('WWC: write-write conflict detected, retry...', kw)
-                        time.sleep(0.5)
-                        continue
+                    if not raise_error:
+                        print_err(str(resp))
+                        return False
                     else:
                         raise Exception(str(resp))
 

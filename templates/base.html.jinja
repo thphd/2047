@@ -84,11 +84,21 @@ if not is_pincong_org() else
   {%block meta%}{%endblock%}
 </head>
 
-{%macro get_colors(k, raw=False)%}
-    {%set bc = (u and u[k]) or (t and t.user and t.user[k]) or (g.logged_in and g.logged_in[k]) or False%}
-    {%set color = (bc and eat_rgb(bc)) or False%}
-  {%if not raw%}{{color or ''}}{%else%}{{bc or ''}}{%endif%}
-{%endmacro%}
+
+{%macro get_background_image_url(k='background_image_uid') -%}
+  {{macros.avatar_url(get_user_by_id_cached(get_cosmetic_config_user(k)))}}
+{%- endmacro%}
+
+{%macro get_colors(k, raw=False) -%}
+  {%- set bc = get_cosmetic_config_user(k) -%}
+  {%- set color = (bc and eat_rgb(bc)) or False -%}
+
+  {%- if not raw -%}
+    {{color or ''}}
+  {%- else -%}
+    {{bc or ''}}
+  {%- endif -%}
+{%- endmacro%}
 
 {%set bc = get_colors('background_color')%}
 
@@ -115,7 +125,7 @@ if not is_pincong_org() else
 {%endif%}
 {%endmacro%}
 
-<body>
+<body {{color_if('background_color')}}>
 
   {# style conditionals #}
   {%if g.current_user and g.current_user.hide_avatar%}
@@ -130,6 +140,30 @@ if not is_pincong_org() else
     <style>
       .outerbox {
         background-image:url('/images/pincong_bkgnd_mod.svg');
+      }
+    </style>
+
+  {%endif%}
+
+  <meta name="nnn" content="{{get_background_image_url()}}">
+  {%if get_background_image_url()%}
+
+    <style>
+      /* .body_wrapper {
+        background-image:url('{{get_background_image_url()}}');
+      } */
+      .body_wrapper::before {
+        content: "";
+        background-image:url('{{get_background_image_url()}}');
+
+        /* background-size: cover; */
+        position: absolute;
+        z-index: -1;
+        top: 0px;
+        right: 0px;
+        bottom: 0px;
+        left: 0px;
+        opacity:{{get_cosmetic_config_user('background_image_opacity')|float}};
       }
     </style>
   {%endif%}
@@ -207,7 +241,7 @@ if not is_pincong_org() else
   </div>
 
 {# body(separated from header) #}
-<div class="body_wrapper" {{color_if('background_color')}}>
+<div class="body_wrapper">
 
   <div class="outerbox">
     <div class="lr">

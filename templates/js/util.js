@@ -213,11 +213,11 @@ function timed(interval){
         // print(itvl)
       }
     }).catch(prerr).then(()=>{
-      timed(itvl)
+      timed(Math.min(itvl,30000))
     })
   }, interval)
 }
-//timed(5000)
+timed(5000)
 
 // use client side hashing
 // such that servers need not know the actual password.

@@ -240,6 +240,24 @@ from flask import render_template
 from template_globals import tgr
 def render_template_g(*a, **k):
     k.update(tgr)
+
+    u = key(k, 'u')
+    t = key(k, 't')
+    gli = g.logged_in
+
+    def get_cosmetic_config_user(ck='background_image_uid'):
+        def kck(n):return key(n,ck)
+
+        bu = (
+            (u and kck(u)) or
+            (t and key(t,'user') and kck(t['user'])) or
+            (gli and kck(gli)) or
+            False
+        )
+        return bu
+
+    k['get_cosmetic_config_user'] = get_cosmetic_config_user
+
     g.time_elapsed_before_render = g.get_elapsed()
     return render_template(*a, **k)
 
@@ -377,14 +395,14 @@ common_links = linkify('''
 黑名单 /t/9807 真/言论自由
 删帖 /c/deleted 本站被删帖子
 管理员 /t/7408 成为管理员
-l337 /leet 做题家
+1337 /leet 做题家
 数据备份 /t/7135 论坛数据库备份
 服务条款 /t/7110 违者封号
 题库 /questions 考试题目编撰
 机读 /choice_stats 答题卡统计
 实体编辑 /entities 公钥上传/其他杂项数据
-链接 /links 2047网址导航
-语录 /quotes 你不是一个人在战斗
+# 链接 /links 2047网址导航
+# 语录 /quotes 你不是一个人在战斗
 oplog /oplog 管理日志
 英雄 /hero BE4的实验性项目
 维尼查 /ccpfinder 镰和锤子不可兼得
@@ -459,9 +477,9 @@ def can_do_to(u1, operation, u2id):
 def parse_target(s, force_int=True):
     s = s.split('/')
     if len(s)!=2:
-        raise Exception(en('target string failed to split', zh='目标字符串分割失败'))
+        raise Exception(enzh('target string failed to split','目标字符串分割失败'))
     if not (len(s[0]) and len(s[1])):
-        raise Exception(en('splitted parts have zero length(s)', zh='分割后其中一部分长度为零'))
+        raise Exception(enzh('splitted parts have zero length(s)','分割后其中一部分长度为零'))
 
     targ = s[0]
     _id = int(s[1]) if force_int else s[1]
@@ -557,15 +575,14 @@ messaging_warning = convert_markdown('''
 
 私信内容不会纳入论坛数据备份。除非FBI敲门，我们不会将私信内容提供给任何第三方。
 
-站长可以阅读所有私信内容（在这一点上，品葱、膜乎等墙外网站是一样的），使用私信功能即视为默许。
+站长可以（但不一定会）阅读所有私信内容（在这一点上，品葱、膜乎等墙外网站是一样的），使用私信功能即视为默许。
 
-如果您不希望站长阅读私信内容，可以将私信内容加密。
+如果您不希望站长阅读私信内容，可以使用GPG工具，以收件人的公钥将私信内容加密，这样就只有对方能解密并看到。
 
 我们不会对私信内容作任何限制，不存在比如说新品葱搞的那种关键词审查/过滤。
 
 但请注意，如果您发送的私信令其他用户感到困扰，在收到举报后我们有可能根据《服务条款》封禁您的账号。
 
-未来2047会添加私信加密功能。
 ''')
 
 register_warning = convert_markdown('''
@@ -758,7 +775,39 @@ def is_water_thread(tid):
     wt = get_water_threads()
     return tid in wt
 
-@stale_cache(ttr=600, ttl=1800)
+@stale_cache(ttr=60, ttl=1800)
+def get_high_trust_score_users_new():
+    l1 = aql('''
+        for u in users
+        filter u.t_c > @recent
+        sort u.trust_score desc
+        limit 500
+        filter u.delete==null and u.trust_score>.0007
+        return u
+    ''', silent=True, recent=time_iso_now(-86400*30))
+    l2 = l1.map(lambda u:u['trust_score'] or 0)
+    return l1,l2
+
+@stale_cache(ttr=5, ttl=180)
+def get_high_trust_score_users_new_random(k):
+    lu, ls = get_high_trust_score_users_new()
+    idxes = random.choices(list(range(len(lu))), k=k*2)
+    d = set()
+    l = []
+    for i in idxes:
+        if i not in d:
+            l.append(i)
+            d.add(i)
+        if len(l)>=k:
+            break
+    ul = [lu[idx] for idx in l]
+
+    ul = sorted(ul, key=lambda u:-(key(u,'trust_score') or 0))
+    ul = ul.map(
+        lambda d:{'user':d, 'n': trust_score_format(d)})
+    return ul
+
+@stale_cache(ttr=60, ttl=1800)
 def get_high_trust_score_users():
     l1 = aql('''
         for u in users

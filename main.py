@@ -147,13 +147,13 @@ def create_all_necessary_indices():
     ciut('threads', ['cid','pinned'], unique=False)
     ci('threads', indexgen(
             [['delete'],['uid'],['delete','cid'],['delete','bigcats[*]'],['delete','tags[*]'],['tags[*]']],
-            ['t_u','t_c','nreplies','vc','votes','t_hn','amv','nfavs'],
+            ['t_u','t_c','nreplies','vc','votes','t_hn','t_hn2','amv','nfavs','t_manual'],
     ))
     ci('threads', indexgen([[]], ['t_hn_u','t_next_hn_update','title','pinned']))
 
     ci('posts', indexgen(
             [['tid'],['uid'],['tid','delete']],
-            ['t_c','vc','votes','nfavs','t_hn'],
+            ['t_c','vc','votes','nfavs','t_hn','t_hn2'],
     ))
 
     ciut('categories', ['cid'])
@@ -203,6 +203,8 @@ def create_all_necessary_indices():
 
     ci('comments',indexgen([[],['parent'],['parent','deleted'],['uid']],['t_c']))
     ci('questions',indexgen([[],['question']],['t_c']))
+
+    ci('punchcards', [['salt','uid','hostname']])
 
 is_integer = lambda i:isinstance(i, int)
 is_string = lambda i:isinstance(i, str)
@@ -287,7 +289,7 @@ class Paginator:
         assert is_integer(tid)
         assert is_integer(uid)
 
-        assert sortby in ['t_c','votes','nfavs','t_hn']
+        assert sortby in ['t_c','votes','nfavs','t_hn','t_hn2']
         # sortby = 't_c'
         assert order in ['desc', 'asc']
 
@@ -422,7 +424,7 @@ class Paginator:
         assert by in ['category', 'user', 'tag', 'ids']
         assert is_string(category) or is_integer(category)
         assert is_integer(uid)
-        assert sortby in ['t_u', 't_c', 'nreplies', 'vc', 'votes','t_hn','amv','nfavs']
+        assert sortby in ['t_u', 't_c', 'nreplies', 'vc', 'votes','t_hn','t_hn2','amv','nfavs']
         assert order in ['desc', 'asc']
 
         assert re.fullmatch(tagname_regex_long, tagname)
@@ -469,16 +471,17 @@ class Paginator:
 
         qsc += filter
 
-        qsc.append('''
-            sort i.{sortby} {order}
-            limit {start},{count}
-             '''.format(
-                    sortby = sortby,
-                    order = order,
-                    start = start,
-                    count = count,
+        if by!='ids':
+            qsc.append('''
+                sort i.{sortby} {order}
+                limit {start},{count}
+                 '''.format(
+                        sortby = sortby,
+                        order = order,
+                        start = start,
+                        count = count,
+                )
             )
-        )
 
         qsc.append('''
             //let user = (for u in users filter u.uid == i.uid return u)[0]
@@ -504,7 +507,8 @@ class Paginator:
             qsc.append('''
                 return merge(i, {
                 //user:user, lastuser:ufin, last:unset(fin,'content'),
-                cname:c.name, count:count,
+                cname:c.name, cat:c,
+                count:count,
                 favorited, self_voted})
             ''')
 
@@ -519,7 +523,8 @@ class Paginator:
             qsc.append('''
                 return merge(i, {
                 //user:user, lastuser:ufin, last:unset(fin,'content'),
-                cname:c.name, count:count})
+                cname:c.name, cat:c,
+                count:count})
             ''')
 
             qss = querystring_simple = \
@@ -661,11 +666,15 @@ class Paginator:
         ]
 
         sortbys = [
-        (zhen('综合','Syn'), querystring(pagenumber, pagesize, order, 't_hn'), 't_hn'==sortby,'HackerNews 排序'),
+
         (zhen('即时','Latest'), querystring(pagenumber, pagesize, order, 't_u'), 't_u'==sortby,'按最后回复时间排序'),
         (zhen('新帖','New'), querystring(pagenumber, pagesize, order, 't_c'), 't_c'==sortby,'按发表时间排序'),
 
-        (zhen('回复','Replies'), querystring(pagenumber, pagesize, order, 'nreplies'), 'nreplies'==sortby,'按照回复数量排序'),
+        (zhen('综合','Syn'), querystring(pagenumber, pagesize, order, 't_hn'), 't_hn'==sortby,'HackerNews 排序'),
+        (zhen('精华','HQ'), querystring(pagenumber, pagesize, order, 't_hn2'), 't_hn2'==sortby,'更注重质量的 HackerNews 排序', 'golden'),
+
+        # (zhen('回复','Replies'), querystring(pagenumber, pagesize, order, 'nreplies'), 'nreplies'==sortby,'按照回复数量排序'),
+
         (zhen('高赞','Likes'), querystring(pagenumber, pagesize, order, 'amv'), 'amv'==sortby,'按照得票（赞）数排序'),
         (zhen('观看','Views'), querystring(pagenumber, pagesize, order, 'vc'), 'vc'==sortby,'按照被浏览次数排序'),
         ]
@@ -702,6 +711,8 @@ class Paginator:
                 (zh('综合'),querystring(pagenumber, pagesize, 'desc', 't_hn'), 't_hn'==sortby),
                 (zh('时间'),querystring(pagenumber, pagesize, 'desc', 't_c'), 't_c'==sortby),
                 (zh('票数'),querystring(pagenumber, pagesize, 'desc', 'votes'), 'votes'==sortby),
+
+                (zhen('精华','HQ'), querystring(pagenumber, pagesize, 'desc', 't_hn2'), 't_hn2'==sortby,'更注重质量的 HackerNews 排序', 'golden'),
             ]
 
         button_groups = []
@@ -1190,12 +1201,53 @@ def getthreadcode(tid):
 @app.route('/c/<string:cid>')
 def _get_category_threads(cid):
     return get_category_threads(cid)
+
 @app.route('/')
 def _get_main_threads():
     return get_category_threads('main')
 
+def get_pinned_threads(cid):
+    if is_integer(cid):
+        pinned_ids = aql('''
+            for i in threads
+            filter i.delete==null and i.cid==@cid and i.t_manual>=@now
+            sort i.t_manual desc
+            return i._id''',
+        cid=cid, silent=True, now=time_iso_now())
+    else:
+        pinned_ids = aql('''
+            for i in threads
+            filter i.delete==null and @cid in i.bigcats and i.t_manual>=@now
+            sort i.t_manual desc
+            return i._id
+        ''', cid=cid, silent=True, now=time_iso_now())
+
+    if pinned_ids:
+        pinned_threads = pgnt.get_thread_list_uncached(
+            by='ids',
+            ids=pinned_ids)
+
+        pinned=pinned_threads
+    else:
+        pinned=[]
+
+    tids = set(pinned_ids)
+    # qprint(pinned_ids)
+    # for p in pinned: qprint (p['tid'], p['t_manual'])
+    return pinned, tids
+
 def get_category_threads(cid):
-    bigcatism = False
+    bigcats = aql('''
+    let c = document('counters/bigcats')
+    return c
+    ''',silent=True)[0]
+    bigcatism = bigcats
+
+    for k,v in bigcats['briefs'].items():
+        v['cid']=k
+
+    category_mode = ''
+    parent_bigcats = []
 
     if is_integer(cid):
         catobj = aql('for c in categories filter c.cid==@cid return c',cid=cid, silent=True)
@@ -1207,17 +1259,26 @@ def get_category_threads(cid):
 
         catobj = catobj[0]
 
-    elif is_string(cid):
-        bigcats = aql('''
-        let c = document('counters/bigcats').briefs
-        return c
-        ''',silent=True)[0]
+        category_mode = 'cat'
 
-        if cid in bigcats:
-            catobj = bigcats[cid]
-        else:
+        for k,v in bigcats['briefs'].items():
+            if cid in bigcats['cats'][k]:
+                parent_bigcats.append(v)
+
+    elif is_string(cid):
+
+        bigcats_briefs = bigcats['briefs']
+        bigcats_cats = bigcats['cats']
+
+        if cid not in bigcats_briefs:
             abort(404, 'bigcat not exist')
-        bigcatism = bigcats
+
+        catobj = bigcats_briefs[cid]
+
+        if len(bigcats_cats[cid])==1:
+            category_mode = 'bigcat_single'
+        else:
+            category_mode = 'bigcat'
 
     tlds, mode = iif(
         # cid!=4 and cid!='water' and cid!='inner',
@@ -1244,34 +1305,17 @@ def get_category_threads(cid):
         path = rpath)
 
     if pagenumber==1:
-        if is_integer(cid):
-            pinned = aql('''
-                for i in threads
-                filter i.cid==@cid and i.pinned==true
-                sort i.t_manual desc
-                return i''',
-            cid=cid, silent=True)
-        else:
-            pinned = aql('''
-                for i in threads
-                filter @cid in i.bigcats and i.pinned==true
-                sort i.t_manual desc
-                return i
-            ''', cid=cid, silent=True)
-
-        if pinned:
-            tids = [p['tid'] for p in pinned]
-            pinned_threads = pgnt.get_thread_list_uncached(
-                by='ids',
-                ids=[p['_id'] for p in pinned])
-
-            threadlist = pinned_threads + [t for t in threadlist if t['tid']not in tids]
+        pinned_threads, pinned_tids = get_pinned_threads(cid)
+        threadlist = pinned_threads + [t for t in threadlist if t['_id']not in pinned_tids]
 
     if cid=='main':
         threadlist = remove_hidden_from_visitor(threadlist)
 
     mark_blacklisted(threadlist)
     threadlist = sink_deleted(threadlist)
+
+    if not parent_bigcats and category_mode=='cat':
+        parent_bigcats.append(bigcatism['briefs']['main'])
 
     return render_template_g('threadlist.html.jinja',
         page_title=catobj['name'],
@@ -1281,8 +1325,12 @@ def get_category_threads(cid):
         categories=get_categories_info(),
         category=catobj,
         bigcatism = bigcatism,
+        cid=cid,
+        category_mode = category_mode,
+        cats_two_parts = get_categories_info_twoparts(
+            cid=cid, mode=category_mode),
         # threadcount=count,
-
+        parent_bigcats = parent_bigcats,
     )
 
 @app.route('/tag/<string:tag>')
@@ -1598,6 +1646,15 @@ def get_all_posts():
                 lt = title
 
     # remove_duplicate_brief(postlist)
+
+    # kill water
+    pl = []
+    for i in postlist:
+        if i and i['t'] and i['t']['cid']==4:
+            pass
+        else:
+            pl.append(i)
+    postlist = pl
 
     return render_template_g('postlist_userposts.html.jinja',
         page_title='所有评论',
@@ -2361,7 +2418,8 @@ def one_poll_votes(pollid):
 
     s = ''
     for v in votes:
-        s+= f"{v['t_c']} {v['user']['name']} {v['choice']} \n"
+        vu = v['user']
+        s+= f"{v['t_c']} ({vu['uid']}) {vu['name']} [rep={pagerank_format(vu)} ts={trust_score_format(vu)}] --> {v['choice']} \n"
 
     return doc2resp(s)
 
@@ -2546,7 +2604,7 @@ def get_oplog(target=None, raw=False):
     query = f'''
     for i in operations
     {'filter i.target==@target' if target else ''}
-    sort i.t_c desc limit 300
+    sort i.t_c desc limit 500
     let user = (for u in users filter u.uid==i.uid return u)[0]
     return merge(i,{{username:user.name, user}})
     '''

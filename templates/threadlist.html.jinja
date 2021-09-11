@@ -43,12 +43,15 @@ for(var i=0;i<tabs.length;i++){k(i)}
 
 
 
-{%macro list_users(wb)%}
+{%macro list_users(wb, avatar=False)%}
   <div class="weekly_best">
     {%for i in wb%}
     <div class="weekly_best_item">
       <div class='weekly_best_votes'>{{i.n or ''}}</div>
       <div class='weekly_best_title'>
+        {%if avatar%}
+          {{macros.avatar(i.user, class='follower_avatar', no_decoration=True)}}
+        {%endif%}
         {{macros.username(i.user)}}
       </div>
     </div>
@@ -103,11 +106,27 @@ for(var i=0;i<tabs.length;i++){k(i)}
       {{zhen('分类列表','Categories')}}
     </div>
 
-    <div class="categories">
-      {%for c in categories%}
-      {{macros.category_bubble(c)}}
-      {%endfor%}
-    </div>
+      {%if cats_two_parts%}
+        <div class="categories">
+        {%for cats in cats_two_parts%}
+
+          {%for c in cats%}
+
+            {%if not c%}
+              <div class="separator"></div>
+            {%else%}
+              {{macros.category_bubble(c)}}
+            {%endif%}
+          {%endfor%}
+
+          {%if loop.index0==0%}
+            <div class="separator big_separator"></div>
+          {%endif%}
+
+        {%endfor%}
+        </div>
+      {%endif%}
+
   </div>
 
   {%endif%}
@@ -169,12 +188,21 @@ for(var i=0;i<tabs.length;i++){k(i)}
 
   <div class="box">
     <div class="boxtitle" title='按照社会信用分'>
-      {{zhen('社会信用榜','Most Liked')}}
+      {{zhen('新人榜','Awesome Newcomers')}}
+    </div>
+    <div class="navigator_quote">
+      {{list_users(get_high_trust_score_users_new_random(9), avatar=True)}}
+    </div>
+  </div>
+
+  <div class="box">
+    <div class="boxtitle" title='按照社会信用分'>
+      {{zhen('社会信用榜','Trust Scoreboard')}}
       <a class="after_linkbox" href="/t/14123">{{
         zhen('了解更多','Learn More')}}</a>
     </div>
     <div class="navigator_quote">
-      {{list_users(get_high_trust_score_users_random(12))}}
+      {{list_users(get_high_trust_score_users_random(5), avatar=True)}}
     </div>
   </div>
 

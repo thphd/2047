@@ -26,6 +26,8 @@ def create_all_necessary_collections():
     aqlc.create_collection('polls')
     aqlc.create_collection('poll_votes')
 
+    aqlc.create_collection('punchcards')
+
 # def make_notification(to_uid, from_uid, why, url, **kw):
 #     d = dict(
 #         to_uid=to_uid,
@@ -132,15 +134,114 @@ def get_url_to_post_given_details(tid, pid, rank): # assume you know rank
 
     return url
 
-@stale_cache(maxsize=128, ttr=5, ttl=120)
+@stale_cache(ttr=3, ttl=1200)
+def get_bigcats():
+    return aql("return document('counters/bigcats')",silent=True)[0]
+
 def get_categories_info():
+    return get_categories_info_withuid(show_empty=0 or is_self_admin())
+
+def cats_into_lines(cats):
+    bc = get_bigcats()
+
+    res = cats
+    catd = {c['cid']:c for c in res}
+    catl = []
+
+    singles = []
+
+    def lasttrue(l):
+        # if len(l):
+        #     l[-1]['last']=True
+        # return l
+        l.append(None)
+        return l
+
+    # sort by bigcats
+    briefs, cats = bc['briefs'], bc['cats']
+    for bck in briefs:
+        cntr = []
+
+        if bck=='main' or bck.startswith('-'):
+            continue
+
+        bccats = cats[bck]
+
+        for ck in catd.copy():
+            if ck in bccats:
+                cntr.append(catd[ck])
+                del catd[ck]
+
+        if cntr:
+            if len(cntr)>1:
+                lasttrue(cntr)
+                catl+=cntr
+            else:
+                singles+=cntr
+
+    leftovers = sorted(catd.values(), key=lambda n:-n['count'])
+    singles = sorted(singles, key=lambda n:-n['count'])
+
+    catl += lasttrue(singles+leftovers) # + lasttrue(leftovers)
+
+    return catl
+
+# def get_raw_categories_info():
+#     return get_raw_categories_info_raw()
+
+@stale_cache(ttr=5, ttl=1800)
+def get_raw_categories_info():
     return aql('''
-        for i in threads collect cid = i.cid with count into cnt
+    for c in categories
+        let cnt = length(for i in threads filter i.cid==c.cid return i)
         sort cnt desc
-        let co = (for c in categories filter c.cid==cid return c)[0]
-        //return {cid, count:cnt, category:co}
-        return merge(co, {count:cnt})
+        return merge(c, {count:cnt})
     ''', silent=True)
+
+@stale_cache(ttr=5, ttl=1200)
+def get_categories_info_withuid(show_empty=False):
+    res = get_raw_categories_info()
+    res = [i for i in cats_into_lines(res) if i is not None]
+
+    if show_empty:
+        return res
+    else:
+        return [i for i in res if i['count']>0]
+
+def get_categories_info_twoparts(cid, mode='cat'):
+    res = get_raw_categories_info()
+    bc = get_bigcats()
+
+    all_upper = False
+
+    if mode == 'cat':
+        bcid = None
+        for k,v in bc['cats'].items():
+            if cid in v:
+                bcid = k
+                break
+        # upper = [i for i in res if i['cid']==cid]
+        # lower = [i for i in res if i['cid']!=cid]
+
+        if bcid is not None:
+            cid = bcid
+        else:
+            all_upper = True
+
+    if not all_upper:
+        bc = get_bigcats()
+        lcats = set(bc['cats'][cid])
+        upper = [i for i in res if i['cid'] in lcats]
+        lower = [i for i in res if i['cid'] not in lcats]
+
+        upper = cats_into_lines(upper)
+        lower = cats_into_lines(lower)
+
+        return upper, lower
+
+    else:
+        upper = cats_into_lines(res)
+        return upper,
 
 def get_current_salt():
     salt = g.session['salt'] if 'salt' in g.session else '==nosalt=='
@@ -193,7 +294,7 @@ def get_user_by_id_admin(uid):
         k=uid, silent=True)
     return uo[0] if uo else False
 
-@stale_cache(ttr=15, ttl=1800, maxsize=4096)
+@stale_cache(ttr=10, ttl=1800, maxsize=8192)
 def get_user_by_id_cached(uid):
     return get_user_by_id(uid)
 
@@ -324,7 +425,7 @@ def insert_new_password_object(uid, pwh):
 
     aql('''insert @i into passwords''', i=pwobj)
 
-@ttl_cache(ttl=60)
+@stale_cache(ttr=30, ttl=1860)
 def get_banned_salts():
     return aql('''for u in users sort u.t_c desc
         limit 100
@@ -566,8 +667,8 @@ def getcomments(k1,k2):
 def current_user_doesnt_have_enough_likes():
     return g.current_user['nlikes'] < 3 if 'nlikes' in g.current_user else True
 
-def dlp_ts(ts): return min(60, max(2 +0, int(ts*0.025*2)))
-def dlt_ts(ts): return min(10, max(2 +0, int(ts*0.003*2)))
+def dlp_ts(ts): return min(60, max(5 +0, int(ts*0.025*2)))
+def dlt_ts(ts): return min(10, max(2 +0, int(ts*0.006*2)))
 
 def daily_limit_posts(uid):
     user = get_user_by_id_cached(uid)
@@ -585,14 +686,14 @@ def daily_number_posts(uid):
 def daily_number_threads(uid):
     return aql('return length(for t in threads filter t.uid==@k and t.t_c>@t return t)', silent=True, k=uid, t=time_iso_now(-86400*2))[0]
 
-@ttl_cache(ttl=120, maxsize=1024)
+@ttl_cache(ttl=10, maxsize=1024)
 def daily_limit_posts_cached(uid):return daily_limit_posts(uid)
-@ttl_cache(ttl=120, maxsize=1024)
+@ttl_cache(ttl=10, maxsize=1024)
 def daily_limit_threads_cached(uid):return daily_limit_threads(uid)
 
-@ttl_cache(ttl=120, maxsize=1024)
+@ttl_cache(ttl=10, maxsize=1024)
 def daily_number_posts_cached(uid):return daily_number_posts(uid)
-@ttl_cache(ttl=120, maxsize=1024)
+@ttl_cache(ttl=10, maxsize=1024)
 def daily_number_threads_cached(uid):return daily_number_threads(uid)
 
 from antispam import is_spam
@@ -1034,10 +1135,18 @@ let t_man = date_timestamp(t.t_manual) or 0
 let pinned = t_man > t_now or null
 
 let votes = t.amv or 0
+
 let points = max([(votes - 0.9), 0]) * 3 + 1 + t.nreplies * .2
+let points2 = max([(votes - 0.9), 0]) * 3 + 1 + t.nreplies * .2
+
 let t_ref = t_submitted * 0.8 + t_updated * 0.2
-let t_offset = 3600*1000*2
-let t_hn = max([t_now + t_offset - (t_now - t_ref + t_offset) / sqrt(points), t_man])
+let t_offset = 3600*1000*2.5
+let t_offset2 = 3600*1000*24*10
+let t_backoff = (t_now - t_ref + t_offset) / sqrt(points)
+let t_backoff2 = (t_now - t_ref + t_offset2) / sqrt(points2)
+
+let t_hn = max([t_now + t_offset - t_backoff, t_man and 0])
+let t_hn2 = max([t_now + t_offset2 - t_backoff2, t_man and 0])
 
 //let min_interval = 5*60*1000
 //let interval_multiplier = (20*60*1000)
@@ -1045,12 +1154,15 @@ let t_hn = max([t_now + t_offset - (t_now - t_ref + t_offset) / sqrt(points), t_
 let t_next_hn_update = t_now + max([max([0, t_now - t_hn]) / 86400000 * @interval_multiplier, @min_interval])
 
 let t_hn_iso = left(date_format(t_hn,'%z'), 19)
+let t_hn2_iso = left(date_format(t_hn2,'%z'), 19)
 
 let viewcount_v2 = (for j in view_counters filter j.targ==t._id return j.c)[0]
 let total_viewcount = (viewcount_v2 or 0) + (t.old_vc or 0)
 
 limit 20
-update t with {t_hn:t_hn_iso, t_next_hn_update, pinned, bigcats,
+update t with {
+    t_hn:t_hn_iso, t_hn2: t_hn2_iso,
+    t_next_hn_update, pinned, bigcats,
     vc:total_viewcount,
     new_vc:viewcount_v2 or 0,
 } in threads return 1
@@ -1065,7 +1177,10 @@ let t_man = date_timestamp(t.t_manual) or 0
 let votes = (t.votes or 0) + (t.nfavs or 0) //differ
 let points = max([(votes - 0.9), 0]) * 3 + 1 //differ
 let t_offset = 3600*1000*1 //differ
-let t_hn = max([t_now + t_offset - (t_now - t_submitted + t_offset) / sqrt(points), t_man])
+let t_offset2 = 3600*1000*24*10 //differ
+let t_hn = max([t_now + t_offset - (t_now - t_submitted + t_offset) / sqrt(points), t_man and 0])
+
+let t_hn2 = max([t_now + t_offset2 - (t_now - t_submitted + t_offset2) / sqrt(points), t_man and 0])
 
 //let min_interval = 5*60*1000
 //let interval_multiplier = (20*60*1000)
@@ -1073,8 +1188,10 @@ let t_hn = max([t_now + t_offset - (t_now - t_submitted + t_offset) / sqrt(point
 let t_next_hn_update = t_now + max([max([0, t_now - t_hn]) / 86400000 * @interval_multiplier, @min_interval])
 
 let t_hn_iso = left(date_format(t_hn,'%z'), 19)
+let t_hn2_iso = left(date_format(t_hn2,'%z'), 19)
 limit 20
-update t with {t_hn:t_hn_iso, t_next_hn_update} in posts return 1 //differ
+update t with {t_hn:t_hn_iso, t_hn2:t_hn2_iso,
+ t_next_hn_update} in posts return 1 //differ
 ''')
 
 def update_thread_hackernews_batch():
@@ -1088,7 +1205,7 @@ def update_thread_hackernews_batch():
     ''', now=time_iso_now())
 
     qr += hn_formula
-    qr.append(min_interval=5*60*1000, interval_multiplier=60*60*1000)
+    qr.append(min_interval=300*1000, interval_multiplier=3600*1000)
 
     res = aql(qr, silent=True, raise_error=False)
     return len(res)
@@ -1102,7 +1219,7 @@ def update_thread_hackernews(tid):
     ''', now=time_iso_now(), tid=tid)
 
     qr += hn_formula
-    qr.append(min_interval=5*60*1000, interval_multiplier=60*60*1000)
+    qr.append(min_interval=300*1000, interval_multiplier=3600*1000)
 
     aql(qr, silent=True, raise_error=False)
 
@@ -1118,7 +1235,7 @@ def update_post_hackernews_batch():
     ''', now=time_iso_now())
 
     qr += hn_formula_post
-    qr.append(min_interval=10*60*1000, interval_multiplier=240*60*1000)
+    qr.append(min_interval=600*1000, interval_multiplier=14400*1000)
 
     res = aql(qr, silent=True, raise_error=False)
     return len(res)
@@ -1187,8 +1304,8 @@ let tawvp = total_activities_plain*.5 + total_activities_w_votes * 2
 let trust_factor = 1 - pow(0.85, tawvp)
 let unit_pr = total_activities?newscore_recent / total_activities:0
 
-let trust_score = unit_pr*trust_factor + (1-trust_factor)*(200/1000000)
-// in the beginning everyone have 200 points
+let trust_score = unit_pr*trust_factor + (1-trust_factor)*(0/1000000)
+// in the beginning everyone have 0 points
 
 //----
 
@@ -1226,7 +1343,7 @@ let new_vc = (for j in view_counters filter j.targ==t._id return j.c)[0] or 0
 let vc = (t.old_vc or 0) + new_vc
 
 update t with {
-    t_next_pr_update: t.t_c>@now_iso_24h?t_now-uidelta:t_now,
+    t_next_pr_update: t_now,
     pagerank:newscore,
 
     //last_recent_update_time:@now_iso,
@@ -1265,7 +1382,7 @@ def update_user_pagerank_batch():
     res = aql(quantifier+update_user_pagerank_qr,
         silent=True, raise_error=False,
         # recent_timestamp=time_iso_now(-86400*365),
-        now_iso_24h=time_iso_now(-3600*24),
+        # now_iso_24h=time_iso_now(-3600*24),
         # now_iso=time_iso_now(),
         efs = get_exponential_falloff_spans_for_now(),
     )
@@ -1275,13 +1392,12 @@ def update_user_pagerank_one(uid):
     quantifier = QueryString('''
     for t in users
     filter t.uid==@uid
-    ''')
+    ''', uid = uid,)
 
     res = aql(quantifier+update_user_pagerank_qr,
         silent=True, raise_error=False,
-        now_iso_24h=time_iso_now(-3600*24),
+        # now_iso_24h=time_iso_now(-3600*24),
         efs = get_exponential_falloff_spans_for_now(),
-        uid = uid,
     )
     return len(res)
 
@@ -1344,7 +1460,7 @@ let nfavs = length(for f in favorites filter f.pointer==t._id return f)
 
 let rv = t.recovered_votes or 0
 let upv= length(for v in votes filter v.type=='thread' and v.id==t.tid and v.vote==1 return v) + rv
-let nreplies = length(for p in posts filter p.tid==t.tid return p)
+let nreplies = length(for p in posts filter p.tid==t.tid and p.delete==null return p)
 
 let last_reply = (for p in posts filter p.tid==t.tid and p.delete==null sort p.t_c desc limit 1 return p)[0]
 
@@ -1432,6 +1548,9 @@ updateable_personal_info = [
     ('header_background_color', '导航栏背景色（同上）（你浏览本站的时候，以及别人浏览你的个人主页或帖子的时候，导航栏颜色都会变成这个）'),
     ('header_text_color', '导航栏文字颜色（同上）'),
 
+    ('background_image_uid', '背景水印图片（使用头像图片，请填写头像UID，所对应用户头像会变成背景水印'),
+    ('background_image_opacity', '背景水印不透明度(0.0-1.0)'),
+
     ('delay_send', '启用延时发送功能（yes即启用，留空即停用）（发帖的时候可以选择延时发送）'),
     ('hide_avatar', '隐藏页面中的头像（yes即隐藏，留空即显示）'),
     ('hide_title', '隐藏头像上方的绿帽（yes即隐藏，留空即显示）'),
@@ -1447,7 +1566,7 @@ def _():
         if item not in g.j:
             continue
 
-        value = es(item)
+        value = es(item).strip()
 
         # if item=='brief' or item=='showcase':
         if (
@@ -1459,6 +1578,16 @@ def _():
 
         if item=='personal_party' and value.strip()!='' and not intify(value):
             raise Exception('党派只能填数字UID或留空')
+
+        if item=='background_image_uid' and value.strip()!='' and not intify(value):
+            raise Exception('背景水印图片只能填数字UID或留空')
+
+        if item=='background_image_opacity' and value:
+            fv = float(value)
+            if 0<=fv and fv<=1:
+                pass
+            else:
+                raise Exception('透明度不在允许范围内')
 
         upd[item] = value
 
@@ -1575,7 +1704,7 @@ def _():
                 pointer=pointer,
             )
             # put in db
-            n = aql('insert @i into votes return NEW',i=vobj,silent=True)[0]
+            n = aql('insert @i into votes return NEW',i=vobj,silent=False)[0]
 
         #if you voted before
         else:
@@ -1590,14 +1719,16 @@ def _():
             )
 
             # put in db
-            n = aql('update @k with @o in votes return NEW',k=vote,o=vobj,silent=True)[0]
+            n = aql('update @k with @o in votes return NEW',k=vote,o=vobj,silent=False)[0]
 
         update_thread_votecount(_id)
 
         update_user_votecount(thread['uid'])
         update_user_votecount(g.current_user['uid'])
 
-        update_user_pagerank_one(thread['uid'])
+        target_user = get_user_by_id_cached(thread['uid'])
+        if (key(target_user, 'trust_score') or 0) < 200/1000000:
+            update_user_pagerank_one(thread['uid'])
         # update_user_pagerank_one(g.current_user['uid'])
 
         return {'ok':vote_number}
@@ -1633,7 +1764,7 @@ def _():
                 pointer=pointer,
             )
             # put in db
-            n = aql('insert @i into votes return NEW',i=vobj,silent=True)[0]
+            n = aql('insert @i into votes return NEW',i=vobj,silent=False)[0]
 
         #if you voted before
         else:
@@ -1648,7 +1779,7 @@ def _():
             )
 
             # put in db
-            n = aql('update @k with @o in votes return NEW',k=vote,o=vobj,silent=True)[0]
+            n = aql('update @k with @o in votes return NEW',k=vote,o=vobj,silent=False)[0]
 
         update_post_votecount(_id)
         update_thread_votecount(post['tid'])
@@ -1656,7 +1787,9 @@ def _():
         update_user_votecount(post['uid'])
         update_user_votecount(g.current_user['uid'])
 
-        update_user_pagerank_one(post['uid'])
+        target_user = get_user_by_id_cached(post['uid'])
+        if (key(target_user, 'trust_score') or 0) < 200/1000000:
+            update_user_pagerank_one(post['uid'])
         # update_user_pagerank_one(g.current_user['uid'])
 
         return {'ok':vote_number}
@@ -2088,7 +2221,7 @@ def must_be_logged_in():
 @register('get_categories_info')
 def _():
     must_be_logged_in()
-    return {'categories':get_categories_info()}
+    return {'categories':get_categories_info_withuid(show_empty=g.is_admin)}
 
 @register('move_thread')
 def _():
@@ -2419,7 +2552,7 @@ def _():
 
     return error_false
 
-@ttl_cache(ttl=5)
+@stale_cache(ttr=5, ttl=1800)
 def get_blacklist(uid):
     list = aql('''for i in blacklist filter i.uid==@uid and i.enabled == true
     let user = (for u in users filter u.uid==i.to_uid return u)[0]
@@ -2429,7 +2562,7 @@ def get_blacklist(uid):
 def get_blacklist_set(uid):
     return set(i['to_uid'] for i in get_blacklist(uid))
 
-@ttl_cache(ttl=5)
+@stale_cache(ttr=5, ttl=1800)
 def get_reversed_blacklist(uid): # who hates me
     list = aql('''for i in blacklist filter i.to_uid==@uid and i.enabled == true
     let user = (for u in users filter u.uid==i.uid return u)[0]
@@ -2493,6 +2626,24 @@ def listbl():
 #     op = es('op')
 #     if op == ''
 
+def put_punchcard():
+    t_c = time_iso_now()
+    t_u = t_c
+
+    uid = g.selfuid
+    salt = get_current_salt()
+
+    hostname=request.host
+
+    if salt=='==nosalt==':
+        return
+
+    ups = dict(salt=salt, uid=uid, hostname=hostname)
+    kins = dict(t_c=t_c, t_u=t_u, uid=uid, salt=salt, hostname=hostname)
+    kups = dict(t_u=t_u, hostname=hostname)
+
+    aql('upsert @ups insert @kins update @kups in punchcards',
+        ups=ups, kins=kins, kups=kups, silent=True)
 
 # feedback regulated ping service
 # average 1 ping every 3 sec
@@ -2513,4 +2664,7 @@ def _():
     pingtime = max(1, pingtime + err * 0.3)
     print_up(f'PING duration {durbuf:4.2f} pingtime {pingtime:4.2f}')
     ping_itvl = int(pingtime*1000)
+
+    put_punchcard()
+
     return {'ping':'pong','interval':ping_itvl}

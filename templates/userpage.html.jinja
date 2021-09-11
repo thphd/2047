@@ -162,8 +162,8 @@
           }}#{{u.uid}}">(排名 {{u.trust_score_rank+1}})</a>
           {%endif
           %}</span>
-          {%if g.is_admin%}
-            {{macros.daily_quota(u)}}
+          {%if g.logged_in%}
+            {{macros.daily_quota(u)}} <a href="/trust_score_explained">对照表</a>
           {%endif%}
       </div>
       {%endif%}

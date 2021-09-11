@@ -9,12 +9,12 @@
 
 {%macro avatar_url(u)
   %}{%set etag_postfix = (('?etag='~u.avatar_etag) if u.avatar_etag else '')
-  %}{%set aurl =
+  %}{%set aurl = (
     ('/avatar/'~u.uid~'.png'~ etag_postfix)
 
     if u.has_avatar or etag_postfix
 
-    else '/avatar/'~u.uid~'.png' or '/images/avatar-max-img.png'
+    else '/avatar/'~u.uid~'.png' or '/images/avatar-max-img.png') if u.uid else ''
 
   %}{{aurl}}{%endmacro%}
 
@@ -93,6 +93,7 @@
 {# one line of post, new version #}
 {%macro post_new(
   p,
+  t = False,
   metas=[],
   avatar_user=False,
   item_id=False,
@@ -105,7 +106,13 @@
 
 <div class="{{classes}} threadlistitem padded {{
 'delusional' if (p.delusional) else ''}} {{
-'deleted' if (p.delete and t) else '' }} {{
+'deleted' if (
+  p.delete
+  and t
+  and not can_do_to(g.logged_in, 'delete', p.uid)
+  and not (t and can_do_to(g.logged_in, 'delete', t.uid))
+  )
+  else '' }} {{
 'spam' if p.spam else '' }} {{
 'conv_delete' if p.delete and 'conversation' in metas else '' }} {{
 'thread_header' if 'thread_header' in metas else '' }} {{
@@ -546,17 +553,23 @@
 
 {%endmacro%}
 
+{%macro edit_string(p) -%}
+  <a href="/u/{{p.editor}}">
+    {{- zhen('作者','author') if p.editor==p.uid else zhen('其他人','others') -}}
+  </a>
+{%- endmacro%}
+
 {%macro edit_status(p)%}
   {# if object has been edited #}
   {%if p.editor and p.t_c and p.t_e and
     (dfshk(p.t_e) - dfshk(p.t_c) > dttd(seconds=5*60))%}
 
     <div class='edited_by'>
-      <span>( 由</span>
-      <a href="/u/{{p.editor}}">{{'作者' if p.editor==p.uid else '其他人'}}</a>
-      <span>于</span>
-      <span>{{format_time_relative_fallback(p.t_e)}}</span>
-      <span>编辑 )</span>
+      <span>
+        {{- spf(zhen('( 由 $0 于 $1 编辑 )','( edited by $0 $1 )'))
+        (edit_string(p), format_time_relative_fallback(p.t_e))
+        | safe -}}
+      </span>
     </div>
   {%endif%}
 
@@ -573,9 +586,9 @@
 {{post_postlist_threadless(p, in_thread=True)}}
 {%endmacro%}
 
-{%macro post_postlist2(p)%}
+{#%macro post_postlist2(p)%}
   {{post(p, ['upper','publisher_upper','brief_upper','under_vote','publish_date_linkto','link_to','postlist','at_reply','edit_post','display_edit_status','post','view_post_code','delete_post'])}}
-{%endmacro%}
+{%endmacro%#}
 
 {%macro delete_post_button(targ_string, deleted=False, note='')%}
   {%if not deleted%}
@@ -586,15 +599,15 @@
 {%endmacro%}
 
 {%macro delete_post(p, mode='post', t=False)%}
-{%if mode=='post'%}
-  {%set targ = ('post/'~p._key) %}
-{%elif mode=='thread'%}
-  {%set targ = ('thread/'~p.tid) %}
-{%elif mode=='message'%}
-  {%set targ = ('message/'~p._key) %}
-{%endif%}
+  {%if mode=='post'%}
+    {%set targ = ('post/'~p._key) %}
+  {%elif mode=='thread'%}
+    {%set targ = ('thread/'~p.tid) %}
+  {%elif mode=='message'%}
+    {%set targ = ('message/'~p._key) %}
+  {%endif%}
 
-{%if can_do_to(g.logged_in, 'delete', p.uid) or (t and can_do_to(g.logged_in, 'delete', t.uid))%}
+  {%if can_do_to(g.logged_in, 'delete', p.uid) or (t and can_do_to(g.logged_in, 'delete', t.uid))%}
 
   {{delete_post_button(targ, p.delete)}}
 
@@ -679,7 +692,8 @@
 {# one line of post, used in postlist with/without a thread #}
 {%macro post_postlist_threadless(p, in_thread=False)%}
   {%call post_new(p, avatar_user=p.user, item_id=p._key,
-      classes = ('blacklist' if p.blacklist else '')
+      classes = ('blacklist' if p.blacklist else ''),
+      t = in_thread,
     ) %}
 
   <div class="meta upper">
@@ -803,15 +817,16 @@
     ('?order=desc' if is_water_thread(tid) else '') %}
   <div class='threadlist_titlecombo'>
 
-    <a href="{{turl}}" class="threadlist_title">{{
-      '[已标记为删除] ' if t.delete else ''
-    }}{{
-      '[SPAM] ' if t.spam else ''
-    }}{{
+    <a href="{{turl}}" class="threadlist_title">
+      {{- zhen('[已标记为删除]','[Deleted]')~' ' if t.delete else '' -}}
+      {{-zhen('[已拦截]','[SPAM]')~' ' if t.spam else ''-}}
+      {{
       '↑' if t.t_manual and
         format_time_datetime(t.t_manual)>=format_time_datetime(t.t_hn)
       else ''
-    }}{{t.title}}</a>
+      }}
+      {{t.title}}
+    </a>
 
     {%if t.youtube%}
       {#
@@ -826,7 +841,7 @@
       t.tid,t.last_reply_pid,t.count or 0)%}
 
   <div class="meta">
-    {{category_bubble(t, class='category_name_threadlist', color_class=False)}}
+    {{category_bubble(t.cat or t, class='category_name_threadlist', color_class=False)}}
 
     {%if 0%}
       {% if t.lastuser%}
@@ -898,7 +913,7 @@
     {%endif%}
 
     {{view_count(t)}}
-    {{delete_post(t, mode=='thread')}}
+    {{delete_post(t, mode='thread')}}
     {{move_thread(t)}}
   </div>
 
@@ -1206,10 +1221,9 @@
 
 {%macro category_bubble(c, class='category_name',color_class=True)%}
   {# category name #}
-  <a class="{{class}} {{'c'~c.cid if color_class}}" href="/c/{{c.cid}}" title="{{c.brief}}">
+  <a class="{{class}} {{'c'~c.cid if color_class}} {{'opaque5' if c.count==0}}" href="/c/{{c.cid}}" title="{{c.brief}}">
     {{c.cname if c.cname else c.name}}
-    {%if 0 and not(c.cname)%}
-      <br>
+    {%if 0 and (c.cname)%}
       {{c.count}}
     {%endif%}
   </a>
@@ -1338,30 +1352,49 @@
       <div class="header">
         <span class="header_title" href="{{
           (request.full_path[:-1] if request.full_path[-1]=='?' else request.full_path)
-        }}">{%if not bigcatism%}
+        }}">{%if ('bigcat' not in (category_mode or ''))%}
               {{page_title}}
             {%else%}
               {%macro bcl(name)%}
                 {{'/c/'~ name if name!='main' else '/'}}
               {%endmacro%}
-              {%for key,c in bigcatism.items()%}
-                {%if page_title != c.name %}
-                  <a class="opaque5" href="{{bcl(key)}}">{{c.name}}</a>
-                {%else%}
-                  <span>{{c.name}}</span>
+              {%for key,c in bigcatism.briefs.items()%}
+                {%if not key.startswith('-')%}
+                  {%if page_title != c.name %}
+                    <a class="opaque5 black" href="{{bcl(key)}}">{{c.name}}</a>
+                  {%else%}
+                    <span>{{c.name}}</span>
+                  {%endif%}
+
                 {%endif%}
               {%endfor%}
         {%endif%}</span>
 
+        {%if parent_bigcats %}
+          {%for cat in (
+              parent_bigcats[1:] or parent_bigcats
+            )%}
+            <a class="opaque5" href="/c/{{cat.cid}}">返回<b>{{cat.name}}</b></a>
+          {%endfor%}
+        {%endif%}
+
         {{category_bubble(t.category) if (t and t.category) else ''}}
 
-        {%if g.logged_in and category and not bigcatism%}
-        <a class='makepost' href="/editor?target=category/{{category.cid}}">{{zhen("发新帖","New Thread")}}</a>
+        {%if g.logged_in%}
+          {%if category_mode=='cat'%}
+            <a class='makepost' href="/editor?target=category/{{category.cid}}">{{zhen("发新帖","New Thread")}}</a>
+
+          {%elif category_mode=='bigcat'%}
+            <a class='makepost' href="javascript:alert('请在右边分类列表中选择一个分类（手机用户请翻到页面最下方）')">{{zhen("发新帖","New Thread")}}</a>
+
+          {%elif category_mode=='bigcat_single'%}
+            <a class='makepost' href="/editor?target=category/{{bigcatism.cats[cid][0]}}">{{zhen("发新帖","New Thread")}}</a>
+
+          {%endif%}
+
+
         {%endif%}
 
-        {%if g.logged_in and (categories and not category or bigcatism)%}
-        <a class='makepost' href="javascript:alert('请在右边分类列表中选择一个分类（手机用户请翻到页面最下方）')">{{zhen("发新帖","New Thread")}}</a>
-        {%endif%}
 
         {%if can_send_message%}
         <a class='makepost' href="javascript:send_new_message()">{{zhen('写信给','New PM')}}</a>
@@ -1385,15 +1418,21 @@
 
     {%for group in pagination.button_groups%}
     <div class="group">
-      {%for item in group%}{# item -> [label, link, selected] #}
+      {%for item in group -%}{# item -> [label, link, selected] #}
 
-        {%if item[1]%}
+        {%- if item[1] -%}
         <a href="{{item[1]}}" title="{{item[3]}}">
-          <div class="pagenumber {{' current' if item[2] else ''}}">{{item[0]}}</div>
+          <div class="pagenumber
+            {{ 'current' if item[2] }}
+            {{ item[4] if item[4] }}">
+            {{- item[0] -}}
+          </div>
         </a>
-        {%else%}
-        <div class="pagenumber {{' current' if item[2] else ''}}">{{item[0]}}</div>
-        {%endif%}
+        {%- else -%}
+        <div class="pagenumber {{'current' if item[2]}}">
+          {{- item[0] -}}
+        </div>
+        {%- endif -%}
 
       {%endfor%}
     </div>
@@ -1430,12 +1469,26 @@
           </div>
         </div>
 
+        <div class="poll_bar">
+          <div class="poll_bar_inner" style="width:{{
+             (choice.nvotes_pr or 0)/(poll.pr_total or 1) * 100
+            }}%;">
+          </div>
+        </div>
+
+        <div class="poll_bar">
+          <div class="poll_bar_inner" style="width:{{
+             (choice.nvotes_ts or 0)/(poll.ts_total or 1) * 100
+            }}%;">
+          </div>
+        </div>
+
       </div>
     {%endfor%}
   </div>
 
   <div class="poll_data">
-    （{{poll.nvoters}}人参与）{%if poll.nvoters%}<a href="/polls/{{poll._key}}/votes">查看记录</a>{%endif%}
+    （{{poll.nvoters}}人参与）{%if poll.nvoters%}<a href="/polls/{{poll._key}}/votes">查看记录</a> <span>（白原始 红声望 蓝信用）</span> {%endif%}
   </div>
 
 </div>
