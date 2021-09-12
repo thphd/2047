@@ -227,7 +227,7 @@
       <div class="register" id="update_personal_info">
         {%for item, explain in updateable_personal_info%}
           <label>{{explain}}</label>
-          <input type="text" id="{{item}}" value={{g.logged_in[item] or ''}}>
+          <input type="text" id="{{item}}" value="{{g.logged_in[item] or ''}}">
           <br>
         {%endfor%}
 
@@ -250,7 +250,7 @@
 
     {{macros.avatar(u, plain=True)}}
 
-    <div class="register" id="update_personal_info">
+    <div class="register" id="update_avatar">
       <form>
         <input type="file" id="file_selector" name="avatar">
         </form>

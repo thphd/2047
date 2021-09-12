@@ -22,7 +22,7 @@ if not is_pincong_org() else
 <!DOCTYPE html>
 <html lang="zh" dir="ltr" prefix="og: http://ogp.me/ns#">
 <head>
-  <meta name="referrer" content="same-origin">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta charset="utf-8">
   {#<meta http-equiv="onion-location" content="{{tor_address}}{{path_url}}" />#}
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -319,10 +319,15 @@ if not is_pincong_org() else
           <div class="copyright">
             <span>{{zhen('访问者IP','Visitor IP')}} {{g.display_ip_address}} </span>
             <a href="/t/7623">{{zhen('为什么显示IP？','Why show IP?')}}</a>
-            <span class='opaque5'>{%
-              set elapsed,ebr = g.get_elapsed(),
-                g.time_elapsed_before_render%}{{
-              ebr}}/{{elapsed-ebr}}/{{elapsed}}ms</span>
+            <span class='opaque5'>
+              {%- set elapsed,ebr = g.get_elapsed(),
+                g.time_elapsed_before_render -%}
+                {{- ebr}}/{{elapsed-ebr}}/{{elapsed -}}
+                ms
+                {% if (online_stats and online_stats[0] or 0) > 10 %}
+                  {{online_stats[1]}}/{{online_stats[0]}}人在线
+                {%endif %}
+            </span>
           </div>
 
         </div>

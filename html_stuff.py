@@ -538,6 +538,13 @@ def sanitize_html(soup, k=0):
                         child.attrs[attr_name],
                     )
 
+            # add attributes
+            if tag_name in ['area','img','video','audio']: # anything that's not a link
+                child.attrs['referrerpolicy']='same-origin'
+
+            if tag_name in ['a']:
+                child.attrs['rel']='noopener'
+
             # recursive descent
             sanitize_html(child,k+1)
 

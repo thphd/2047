@@ -22,6 +22,10 @@ def extract(key, d, default):
         return a
     return default
 
+import time, random
+ts = time.sleep
+rr = random.random
+
 # interface with arangodb.
 class AQLController:
     def request(self, method, endp, raise_error=True, **kw):
@@ -42,9 +46,10 @@ class AQLController:
             else:
                 em = resp['errorMessage']
                 if 'write-write' in em and 'conflict' in em:
+                    wrr = waittime*rr()
                     print_err('WWC: write-write conflict detected, retry...')
-                    print_up(f'wait for {waittime:.2f}s')
-                    time.sleep(waittime)
+                    print_up(f'wait for {wrr:.2f}s')
+                    ts(wrr)
                     waittime*=2
                     continue
 

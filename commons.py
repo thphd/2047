@@ -258,6 +258,8 @@ def render_template_g(*a, **k):
 
     k['get_cosmetic_config_user'] = get_cosmetic_config_user
 
+    k['online_stats'] = tgr['get_online_stats']()
+
     g.time_elapsed_before_render = g.get_elapsed()
     return render_template(*a, **k)
 

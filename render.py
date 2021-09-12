@@ -3,6 +3,8 @@ from cachy import stale_cache
 import threading
 import re
 
+from colors import *
+
 # extract non-markdown urls
 url_regex = r'((((http|https|ftp):(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+(:\[0-9]+)?|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)(?![^<]*?(?:<\/\w+>|\/?>))(?![^\(]*?\))'
 # dont use for now
@@ -416,7 +418,7 @@ class FlavoredRenderer(HTMLRenderer):
 # flavored_renderer = FlavoredRenderer()
 renderlock = threading.Lock()
 
-@lru_cache(maxsize=4096)
+@lru_cache(maxsize=8192)
 def frend(md):
     with renderlock:
         with FlavoredRenderer() as ren:

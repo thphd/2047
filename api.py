@@ -1460,7 +1460,8 @@ let nfavs = length(for f in favorites filter f.pointer==t._id return f)
 
 let rv = t.recovered_votes or 0
 let upv= length(for v in votes filter v.type=='thread' and v.id==t.tid and v.vote==1 return v) + rv
-let nreplies = length(for p in posts filter p.tid==t.tid and p.delete==null return p)
+let nreplies = length(for p in posts filter p.tid==t.tid return p)
+let nreplies_visible = length(for p in posts filter p.tid==t.tid and p.delete==null return p)
 
 let last_reply = (for p in posts filter p.tid==t.tid and p.delete==null sort p.t_c desc limit 1 return p)[0]
 
@@ -1472,7 +1473,9 @@ let mvp = (for p in posts filter p.tid==t.tid sort p.votes desc limit 1 return p
 // mvp = max vote post, mv = max vote (of that post)
 // mvu = uid of mvp, amv = absolute max vote (of both the mvp and the thread)
 update t with {
-    votes:upv, nreplies, t_u,
+    votes:upv,
+    nreplies, nreplies_visible,
+    t_u,
     last_reply_uid, last_reply_pid:last_reply._key,
     mvp:mvp._key, mv:mvp.votes or 0, mvu:mvp.uid,
     amv: max([mvp.votes or 0, upv or 0]), nfavs, bigcats}
@@ -2626,6 +2629,18 @@ def listbl():
 #     op = es('op')
 #     if op == ''
 
+@stale_cache(ttr=3, ttl=1800)
+def get_online_stats():
+    n = aql('''
+    for i in punchcards
+    filter i.t_u > @recent
+    collect aggregate n=count(i),nu=count_unique(i.uid)
+    let lu=nu-1
+    return {n, lu}
+    ''',silent=True, recent=time_iso_now(-1800))[0]
+
+    return n['n'],n['lu']
+
 def put_punchcard():
     t_c = time_iso_now()
     t_u = t_c
@@ -2636,6 +2651,24 @@ def put_punchcard():
     hostname=request.host
 
     if salt=='==nosalt==':
+        qprint('ping no salt')
+        return
+
+    if not g.using_browser:
+        qprint('ping no browser')
+        return
+
+    # get punchcard. if within 3 minutes, don't stamp again
+    n=aql('''return count(
+    for i in punchcards
+    filter i.t_u > @recent3 and i.salt==@salt
+     and i.uid==@uid and i.hostname==@hostname
+     return i)
+    ''', silent=True, recent3=time_iso_now(-180),
+        salt=salt, uid=uid, hostname=hostname)[0]
+
+    if n:
+        # print_down('within 3 minutes, not stamping again')
         return
 
     ups = dict(salt=salt, uid=uid, hostname=hostname)
@@ -2644,24 +2677,27 @@ def put_punchcard():
 
     aql('upsert @ups insert @kins update @kups in punchcards',
         ups=ups, kins=kins, kups=kups, silent=True)
+    print_down(f'stamped {uid} {salt} {hostname}')
 
 # feedback regulated ping service
 # average 1 ping every 3 sec
 lastping = time.time()
-pingtime = 1.
+# pingtime = 1.
+logpt = 0
 durbuf = 0
 @register('ping')
 def _():
-    global lastping,durbuf,pingtime
+    global lastping,durbuf,logpt
     now = time.time()
     dur = now - lastping
-
-    durbuf = dur*0.1+durbuf*0.9
     lastping = now
+
+    durbuf = dur*0.2+durbuf*0.8
     target = 5
     err = target - dur
 
-    pingtime = max(1, pingtime + err * 0.3)
+    logpt = min(max(0, logpt+err*.05), 10)
+    pingtime = math.exp(logpt)
     print_up(f'PING duration {durbuf:4.2f} pingtime {pingtime:4.2f}')
     ping_itvl = int(pingtime*1000)
 

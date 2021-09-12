@@ -843,17 +843,17 @@
   <div class="meta">
     {{category_bubble(t.cat or t, class='category_name_threadlist', color_class=False)}}
 
-    {%if 0%}
+    {#%if 0%}
       {% if t.lastuser%}
-        {# number of comments #}
+        <!-- number of comments -->
 
-        {# last commenter #}
+        <!-- last commenter -->
         {{username(t.lastuser, href=url_to_last)}}
 
 
         <a class='last_commented_date' href="{{url_to_last}}">{{'回复了文章' if t.mode!='question' else '回答了问题'}}</a>
 
-        {# last commented date #}
+        <!-- last commented date  -->
         <a class="last_commented_date" href="{{url_to_last}}">
           {{format_time_relative_fallback(t.last.t_c)}}
         </a>
@@ -871,7 +871,7 @@
         {%endif%}
 
       {%endif%}
-    {%endif%}
+    {%endif%#}
 
     {{username(t.user)}}
 
@@ -901,7 +901,9 @@
       {%endif%}
     {%endif%}
 
-    {%if t.count %}
+    {%set display_nreplies = t.nreplies_visible if ('nreplies_visible' in t)else(t.nreplies or t.count or 0)%}
+
+    {%if display_nreplies %}
       <a class="response" href="{{url_to_last}}">{{
         spf(
           zhen('$0 个评论','$0 comment$es0')
@@ -917,11 +919,13 @@
     {{move_thread(t)}}
   </div>
 
-  {%if t.count and 0%}
+
+
+  {%if 0 %}
   {# small circle indicating num replies #}
 
     <div class="rightmost">
-      <a class="reply_count c{{t.cid}}" href="{{url_to_last}}">{{t.count}}</a>
+      <a class="reply_count c{{t.cid}}" href="{{url_to_last}}">{{display_nreplies}}</a>
     </div>
   {%endif%}
 
@@ -1350,25 +1354,32 @@
       {%endif%}
 
       <div class="header">
-        <span class="header_title" href="{{
-          (request.full_path[:-1] if request.full_path[-1]=='?' else request.full_path)
-        }}">{%if ('bigcat' not in (category_mode or ''))%}
+        {%if ('bigcat' not in (category_mode or ''))%}
+          <span class="header_title" href="{{
+            (request.full_path[:-1] if request.full_path[-1]=='?' else request.full_path)
+          }}">
               {{page_title}}
-            {%else%}
-              {%macro bcl(name)%}
-                {{'/c/'~ name if name!='main' else '/'}}
-              {%endmacro%}
-              {%for key,c in bigcatism.briefs.items()%}
-                {%if not key.startswith('-')%}
-                  {%if page_title != c.name %}
-                    <a class="opaque5 black" href="{{bcl(key)}}">{{c.name}}</a>
-                  {%else%}
-                    <span>{{c.name}}</span>
-                  {%endif%}
+          </span>
+        {%else%}
+          <span class='header_title bigcats'>
+            {%macro bcl(name)%}
+              {{'/c/'~ name if name!='main' else '/'}}
+            {%endmacro%}
 
+            {%for key,c in bigcatism.briefs.items()%}
+              {%if not key.startswith('-')%}
+                {%if page_title != c.name %}
+                  <a class="black" href="{{bcl(key)}}">{{c.name}}</a>
+                {%else%}
+                  <span>{{c.name}}</span>
                 {%endif%}
-              {%endfor%}
-        {%endif%}</span>
+
+              {%endif%}
+            {%endfor%}
+
+          </span>
+        {%endif%}
+
 
         {%if parent_bigcats %}
           {%for cat in (

@@ -47,6 +47,12 @@ empty = 0
 idle = 1
 dispatching = 2
 
+import time, random
+ts = time.sleep
+rr = random.random
+
+def tsr():ts(rr()*.1)
+
 # buffer that refreshes in the bkgnd
 class StaleBuffer:
 
@@ -65,6 +71,7 @@ class StaleBuffer:
         assert ttl>ttr
 
     def refresh_threaded(self):
+        tsr()
         try:
             r = self.f()
         except Exception as e:

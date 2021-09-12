@@ -204,7 +204,7 @@ def create_all_necessary_indices():
     ci('comments',indexgen([[],['parent'],['parent','deleted'],['uid']],['t_c']))
     ci('questions',indexgen([[],['question']],['t_c']))
 
-    ci('punchcards', [['salt','uid','hostname']])
+    ci('punchcards', [['salt','uid','hostname'],['t_u']])
 
 is_integer = lambda i:isinstance(i, int)
 is_string = lambda i:isinstance(i, str)
@@ -744,7 +744,8 @@ class Paginator:
             if mode=='simple':
                 pass
             else:
-                button_groups.append(orders)
+                if 0: # bypass to see effect
+                    button_groups.append(orders)
 
             button_groups.append([(spf(zhen('共 $0', '$0 Total'))(count), '')])
 
