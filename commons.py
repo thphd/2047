@@ -37,31 +37,37 @@ def ras(k):
 
 from i18n import DefaultTranslations, spf
 
-def get_current_locale():
-    try:
-        locale = g.locale if hasattr(g, 'locale') else 'zh'
-    except:
-        locale = 'zh'
-
-    if locale not in trans.allowed_languages:
-        locale = 'zh'
-
-    return locale
+# def get_current_locale():
+#     try:
+#         locale = g.locale if hasattr(g, 'locale') else 'zh'
+#     except:
+#         locale = 'zh'
+#
+#     if locale not in trans.allowed_languages:
+#         locale = 'zh'
+#
+#     return locale
 def get_current_locale(): return g.locale
 
-trans = DefaultTranslations(get_current_locale)
-dict_of_languages = {
-    k:v['name']
-    for k,v in trans.allowed_languages.items()
-    if not v['name'].startswith('*') or k=='expl'
-}
+def get_translator_functions(gcl):
+    trans = DefaultTranslations(gcl)
+    dict_of_languages = {
+        k:v['name']
+        for k,v in trans.allowed_languages.items()
+        if not v['name'].startswith('*') or k=='expl'
+    }
+
+    zh = trans.mark_for_translate_gen('zh')
+    en = trans.mark_for_translate_gen('en')
+    zhen = lambda a,b:zh(a,('en', b))
+    enzh = lambda a,b:en(a,('zh', b))
+
+    return zh,en,zhen,enzh,trans,dict_of_languages
+
+zh,en,zhen,enzh,trans,dict_of_languages = get_translator_functions(get_current_locale)
+
 if __name__ == '__main__':
     print(trans.list_allowed_languages())
-
-zh = zh_ = trans.mark_for_translate_gen('zh')
-en = en_ = trans.mark_for_translate_gen('en')
-zhen = lambda a,b:zh_(a,('en', b))
-enzh = lambda a,b:en_(a,('zh', b))
 
 # everything time related
 
@@ -96,6 +102,7 @@ def format_time_iso(dtdt):
 fti = format_time_iso
 
 format_time_datetime = lambda s: format_time(dfs(s), '%Y-%m-%d %H:%M')
+format_time_datetime_second = lambda s: format_time(dfs(s), '%Y-%m-%d %H:%M:%S')
 format_time_dateonly = lambda s: format_time(dfs(s), '%Y-%m-%d')
 format_time_timeonly = lambda s: format_time(dfs(s), '%H:%M')
 
@@ -143,7 +150,11 @@ def page_grayness():
 
     return cap(1 - (1 - (b-k) / b)**1.2, 0, 1) * 0.95
 
+@ttl_cache(ttl=15)
 def format_time_relative_fallback(s):
+    return format_time_relative_fallback_raw(s)
+
+def format_time_relative_fallback_raw(s):
     dt = dfshk(s)
     now = dtn(working_timezone)
 
@@ -181,6 +192,18 @@ def format_time_absolute_fallback(s):
     else:
         return format_time_dateonly(s)
 
+@lru_cache(maxsize=2048)
+def format_time_absolute_dateifyesterday(s):
+    dt = dfshk(s)
+    now = dtn(working_timezone)
+
+    past = now-dt # larger=>longer in the past
+
+    if past < dttd(seconds=3600*15):
+        return format_time_timeonly(s)
+    else:
+        return format_time_datetime(s)
+
 def login_time_validation(s):
     dt = dfs(s).replace(tzinfo=gmt_timezone)
     now = dtn(working_timezone)
@@ -198,40 +221,6 @@ gmt_timezone = dttz(dttd(hours=0)) # GMT
 
 def time_iso_now(dt=0): # dt in seconds
     return format_time_iso(dtn(working_timezone) + dttd(seconds=dt))
-
-# pw hashing
-
-def bytes2hexstr(b):
-    return ba.b2a_hex(b).decode('ascii')
-
-def hexstr2bytes(h):
-    return ba.a2b_hex(h.encode('ascii'))
-
-# https://nitratine.net/blog/post/how-to-hash-passwords-in-python/
-def get_salt():
-    return os.urandom(32)
-
-def get_random_hex_string(b=8):
-    return base64.b16encode(os.urandom(b)).decode('ascii')
-
-def hash_pw(salt, string):
-    return hashlib.pbkdf2_hmac(
-        'sha256',
-        string.encode('ascii'),
-        salt,
-        100000,
-    )
-
-# input string, output hash and salt
-def hash_w_salt(string):
-    salt = get_salt()
-    hash = hash_pw(salt, string)
-    return bytes2hexstr(hash), bytes2hexstr(salt)
-
-# input hash,salt,string, output comparison result
-def check_hash_salt_pw(hashstr, saltstr, string):
-    chash = hash_pw(hexstr2bytes(saltstr), string)
-    return chash == hexstr2bytes(hashstr)
 
 from render import *
 
@@ -282,6 +271,7 @@ def eat_rgb(s, raw=False):
 from aql import AQLController, QueryString
 aqlc = AQLController(None, 'db2047')
 aql = aqlc.aql
+aqls = lambda *a,**k:aql(*a, **k, silent=True)
 
 def wait_for_database_online():
     qprint('waiting for database online...')
@@ -389,15 +379,19 @@ def linkify(s):
 
 common_links = linkify('''
 新手指南 /t/7623 如题
+创建投票 /t/9564 应用户强烈要求
+# 聊天室 /deer 公共聊天室
+1337 /leet 做题家
+
+
 用户名录 /u/all 本站用户名册
 社会信用分 /u/all?sortby=trust_score 试点项目
-创建投票 /t/9564 应用户强烈要求
 老用户 /t/7108 原2049用户取回账号方式
 勋章墙 /medals 荣光
 黑名单 /t/9807 真/言论自由
 删帖 /c/deleted 本站被删帖子
 管理员 /t/7408 成为管理员
-1337 /leet 做题家
+
 数据备份 /t/7135 论坛数据库备份
 服务条款 /t/7110 违者封号
 题库 /questions 考试题目编撰
@@ -408,7 +402,7 @@ common_links = linkify('''
 oplog /oplog 管理日志
 英雄 /hero BE4的实验性项目
 维尼查 /ccpfinder 镰和锤子不可兼得
-云上贵州 /guizhou 年轻人不讲武德
+# 云上贵州 /guizhou 年轻人不讲武德
 人人影视 /search_yyets?q=越狱 人人英雄永垂不朽
 图书馆 https://zh.b-ok.org/ 人类进步的阶梯
 ''')
@@ -494,9 +488,15 @@ def parse_showcases(s):
     occurences = re.findall(rsc, s)
     return occurences
 
-from flask import request
+from flask import request, g
 def is_pincong_org():
     return 'pincong.org' in request.host
+
+def is_zh_rocks():
+    return 'zh-rocks' == g.locale
+
+def is_zh_mohu():
+    return 'zh-mohu' == g.locale
 
 def pagerank_format(u):
     pr = key(u, 'pagerank') or 0
@@ -506,6 +506,7 @@ def trust_score_format(u):
     ts = key(u, 'trust_score') or 0
     return int(ts*1000000)
 
+@jit(forceobj=True)
 def redact(s):
     out = []
     for idx, l in enumerate(s):
@@ -631,7 +632,7 @@ def is_alphanumeric(n):
 import random
 from quotes import *
 
-@stale_cache(ttr=10, ttl=900)
+@stale_cache(ttr=3, ttl=900)
 def get_links():
     links = aql('''
     for i in entities
@@ -703,7 +704,7 @@ def get_link_one():
     linksd, linksl = get_links()
     return random.choice(linksl)
 
-@stale_cache(ttr=60, ttl=1800)
+@stale_cache(ttr=30, ttl=1800)
 def get_weekly_best(start=7, stop=14, n=10):
     lastweek = format_time_iso(dfs(time_iso_now()) - dttd(days=start))
     lastweek2 = format_time_iso(dfs(time_iso_now()) - dttd(days=stop))
@@ -716,7 +717,7 @@ def get_weekly_best(start=7, stop=14, n=10):
     ''', silent=True)
     return wb
 
-@stale_cache(ttr=60, ttl=1800)
+@stale_cache(ttr=30, ttl=1800)
 def get_weekly_best_user(start=7, stop=14, n=10):
     lastweek = format_time_iso(dfs(time_iso_now()) - dttd(days=start))
     lastweek2 = format_time_iso(dfs(time_iso_now()) - dttd(days=stop))
@@ -735,7 +736,7 @@ def get_weekly_best_user(start=7, stop=14, n=10):
 
     return wbu
 
-@stale_cache(ttr=60, ttl=1800)
+@stale_cache(ttr=30, ttl=1800)
 def get_user_best_threads(uid):
     return aql('''
         for t in threads
@@ -745,13 +746,14 @@ def get_user_best_threads(uid):
         return t
     ''', uid=int(uid), silent=True)
 
+@stale_cache(ttr=15, ttl=1800)
 def get_user_picked_threads(uid):
     ts = get_user_best_threads(uid)
     ts = random.sample(ts,min(7, len(ts)))
     ts = sorted(ts, key=lambda t:t['amv'] if 'amv' in t else 0, reverse=True)
     return ts
 
-@stale_cache(ttr=600, ttl=1800)
+@stale_cache(ttr=60, ttl=1800)
 def get_best_threads():
     return aql('''
         for t in threads
@@ -870,10 +872,21 @@ if __name__ == '__main__':
     for i in range(10):
         print(get_random_hex_string(6))
 
-    # test timezone
-    print(format_time_iso(dtn()))
-    print(format_time_iso(dtn(working_timezone)))
+    # # test timezone
+    # print(format_time_iso(dtn()))
+    # print(format_time_iso(dtn(working_timezone)))
+    #
+    # print(format_time_relative_fallback(
+    #     format_time_iso(dtn())
+    # ))
 
-    print(format_time_relative_fallback(
-        format_time_iso(dtn())
-    ))
+if __name__ == '__main__':
+    # timethis('$format_time_relative_fallback("2020-10-20T02:34:11")')
+    # timethis('$format_time_absolute_fallback("2020-10-20T02:34:11")')
+    # timethis('$get_user_picked_threads(5108)')
+    # jj='r24r14r142ffffasfaff4r24r1412341241424143414314r1'*100
+    # timethis('$redact($jj)')
+
+    timethis('$get_links()')
+
+    # format_time_relative_fallback()

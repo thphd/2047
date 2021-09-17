@@ -40,6 +40,22 @@ def create_all_necessary_collections():
 #
 #     aql('insert @k into notifications', k=d, silent=True)
 
+class IndexCreator:
+    # create index
+    @classmethod
+    def create_indices(cls,coll,aa):
+        for a in aa:
+            qprint('creating index on',coll,a)
+            aqlc.create_index(coll, type='persistent', fields=a,
+                unique=False,sparse=False)
+
+    # create index with unique=True
+    @classmethod
+    def create_index_unique_true(cls, coll, a, unique=True):
+        for ai in a:
+            qprint('creating index on',coll,[ai])
+            aqlc.create_index(coll, type='persistent', fields=[ai], unique=unique, sparse=False)
+
 def get_uidlist_by_namelist(names):
     uids = aql('''
     let uidlist = (
@@ -165,7 +181,7 @@ def cats_into_lines(cats):
         if bck=='main' or bck.startswith('-'):
             continue
 
-        bccats = cats[bck]
+        bccats = key(cats, bck) or [] #cats[bck]
 
         for ck in catd.copy():
             if ck in bccats:
@@ -696,7 +712,20 @@ def daily_number_posts_cached(uid):return daily_number_posts(uid)
 @ttl_cache(ttl=10, maxsize=1024)
 def daily_number_threads_cached(uid):return daily_number_threads(uid)
 
-from antispam import is_spam
+
+def spam_kill(content):
+    from antispam import is_spam
+    spam_detected = False
+    if is_spam(content):
+        spam_detected = True
+
+        if current_user_doesnt_have_enough_likes():
+            aql('update @u with @u in users', u={
+                '_key':g.current_user['_key'],
+                'delete':True,
+            })
+            g.no_notifications = True
+    return spam_detected
 
 @register('post')
 def _():
@@ -726,17 +755,7 @@ def _():
     pagerank = pagerank_format(g.current_user)
     trust_score = trust_score_format(g.current_user)
 
-    spam_detected = False
-    if is_spam(content):
-        spam_detected = True
-
-        if current_user_doesnt_have_enough_likes():
-            aql('update @u with @u in users', u={
-                '_key':g.current_user['_key'],
-                'delete':True,
-            })
-            g.no_notifications = True
-
+    spam_detected = spam_kill(content)
 
     if target_type=='thread':
         _id = int(_id)
@@ -1553,6 +1572,7 @@ updateable_personal_info = [
 
     ('background_image_uid', '背景水印图片（使用头像图片，请填写头像UID，所对应用户头像会变成背景水印'),
     ('background_image_opacity', '背景水印不透明度(0.0-1.0)'),
+    ('background_image_scale', '背景水印放大比例(0.5-4.0)'),
 
     ('delay_send', '启用延时发送功能（yes即启用，留空即停用）（发帖的时候可以选择延时发送）'),
     ('hide_avatar', '隐藏页面中的头像（yes即隐藏，留空即显示）'),
@@ -1591,6 +1611,13 @@ def _():
                 pass
             else:
                 raise Exception('透明度不在允许范围内')
+
+        if item=='background_image_scale' and value:
+            fv = float(value)
+            if .5<=fv and fv<=4.0:
+                pass
+            else:
+                raise Exception('缩放比例不在允许范围内')
 
         upd[item] = value
 
@@ -2599,15 +2626,21 @@ def get_blacklist_all():
     return aql('''for i in blacklist filter i.enabled==true
     let user = (for u in users filter u.uid==i.uid return u)[0]
     let to_user = (for u in users filter u.uid==i.to_uid return u)[0]
-    sort i.t_c
+    sort i.t_u
     return merge(i,{user, to_user})
     ''', silent=True)
 
 @register('get_blacklist_all')
 def _():
-    must_be_admin()
+    # must_be_admin()
     res = get_blacklist_all()
-    return {'blacklist': [(l['user']['name'],'blacklisted',l['to_user']['name']) for l in res]}
+    return {'blacklist': [(
+        l['user']['name'],
+        l['user']['uid'],
+        l['to_user']['name'],
+        l['to_user']['uid'],
+        l['t_u'],
+    ) for l in res]}
 
 @app.route('/blacklist')
 def listbl():
@@ -2629,6 +2662,11 @@ def listbl():
 #     op = es('op')
 #     if op == ''
 
+@register('get_online_stats')
+def _():
+    tot, reg = get_online_stats()
+    return {'total':tot,'registered':reg}
+
 @stale_cache(ttr=3, ttl=1800)
 def get_online_stats():
     n = aql('''
@@ -2638,8 +2676,39 @@ def get_online_stats():
     let lu=nu-1
     return {n, lu}
     ''',silent=True, recent=time_iso_now(-1800))[0]
-
     return n['n'],n['lu']
+
+@stale_cache(ttr=6, ttl=1800)
+def get_online_admins():
+    n = aqls('''
+for i in punchcards
+filter i.t_u > @recent
+sort i.t_u desc
+    for u in users
+    filter u.uid==i.uid
+        for a in admins
+        filter a.name==u.name
+        collect uid=i.uid into g=i.t_u
+        let gm = max(g)
+        sort gm desc
+        return {uid, t_u:gm}
+    ''', recent=time_iso_now(-86400/4))
+
+    return n
+
+@register('get_user_data_by_uid')
+def _():
+    j = g.j
+    uid = key(j,'uid')
+    uid = intify(uid)
+
+    if not (uid and uid>0):
+        raise Exception('uid illegal')
+
+    u = get_user_by_id_cached(uid)
+    if not u:
+        raise Exception('user not exist')
+    return {'user':u}
 
 def put_punchcard():
     t_c = time_iso_now()

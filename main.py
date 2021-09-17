@@ -25,6 +25,13 @@ from flask import render_template, request, send_from_directory, make_response
 from api import api_registry, get_categories_info, get_url_to_post, get_url_to_post_given_details, create_all_necessary_collections
 from api import *
 
+# ads
+import sys
+sys.path.append('./ads')
+from advert import ads
+
+import chat
+
 dispatch_with_retries(create_all_necessary_collections)
 dispatch_with_retries(dispatch_database_updaters)
 
@@ -79,12 +86,26 @@ def calculate_resource_files_hash():
 
 dispatch_with_retries(calculate_resource_files_hash)
 
+def path_is_parent(parent_path, child_path):
+    # Smooth out relative path names, note: if you are concerned about symbolic links, you should use os.path.realpath too
+    parent_path = os.path.realpath(os.path.abspath(parent_path))
+    child_path = os.path.realpath(os.path.abspath(child_path))
+
+    # Compare the common path of the parent and child path with the common path of just the parent path. Using the commonpath method on just the parent path will regularise the path name in the same way as the comparison that deals with both paths, removing any trailing path separator
+    return os.path.commonpath([parent_path]) == \
+        os.path.commonpath([parent_path, child_path])
+
 def route_static(frompath, topath, maxage=1800):
     @route('/'+frompath+'/<path:path>')
     def _(path):
-        path = re.split('v=.+?\/', path).join('')
+        path = re.sub(r'v=.+?/', '/', path)
 
         cc = topath+'/'+path
+
+        # check if cc is within topath for security
+        if not path_is_parent(topath, cc):
+            abort(403, 'Access Denied')
+
         if not os.path.exists(cc):
             abort(404, 'File not found')
             # return make_response('File not found', 404)
@@ -114,8 +135,8 @@ route_static('pr_images', 'ads/images', 3600*24*5)
 route_static('css', 'templates/css', 3600*24*5)
 route_static('js', 'templates/js', 3600*24*5)
 route_static('highlight', 'templates/highlight', 3600*24*5)
-route_static('jgawb', 'jgawb', 1800)
-route_static('jicpb', 'jicpb', 1800)
+route_static('jgawb', 'jgawb', 3600*24)
+route_static('jicpb', 'jicpb', 3600*24)
 
 @app.route('/favicon.ico')
 def favicon():
@@ -127,18 +148,8 @@ def favicon():
     return resp
 
 def create_all_necessary_indices():
-    # create index
-    def ci(coll,aa):
-        for a in aa:
-            qprint('creating index on',coll,a)
-            aqlc.create_index(coll, type='persistent', fields=a,
-                unique=False,sparse=False)
-
-    # create index with unique=True
-    def ciut(coll, a, unique=True):
-        for ai in a:
-            qprint('creating index on',coll,[ai])
-            aqlc.create_index(coll, type='persistent', fields=[ai], unique=unique, sparse=False)
+    ci = IndexCreator.create_indices
+    ciut = IndexCreator.create_index_unique_true
 
     ciut('view_counters', ['targ'])
 
@@ -840,6 +851,17 @@ def log_err(*a):
     text = ' '.join(map(lambda i:str(i), a))
     app.logger.warning(colored_err(text))
 
+
+
+okaybots = ['AdsBot-Google-Mobile','googlebot','blexbot','semrushbot','webmeup','ahrefsbot'].map(lambda k:k.lower())
+
+def is_okay_bot(uas):
+    uas = uas.lower()
+    for botname in okaybots:
+        if botname in uas:
+            return True
+    return False
+
 @app.before_request
 def before_request():
     hostname = request.host
@@ -918,7 +940,7 @@ def before_request():
     g.is_admin = False
 
     if (not is_static):
-        if 'uid' in session:
+        if 'uid' in session and session['uid']:
             uid = int(session['uid'])
             g.logged_in = get_user_by_id_admin(uid)
 
@@ -977,21 +999,14 @@ def before_request():
 
     uasl = uas.lower()
 
-    okaybots = ['AdsBot-Google-Mobile','googlebot','blexbot','semrushbot','webmeup','ahrefsbot'].map(lambda k:k.lower())
-
-    def is_okay_bot(uas):
-        uas = uas.lower()
-        for botname in okaybots:
-            if botname in uas:
-                return True
-        return False
-
     # filter bot/dos requests
     allowed = (
         # uaf.judge(uas, weight) and
         # uaf.judge(acceptstr, weight) and
         # is_okay_bot(uas) or
         (uaf.judge(ipstr, weight, infostring=uas) if not is_local else True)
+
+        and (ipstr!='45.155.205.206')
     )
 
     def uafd(k):
@@ -1005,10 +1020,10 @@ def before_request():
         +f'bl:{list(uaf.blacklist.keys()).join(",")}')
 
 
-        if not is_okay_bot(uas) and (ipstr in uaf.blacklist):
+        if (not is_okay_bot(uas) or 1) and (ipstr in uaf.blacklist):
 
             resp = make_response('rate limit exceeded', 307)
-            resp.headers['Location'] = 'https://shca.miit.gov.cn/'
+            resp.headers['Location'] = 'https://community.geph.io/'
             return resp
         else:
             return make_response('rate limit exceeded', 429)
@@ -1815,7 +1830,7 @@ def _userpage(uid):
     return length(for u in users filter u.trust_score>@pr return u)''',
     silent=True,pr=key(uobj, 'trust_score')or 0)[0]
 
-    if key(uobj, 'delete'):
+    if 1 or key(uobj, 'delete'):
         ban_information = aql('''
         for i in operations filter i.op=='ban_user' and i.target==@uid
         sort i.t_c desc
@@ -2164,22 +2179,25 @@ def e(s): return make_response({'error':s}, 500)
 
 
 rld = {}
+rldlock = threading.Lock()
 def ratelimit(uid, k=1):
     global rld
     tn = time.time()
-    if uid not in rld:
-        rld[uid] = [tn, 0]
 
-    lt, ls = rld[uid]
+    with rldlock:
+        if uid not in rld:
+            rld[uid] = [tn, 0]
 
-    dt = tn-lt
+        lt, ls = rld[uid]
 
-    ls *= 0.95**dt
-    ls += k
+        dt = tn-lt
 
-    rld[uid] = [tn, ls]
+        ls *= 0.95**dt
+        ls += k
 
-    return ls
+        rld[uid] = [tn, ls]
+
+        return ls
 
 
 @app.route('/api', methods=['GET', 'POST'])
@@ -2213,9 +2231,10 @@ def apir():
     action = j['action']
 
     # method limitation
-    if action not in ['ping','sb1024_encrypt','sb1024_decrypt']:
+    if (action not in ['ping','sb1024_encrypt','sb1024_decrypt']
+        and ('get' not in action)):
         if request.method != 'POST':
-            return e('you must use POST for actions other than "ping"')
+            return e('you must use POST for this action')
 
     # CSRF prevention
     # if action!='ping':
@@ -2233,7 +2252,7 @@ def apir():
         return e('action function not registered')
 
     rate = ratelimit(g.selfuid, 1)
-    if g.selfuid>0 and rate>5 and ('delete' in action or 'edit' in action):
+    if g.selfuid>0 and rate>10 and ('delete' in action or 'edit' in action):
         log_err(f'api rate limit: {g.selfuid} {g.current_user and g.current_user["name"]}\naction: {action}\n{j}')
 
         aql('insert @i into logs', i={
@@ -2249,7 +2268,7 @@ def apir():
     # thread-local access to json body
     g.j = j
 
-    printback = action not in 'ping viewed_target viewed_target_v2 browser_check render_poll'.split(' ') and 'render' not in action.lower()
+    printback = action not in 'ping viewed_target viewed_target_v2 browser_check render_poll'.split(' ') and 'render' not in action.lower() and 'silent' not in j
 
     if printback:
         print_up('API >>', j)

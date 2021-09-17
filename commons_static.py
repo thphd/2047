@@ -3,6 +3,7 @@ import base64, re
 import time, math
 from colors import *
 # from functools import lru_cache
+from numba import jit
 
 from cachetools.func import *
 from cachy import *
@@ -87,6 +88,14 @@ def intify(s, name=''):
             pass
         return 0
 
+def floatify(s):
+    try:
+        return float(s)
+    except:
+        if s:
+            pass
+        return 0.
+
 def get_environ(k):
     k = k.upper()
     if k in os.environ:
@@ -104,6 +113,7 @@ clip01 = clip(0,1)
 import zlib
 
 def calculate_checksum(bin): return zlib.adler32(bin).to_bytes(4,'big')
+
 def calculate_checksum_base64(bin):
     csum = calculate_checksum(bin)
     chksum_encoded = base64.b64encode(csum).decode('ascii')
@@ -113,14 +123,68 @@ def calculate_checksum_base64_replaced(bin):
     return calculate_checksum_base64(bin).replace('+','-').replace('/','_')
 
 def calculate_etag(bin):
-    chksum_encoded = calculate_checksum_base64_replaced(bin)
-    return chksum_encoded
+    return calculate_checksum_base64_replaced(bin)
+
+
+# pw hashing
+
+def bytes2hexstr(b):
+    return ba.b2a_hex(b).decode('ascii')
+
+def hexstr2bytes(h):
+    return ba.a2b_hex(h.encode('ascii'))
+
+# https://nitratine.net/blog/post/how-to-hash-passwords-in-python/
+def get_salt():
+    return os.urandom(32)
+
+def get_random_hex_string(b=8):
+    return base64.b16encode(os.urandom(b)).decode('ascii')
+
+def hash_pw(salt, string):
+    return hashlib.pbkdf2_hmac(
+        'sha256',
+        string.encode('ascii'),
+        salt,
+        100000,
+    )
+
+# input string, output hash and salt
+def hash_w_salt(string):
+    salt = get_salt()
+    hash = hash_pw(salt, string)
+    return bytes2hexstr(hash), bytes2hexstr(salt)
+
+# input hash,salt,string, output comparison result
+def check_hash_salt_pw(hashstr, saltstr, string):
+    chash = hash_pw(hexstr2bytes(saltstr), string)
+    return chash == hexstr2bytes(hashstr)
+
+
+def timethis(stmt):
+    import re, timeit
+    print('timing', stmt)
+    broken = re.findall(f'\$([a-zA-Z][0-9a-zA-Z_\-]*)', stmt)
+    stmt = stmt.replace('$','')
+    setup = f"from __main__ import {','.join(broken)}"
+
+    exec(setup) # preheat
+    exec(stmt)
+
+    timeit.Timer(stmt,
+        setup=setup
+        ).autorange(
+            lambda a,b:print(f'{a} in {b:.4f}, avg: {b/a*1000_000:.4f}us'))
+
+# if __name__ == '__main__':
+#     k = time.time()
+#     def hello():
+#         if time.time() - k < 2:
+#             raise Exception('nah')
+#
+#     dispatch_with_retries(hello)
+#     time.sleep(4)
 
 if __name__ == '__main__':
-    k = time.time()
-    def hello():
-        if time.time() - k < 2:
-            raise Exception('nah')
-
-    dispatch_with_retries(hello)
-    time.sleep(4)
+    toenc = b"r12uf-398gy309ghh123r1"*100000
+    timethis('calculate_checksum_base64_replaced(toenc)')

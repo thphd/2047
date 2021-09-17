@@ -7,22 +7,25 @@ def load_img_from_bin(b):
     return im.convert(mode='RGBA')
 
 def resize_to(im, target=72):
-    w,h = im.size
+    w,h = ow,oh = im.size
     longer = max(w,h)
     shorter = min(w,h)
 
     # crop the thing to square
     l = int((longer-shorter)/2+.5)
     if longer==w:
-        im = im.crop((l,0,w-l,h))
+        nim = im.crop((l,0,w-l,h))
     else:
-        im = im.crop((0,l,w,h-l))
+        nim = im.crop((0,l,w,h-l))
 
     # resize to a smaller square
-    w,h = im.size
+    w,h = nim.size
     ratio = target/w
-    nw,nh = int(w*ratio+.5), int(w*ratio+.5)
-    return im.resize((nw,nh), resample=Image.BICUBIC, reducing_gap=3.5)
+    nw,nh = round(w*ratio), round(w*ratio)
+
+    if nw == ow and nh==oh:
+        return im
+    return nim.resize((nw,nh), resample=Image.BICUBIC, reducing_gap=3.5)
 
 def avatar_pipeline(b):
     # user upload binary file
@@ -49,7 +52,7 @@ if __name__ == '__main__':
         im = load_img_from_bin(open(fn,'rb').read())
 
         im = im.quantize(
-            colors=64,
+            colors=128,
             method=Image.FASTOCTREE, # only applicapable
             kmeans=1, # larger faster
             dither=Image.FLOYDSTEINBERG,

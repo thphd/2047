@@ -28,6 +28,7 @@ allowed_languages_attribs = ala = [
     en-gb English(UK) en-us en
 
     zh-mohu 膜乎 zh-cn
+    zh-rocks 新品葱 zh-cn
 
     default *默认 zh en
 
@@ -227,7 +228,10 @@ class Translations:
                         ds[ilang] = translation
 
             # load current locale
-            cl = get_current_locale()
+            try:
+                cl = get_current_locale()
+            except:
+                cl = 'zh-cn'
 
             return return_translate(s, cl)
 
@@ -397,10 +401,10 @@ if __name__ == '__main__':
     print(spf('$em0 $1, $yy4')(1,1,2020))
 
     current_locale = 'en'
-    def get_current_locale():
+    def gcl():
         return current_locale
 
-    trans = DefaultTranslations(get_current_locale)
+    trans = DefaultTranslations(gcl)
 
     print(trans.list_allowed_languages())
 

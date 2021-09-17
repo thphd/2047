@@ -25,3 +25,7 @@ beautifulsoup4
 # monkeypatching
 
 forbiddenfruit (requires VS build tools on Windows
+
+pytio
+brotli
+numba

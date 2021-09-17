@@ -3,6 +3,7 @@ from cachy import stale_cache
 import threading
 import re
 
+from commons_static import *
 from colors import *
 
 # extract non-markdown urls
@@ -418,16 +419,16 @@ class FlavoredRenderer(HTMLRenderer):
 # flavored_renderer = FlavoredRenderer()
 renderlock = threading.Lock()
 
-@lru_cache(maxsize=8192)
+@lru_cache(maxsize=16384)
 def frend(md):
     with renderlock:
+        # ren = FlavoredRenderer()
         with FlavoredRenderer() as ren:
-        # with flavored_renderer as ren:
             # again very bad interface design
             rend = ren.render(Document(md))
             coll = ren.collected
 
-    return rend, coll
+        return rend, coll
 
 
 if __name__ == '__main__':
@@ -447,15 +448,8 @@ if __name__ == '__main__':
 
 ```
 
-    '''
+    '''*10
     print(frend(xamplemd))
 
     print(just_markdown('<https://baidu.com/>'))
     print(convert_markdown('<https://baidu.com/>'))
-
-# ads
-
-import sys
-sys.path.append('./ads')
-
-from advert import ads
