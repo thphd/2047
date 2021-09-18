@@ -2879,6 +2879,10 @@ def templates(path):
         page_title = path,
     )
 
+@app.route('/502')
+def e502():
+    return make_response('502', 502)
+
 @app.errorhandler(404)
 def e404(e):
     err = str(e) or str(e.original_exception) or str(e.original_exception.__class__.__name__)

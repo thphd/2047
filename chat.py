@@ -69,6 +69,8 @@ class Chat:
         return newc
 
     def post_message(self, cid, uid, content):
+        banned_check()
+
         content = content.strip()
         content_length_check(content)
         # check if channel exists
