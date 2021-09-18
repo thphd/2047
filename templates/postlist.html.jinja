@@ -52,10 +52,11 @@
   {%set dnt = daily_number_threads(g.selfuid)%}
 
 
-  {%if dnp or dnt%}
+  {%if (dlp-dnp)<5 or (dlt-dnt)<3%}
     <div class="padlr opaque5" style="font-size:10px;margin-bottom:0.5em">
-      你的<a href="/trust_score_explained">社会信用分</a>是{{tsc}}，过去48小时发表了 {{dnp}}/{{dlp}} 个回复{%
-        if dnt%}，{{dnt}}/{{dlt}}个主题{%endif%}
+      你的<a href="/trust_score_explained">社会信用分</a>是{{tsc}}，过去48小时发表了 {{dnp}}/{{dlp}} 个回复
+      {%- if dnt%}，{{dnt}}/{{dlt}}个主题
+      {%-endif%}
     </div>
   {%endif%}
 

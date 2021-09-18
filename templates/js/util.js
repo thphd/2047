@@ -1958,3 +1958,210 @@ function isa_error(message, t){
   if (t) isa.delay_destruct(t)
   return isa
 }
+
+(function(){
+  var chat_new = geid('btn_chat_loadnew')
+  var chat_old = geid('btn_chat_loadold')
+
+  if(!chat_new || !chat_old)return
+
+  chat_new.style.display = 'none'
+  // chat_old.style.display = 'none'
+
+  var chat_send = geid('btn_chat_send')
+  var chat_area = geid('chat_textarea')
+
+  var chat_history = geid('chat_history')
+  var chat_history_outer = geid('chat_history_outer')
+
+  var oldest = '2047'
+  var newest = '1989'
+
+  var cid = 1
+
+  function onclickify(element, f){
+    element.onclick = function(){
+      element.enabled = false
+      return Promise.resolve()
+      .then(f)
+      .catch(print)
+      .then(()=>{element.enabled=true})
+    }
+  }
+
+  function moveranges(t_c){
+    oldest = t_c < oldest?t_c:oldest
+    newest = t_c > newest?t_c:newest
+    // print({oldest,newest})
+  }
+
+  var lock = 0
+  function do_with_lock(f){
+    if (lock==0){
+      lock=1
+      return Promise.resolve()
+      .then(f)
+      .catch(e=>isa_error(e,1000))
+      .then(res=>{
+        lock=0
+        return res
+      })
+    }else{
+      return Promise.reject('')
+    }
+  }
+
+  function to_top(element){
+    element.scrollTop = 0
+  }
+
+  function is_near_bottom(element){
+    var ch = element.clientHeight
+    var sh = element.scrollHeight
+    var st = element.scrollTop
+    return st > sh-ch - 800
+  }
+
+  function to_bottom_if_near(element, force){
+    // var ch = element.clientHeight
+    // var st = element.scrollTop
+
+    if (force || is_near_bottom(element)){
+      var sh = element.scrollHeight
+      element.scrollTop = sh
+      // print('low enough', sh, st)
+
+    }else{
+      // print('not low enough', sh, st)
+    }
+  }
+
+  // https://stackoverflow.com/a/33918803
+  function hold_still(element){
+    var lastScrollHeight = element.scrollHeight;
+    function spring_back(offset){
+      var scrollDiff = element.scrollHeight - lastScrollHeight;
+      element.scrollTop += scrollDiff + (offset || 0);
+    }
+    return spring_back
+  }
+
+  function gmbf(stay){
+    return do_with_lock(function(){
+      return aa('chat',
+        {f:'get_messages_before',a:[cid, oldest],silent:true}, false)
+        .then(res=>{
+          var messages = res.messages
+
+          var spring_back = hold_still(chat_history_outer)
+
+          foreach(messages)(m=>{
+            moveranges(m.t_c)
+
+            var div = dce('div')
+            div.innerHTML = m.content
+            chat_history.prepend(div.firstChild)
+          })
+
+          spring_back(0)
+
+          if(!stay){
+            to_top(chat_history_outer)
+          }
+          return messages
+        })
+    })
+  }
+
+  function gmaf(){
+    return do_with_lock(function(){
+      return aa('chat',
+        {f:'get_messages_after',a:[cid, newest],silent:true}, true)
+        .then(res=>{
+          var messages = res.messages
+          var near = is_near_bottom(chat_history_outer)
+
+          foreach(messages)(m=>{
+            moveranges(m.t_c)
+
+            var div = dce('div')
+            div.innerHTML = m.content
+            chat_history.append(div.firstChild)
+
+            if(chat_history.children.length>100){
+              chat_history.removeChild(chat_history.children[0])
+            }
+          })
+
+          if(messages.length && near)to_bottom_if_near(chat_history_outer, true)
+
+          return messages
+        })
+    })
+  }
+
+  if(chat_new && chat_old && chat_area){
+    onclickify(chat_old, function(){
+      return gmbf(true)
+      .catch(alert)
+    })
+
+    onclickify(chat_new, function(){
+      return gmaf()
+      .catch(alert)
+    })
+
+    onclickify(chat_send, function(){
+      var content = chat_area.value
+      // print(content)
+      return Promise.resolve(content)
+      .then(content=>{
+
+        if(content){
+          return aa('chat', {f:'post', a:[cid, content]})
+          .then(res=>{
+            chat_area.value = ''
+            return gmaf()
+            .then(()=>{
+              to_bottom_if_near(chat_history_outer, true)
+            })
+          })
+          .catch(err=>{
+            isa_error(err, 2000)
+          })
+        }
+      })
+
+    })
+
+    chat_area.onkeydown = function(e){
+      if ((e.ctrlKey||e.metaKey) && e.keyCode == 13) {
+        // Ctrl-Enter pressed
+        chat_send.click()
+      }else{
+        print(e.keyCode)
+      }
+    }
+
+    function fire_update(){
+      return gmaf()
+      .catch(err=>isa_error(err, 2000))
+      .then((messages)=>{
+        if (messages&&messages.length){
+          setTimeout(fire_update, 100)
+        }else{
+          setTimeout(fire_update, 6000)
+        }
+      })
+      .catch(print)
+    }
+
+    gmbf(true)
+    .catch(err=>isa_error(err, 2000))
+    .then(messages=>{
+      to_bottom_if_near(chat_history_outer, true)
+      fire_update()
+    })
+  }
+
+}())

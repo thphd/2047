@@ -11,7 +11,7 @@
 
         <span class='userpage_username'>{{macros.username(u, class='', as_link=False)}}{{'（已封禁于 '~format_time_dateifnottoday(u.t_d)~'）'if u.delete and u.t_d else ''}}</span>
 
-        {%if u.delete and u.ban_information%}
+        {%if (u.delete or g.is_admin) and u.ban_information%}
           {%for bi in u.ban_information%}
             <div class="opaque5" style="font-size:12px;line-height:1.4">
               {{spf(zh("由 $0 封禁/解封于 $1 理由 【$2】"))

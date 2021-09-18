@@ -284,7 +284,7 @@ def ei(k):
     return (int(j[k]) if ((k in j) and (k is not None)) else None)
 
 def get_user_by_name(name):
-    res = aql('for u in users filter u.name==@n return u', n=name, silent=True)
+    res = aql('for u in users filter u.name==@n sort u.uid asc return u', n=name, silent=True)
     if len(res)>0:
         return res[0]
     else:
@@ -683,7 +683,7 @@ def getcomments(k1,k2):
 def current_user_doesnt_have_enough_likes():
     return g.current_user['nlikes'] < 3 if 'nlikes' in g.current_user else True
 
-def dlp_ts(ts): return min(60, max(5 +0, int(ts*0.025*2)))
+def dlp_ts(ts): return min(60, max(2 +0, int(ts*0.025*2)))
 def dlt_ts(ts): return min(10, max(2 +0, int(ts*0.006*2)))
 
 def daily_limit_posts(uid):

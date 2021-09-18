@@ -7,17 +7,79 @@
 {% set path_url = (request.full_path[:-1] if request.full_path[-1]=='?' else request.full_path) %}
 {% set share_url = base_url + path_url %}
 {% set qr_url = request.host_url + "qr/" + share_url %}
-{% set logourl =
-  ('/images/2049bbslogo_clipped_small_pressed.png')
-if not is_pincong_org() else
-  '/images/pincong_logo.svg'
-%}
-{% set logo_url_full = base_url + logourl%}
 
-{% set icon_url = "/images/favicon_new_pressed.png" if not is_pincong_org()
- else "/images/pc_favicon.ico" %}
+{% set mohuness = (is_zh_mohu() or (t and t.cid==17) or
+    (category and (category.cid==17 or category.cid=='tainment'))) %}
 
-{% set icon_url_full = base_url+"/images/favicon_new_pressed.png"%}
+{%if mohuness%}
+  {%set icon_url = "/images/favicon_new_pressed.png"%}
+  {%set logourl = '/images/mohu_logo.svg' %}
+
+{%elif is_pincong_org() or is_zh_rocks()%}
+  {%set icon_url = "/images/pc_favicon.ico"%}
+  {%set logourl = '/images/pincong_logo.svg' %}
+
+{%else%}
+  {%set icon_url = "/images/favicon_new_pressed.png"%}
+  {%set logourl = '/images/2049bbslogo_clipped_small_pressed.png' %}
+
+{%endif%}
+
+{% set logo_url_full = base_url + logourl %}
+{% set icon_url_full = base_url + icon_url %}
+
+{%macro get_background_image_url(k='background_image_uid') -%}
+  {{macros.avatar_url(get_user_by_id_cached(get_cosmetic_config_user(k)))}}
+{%- endmacro%}
+
+<!-- custom color / standard colors  -->
+{%macro get_colors(k, raw=False) -%}
+  {%- set bc = get_cosmetic_config_user(k) -%}
+  {%- set color = (
+    bc and eat_rgb(bc))
+    or (
+      k=='header_background_color' and
+      (
+        (mohuness and '#499ef3')
+        or ((is_pincong_org() or is_zh_rocks()) and '#404451')
+      )
+    )
+    or False -%}
+
+  {%- if not raw -%}
+    {{color or ''}}
+  {%- else -%}
+    {{bc or ''}}
+  {%- endif -%}
+{%- endmacro%}
+
+{%set bc = get_colors('background_color')%}
+
+{%macro color_if(k, prop='background-color', in_css=False)%}
+  {%set bc = get_colors(k).strip()%}
+  {%-if bc-%}
+    {%- if in_css -%}
+    {{prop}}:{{bc}};
+    {%-else-%}
+    style="{{prop}}:{{bc}};"
+    {%-endif-%}
+  {%-endif-%}
+{%endmacro%}
+
+{%macro hl(url, name)%}
+<a class='headerlink {{'active' if request.full_path.startswith(url)}}' href="{{url}}">{{name}}</a>
+{%endmacro%}
+
+{%macro redcircle(number)%}
+{%if number%}
+<div class="redcircle"><div class="redcircle_inner">{{
+  number
+}}</div></div>
+{%endif%}
+{%endmacro%}
+
+
+
 
 <!DOCTYPE html>
 <html lang="zh" dir="ltr" prefix="og: http://ogp.me/ns#">
@@ -29,14 +91,132 @@ if not is_pincong_org() else
   <link rel="stylesheet" href="/css/normalize.css">
   <link rel="stylesheet" href="/css/v={{resource_files_hash}}/styles.css">
   <link rel="stylesheet" href="/css/labnol_youtube.css">
-  {%if not is_pincong_org()%}
-    <link rel="icon" type="image/png" href="{{icon_url}}">
-  {%else%}
-    <link rel="icon" type="image/x-icon" href="{{icon_url}}">
+
+
+  {# style conditionals #}
+  {%if g.current_user and g.current_user.hide_avatar%}
+    <style>
+      .left {
+        display:none;
+      }
+    </style>
   {%endif%}
 
-  <title>{{page_title_title or page_title}} - {{site_name}}</title>
+  <!-- site specific styles -->
+  {%if (is_pincong_org() and not mohuness) or is_zh_rocks()%}
+    <style>
+      .outerbox {
+        background-image:url('/images/pincong_bkgnd_mod.svg');
+      }
 
+      .category_name {
+        background-color: #697287;
+      }
+    </style>
+  {%elif mohuness%}
+    <style>
+      a.threadlist_title {
+        color:#155faa;
+      }
+      .category_name, .tag {
+        background-color: #99cfff;
+      }
+    </style>
+  {%endif%}
+
+  <!-- background_color of body  -->
+  <style >
+    body {
+      {{color_if('background_color', in_css=True)}}
+    }
+  </style>
+
+  <!-- background_image of body_wrapper -->
+  <meta name="nnn" content="{{get_background_image_url()}}">
+  {%if get_background_image_url()%}
+    <style>
+      .body_wrapper::before {
+        content: "";
+        background-image:url('{{get_background_image_url()}}');
+
+        /* background-size: cover; */
+        position: absolute;
+        z-index: -1;
+        top: 0px;
+        right: 0px;
+        bottom: 0px;
+        left: 0px;
+        opacity:{{get_cosmetic_config_user("background_image_opacity")|float}};
+        background-size: {{(floatify(
+            get_cosmetic_config_user('background_image_scale')
+          ) or 1) * 96}}px;
+        background-position-x: 50%;
+      }
+    </style>
+  {%endif%}
+
+  <!-- page grayness -->
+  <style>
+  .header_bkgnd, .body_wrapper {
+    filter: grayscale({{page_grayness()}}); /* {{page_grayness()}} */
+  }
+  .body_wrapper{
+    padding-bottom: 1px;
+  }
+  .header_bkgnd {
+    {{color_if('header_background_color', in_css=True)}}
+  }
+  {%if color_if('header_background_color')%}
+    .headerlink{
+      {{color_if('header_text_color', 'color', in_css=True,)}}
+    }
+  {%endif%}
+  </style>
+
+    {%set eaten =
+      eat_rgb(get_colors('header_background_color', raw=True), raw=True)%}
+    {%if eaten and (eaten[0]*0.3+eaten[1]*0.6+eaten[2]*0.1 > 128) %}
+      <style>
+        .headerlink:hover, .headerlink:focus, .headerlink:active, .headerlink.active{
+          background:#00000012;
+        }
+      </style>
+    {%else%}
+      <meta name="eaten" content="{{eaten}}">
+    {%endif%}
+
+    {%if 0 and color_if('header_text_color')%}
+      <style>
+        .headerlink{
+          {{color_if('header_text_color', 'color', in_css=True,)}}
+        }
+      </style>
+    {%endif%}
+
+
+
+  <!-- icon file  -->
+  <link rel="icon" type="{{
+      'image/png' if 'png' in icon_url else 'image/x-icon'
+    }}" href="{{icon_url}}">
+
+  <!-- site_name -->
+  {%if mohuness%}
+    {%set new_site_name = '膜乎，分享你的人生经验' %}
+
+  {%elif is_pincong_org() or is_zh_rocks()%}
+    {%set new_site_name = "新·品葱"%}
+
+  {%else%}
+
+  {%endif%}
+
+
+  <title>
+    {{- page_title_title or page_title}} - {{new_site_name or site_name -}}
+  </title>
+
+  <!-- meta for ogp and stuff -->
   <meta name="twitter:card" content="summary_large_image">
 
   <meta property="og:title" content="{{page_title}}" />
@@ -69,6 +249,7 @@ if not is_pincong_org() else
     <meta property="og:image" content="{{icon_url_full}}" />
   {%endif%}
 
+  <!-- locale information passed along with html  -->
   <meta name="locale" content="{{g.locale}}">
   {%if dict_of_languages %}
     <meta name="dict_of_languages" content="{{
@@ -81,122 +262,16 @@ if not is_pincong_org() else
     {%endfor%}
   {%endif%}
 
+  <!-- more meta info extended in blocks -->
   {%block meta%}{%endblock%}
 </head>
 
 
-{%macro get_background_image_url(k='background_image_uid') -%}
-  {{macros.avatar_url(get_user_by_id_cached(get_cosmetic_config_user(k)))}}
-{%- endmacro%}
 
-{%macro get_colors(k, raw=False) -%}
-  {%- set bc = get_cosmetic_config_user(k) -%}
-  {%- set color = (bc and eat_rgb(bc)) or False -%}
 
-  {%- if not raw -%}
-    {{color or ''}}
-  {%- else -%}
-    {{bc or ''}}
-  {%- endif -%}
-{%- endmacro%}
-
-{%set bc = get_colors('background_color')%}
-
-{%macro color_if(k, prop='background-color', in_css=False)%}
-{%set bc = get_colors(k).strip()%}
-{%if bc%}
-  {%if in_css%}
-  {{prop}}:{{bc}};
-  {%else%}
-  style="{{prop}}:{{bc}};"
-  {%endif%}
-{%endif%}
-{%endmacro%}
-
-{%macro hl(url, name)%}
-<a class='headerlink {{'active' if request.full_path.startswith(url)}}' href="{{url}}">{{name}}</a>
-{%endmacro%}
-
-{%macro redcircle(number)%}
-{%if number%}
-<div class="redcircle"><div class="redcircle_inner">{{
-  number
-}}</div></div>
-{%endif%}
-{%endmacro%}
-
-<body {{color_if('background_color')}}>
-
-  {# style conditionals #}
-  {%if g.current_user and g.current_user.hide_avatar%}
-    <style>
-      .left {
-        display:none;
-      }
-    </style>
-  {%endif%}
-
-  {%if is_pincong_org()%}
-    <style>
-      .outerbox {
-        background-image:url('/images/pincong_bkgnd_mod.svg');
-      }
-    </style>
-
-  {%endif%}
-
-  <meta name="nnn" content="{{get_background_image_url()}}">
-  {%if get_background_image_url()%}
-
-    <style>
-      /* .body_wrapper {
-        background-image:url('{{get_background_image_url()}}');
-      } */
-      .body_wrapper::before {
-        content: "";
-        background-image:url('{{get_background_image_url()}}');
-
-        /* background-size: cover; */
-        position: absolute;
-        z-index: -1;
-        top: 0px;
-        right: 0px;
-        bottom: 0px;
-        left: 0px;
-        opacity:{{get_cosmetic_config_user('background_image_opacity')|float}};
-      }
-    </style>
-  {%endif%}
-
-  <style>
-  .header_bkgnd, .body_wrapper {
-    filter: grayscale({{page_grayness()}}); /* {{page_grayness()}} */
-  }
-  .body_wrapper{
-    padding-bottom: 1px;
-  }
-  </style>
-
+<body>
   {# navbar bkgnd #}
-  <div class="header_bkgnd" {{color_if('header_background_color')}}>
-    {%set eaten = eat_rgb(get_colors('header_background_color', raw=True), raw=True)%}
-    {%if eaten and (eaten[0]*0.3+eaten[1]*0.6+eaten[2]*0.1 > 128) %}
-      <style>
-        .headerlink:hover, .headerlink:focus, .headerlink:active, .headerlink.active{
-          background:#00000012;
-        }
-      </style>
-    {%else%}
-      <meta name="eaten" content="{{eaten}}">
-    {%endif%}
-
-    {%if color_if('header_text_color')%}
-      <style>
-        .headerlink{
-          {{color_if('header_text_color', 'color', in_css=True,)}}
-        }
-      </style>
-    {%endif%}
+  <div class="header_bkgnd" >
 
     {# navbar #}
     <div id="header" class="">
@@ -221,7 +296,9 @@ if not is_pincong_org() else
           {{hl('/n',zhen('提醒','Notif.')~redcircle(g.logged_in.num_notif))}}
           {{hl('/m',zhen('私信','PM')~redcircle(g.logged_in.num_unread))}}
 
-          <a class='headerlink' href="javascript:logout()">{{zhen('登出','Logout')}}</a>
+          <a class='headerlink' href="javascript:logout()">
+            {{-zhen('登出','Logout')-}}
+          </a>
 
           {{hl('/u/'~g.current_user.uid, g.current_user.name)}}
 
@@ -268,18 +345,31 @@ if not is_pincong_org() else
     <div id="footer" class="padded">
       <div class="lr">
         <div class="">
-          <div class="copyright">
-            ©1989 Tsinghua University
-          </div>
 
-          <div class="copyright">
-            ©2047 Beijing Wudaokou Computing Technology LLC
-          </div>
+          {%if mohuness%}
+            <div class="copyright">
+              Copyright © 2021 - 中南海皇家娱乐城, All Rights Reserved.
+            </div>
 
-          <div class="copyright">
-            版权所有 北京市五道口计算机技术有限公司 地址：北京市海淀区中关村东路1号院3号
-          </div>
+          {%elif is_pincong_org() or is_zh_rocks()%}
+            <div class="copyright">
+              Copyright © 2021, All Rights Reserved.
+            </div>
 
+          {%else%}
+            <div class="copyright">
+              ©1989 Tsinghua University
+            </div>
+
+            <div class="copyright">
+              ©2047 Beijing Wudaokou Computing Technology LLC
+            </div>
+
+            <div class="copyright">
+              版权所有 北京市五道口计算机技术有限公司（北京市海淀区中关村东路1号院3号）
+            </div>
+
+          {%endif%}
           <div class="copyright">
             <a href="/t/7110">{{zhen('服务条款','Service Terms')}}</a>
             <a href="/t/7448">{{zhen('隐私声明','Privacy Policy')}}</a>
@@ -291,9 +381,9 @@ if not is_pincong_org() else
             {%endif%}
           </div>
 
-          <div class="copyright">
+          <!-- <div class="copyright">
             <a href="/">{{zhen('回到首页','Go Home')}}</a>
-          </div>
+          </div> -->
         </div>
 
         <div class="">
@@ -309,13 +399,15 @@ if not is_pincong_org() else
           <div class="copyright">
           </div>
 
-          {%if 1%}
-          <div class="copyright">
-            <img src="/images/ga.png">
-            京公网安备 11010502000728号 京ICP备11027288号
-          </div>
+          {%if 1 and not is_pincong_org() and not mohuness and not is_zh_rocks()%}
+            <div class="copyright">
+              <img src="/images/ga.png">
+              <a href="/jgawb/全国互联网安全管理服务平台.html">京公网安备 11010502000728号</a>
+              <a href="/jicpb/ICP_IP地址_域名信息备案管理系统.html">京ICP备11027288号</a>
+            </div>
 
           {%endif%}
+
           <div class="copyright">
             <span>{{zhen('访问者IP','Visitor IP')}} {{g.display_ip_address}} </span>
             <a href="/t/7623">{{zhen('为什么显示IP？','Why show IP?')}}</a>

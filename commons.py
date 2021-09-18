@@ -380,7 +380,7 @@ def linkify(s):
 common_links = linkify('''
 新手指南 /t/7623 如题
 创建投票 /t/9564 应用户强烈要求
-# 聊天室 /deer 公共聊天室
+聊天室 /deer 公共聊天室
 1337 /leet 做题家
 
 
@@ -402,7 +402,7 @@ common_links = linkify('''
 oplog /oplog 管理日志
 英雄 /hero BE4的实验性项目
 维尼查 /ccpfinder 镰和锤子不可兼得
-# 云上贵州 /guizhou 年轻人不讲武德
+云上贵州 /guizhou 年轻人不讲武德
 人人影视 /search_yyets?q=越狱 人人英雄永垂不朽
 图书馆 https://zh.b-ok.org/ 人类进步的阶梯
 ''')

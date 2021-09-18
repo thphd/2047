@@ -1,0 +1,29 @@
+{%extends 'base.html.jinja'%}
+{%block content%}
+
+<div id='chat_history_outer'>
+  <div class="padded">
+    <button type="button" name="button" class='opaque5' id='btn_chat_loadold'>load older</button>
+  </div>
+  
+  <div id='chat_history' class='threadlist'>
+
+  {%for m in messages%}
+    {{macros.post_chat_message(m)}}
+  {%endfor%}
+
+  </div>
+</div>
+
+<div id="chat_editor" class='padlr'>
+  <textarea name="name" rows="3" cols="40" id='chat_textarea'></textarea>
+</div>
+
+  <div id='chat_buttons'class='padlr'>
+
+  <button type="button" name="button" id='btn_chat_send'>Send</button>
+  <button type="button" name="button" id='btn_chat_loadnew'>load newer</button>
+
+</div>
+
+{%endblock%}

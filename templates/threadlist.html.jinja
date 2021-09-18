@@ -142,6 +142,7 @@ for(var i=0;i<tabs.length;i++){k(i)}
     </div>
   </div>
 
+
   {%import 'links.html.jinja' as linkshtml with context%}
 
   {%set link = get_link_one()%}
@@ -171,6 +172,32 @@ for(var i=0;i<tabs.length;i++){k(i)}
   {%endif%}
 
 
+  <div class="box">
+    <div class="boxtitle">
+      {{zhen('当值', 'On Duty')}}
+    </div>
+    <div class="navigator_quote">
+      {%set oa = get_online_admins()%}
+
+      <div class="weekly_best line_of_avatars">
+        {%for i in oa%}
+        {%set u = get_user_by_id_cached(i.uid)%}
+        <!-- <div class="weekly_best_item"> -->
+          <!-- <div class='weekly_best_votes'>{{i.n or ''}}</div> -->
+          <!-- <div class='weekly_best_title'> -->
+            {%if u%}
+              {{macros.avatar(u, class='follower_avatar', no_decoration=True)}}
+            {%endif%}
+            {#
+            {{macros.username(u)}}
+            {{format_time_relative_fallback(i.t_u)}}
+            #}
+          <!-- </div> -->
+        <!-- </div> -->
+        {%endfor%}
+      </div>
+    </div>
+  </div>
 
   <div class="box">
     <div class="boxtitle" title="按照被点赞的次数">
@@ -185,7 +212,6 @@ for(var i=0;i<tabs.length;i++){k(i)}
         ], index=random.randint(0,5)%4)}}
     </div>
   </div>
-
   {#
   <div class="box">
     <div class="boxtitle" title='按照社会信用分'>
@@ -207,6 +233,8 @@ for(var i=0;i<tabs.length;i++){k(i)}
     </div>
   </div>
   #}
+
+
 
   <div class="box">
     <div class="boxtitle" title='按照被点赞的次数'>

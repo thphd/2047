@@ -18,7 +18,9 @@
 
   %}{{aurl}}{%endmacro%}
 
-{%macro avatar(u, class="", plain=False, show_title=True, no_decoration=False)%}
+{%macro avatar(u,
+  class="", outer_classes="",
+  plain=False, show_title=True, no_decoration=False)%}
   {%set uid = u.uid %}
   {%set deco = not no_decoration%}
   {%set pt = deco and show_title and (not g.current_user or not g.current_user.hide_title) and u.personal_title%}
@@ -34,7 +36,7 @@
     <img title="{{title}}" class="{{class}}" src="{{aurl}}">
 
   {%else%}
-    <span class="avatar_outer">{%
+    <span class="avatar_outer {{outer_classes}}">{%
       if pp%}{{avatar(
         ppu,
         class='personal_title',
@@ -90,6 +92,50 @@
   </span>
 {%endmacro%}
 
+{%macro post_chat_message(p)%}
+{%set u = get_user_by_id_cached(p.uid) %}
+{%call post_new(p,
+  padded = False,
+  classes = 'chat_message_item',
+  left=avatar(u, class='follower_avatar', outer_classes='left',
+    no_decoration=True))
+  %}
+
+  {{contentify(p, foldable=False, classes="chat_message_content")}}
+
+  <div class='meta' style='/*display:inline*/'>
+    {%if u%}
+      {{username(u)}}
+    {%endif%}
+
+    <a class="date" href="#">
+      {{format_time_absolute_dateifyesterday(p.t_c)}}
+    </a>
+  </div>
+
+{%endcall%}
+{%endmacro%}
+
+{%macro post_chat_message2(p)%}
+{%set u = get_user_by_id_cached(p.uid) %}
+{%call post_new(p, avatar_user= u)%}
+
+{{contentify(p, foldable=False)}}
+
+
+<div class="meta">
+  {%if u%}
+    {{username(u)}}
+  {%endif%}
+
+  <a class="date" href="#">
+    {{format_time_timeonly(p.t_c)}}
+  </a>
+</div>
+
+{%endcall%}
+{%endmacro%}
+
 {# one line of post, new version #}
 {%macro post_new(
   p,
@@ -99,12 +145,14 @@
   item_id=False,
   leftmost=False,
   left=True,
-  classes=''
+  classes='',
+  padded = True
   )%}
 
 {% set _id = item_id or ''%}
 
-<div class="{{classes}} threadlistitem padded {{
+<div class="{{classes}} threadlistitem
+{{'padded' if padded }} {{
 'delusional' if (p.delusional) else ''}} {{
 'deleted' if (
   p.delete
@@ -121,7 +169,7 @@
 
   {%if leftmost%}{{leftmost}}{%endif%}
 
-  {%if left%}
+  {%if left==True%}
   <div class="left">
     {# editor avatar should be current logged in user's #}
 
@@ -132,6 +180,10 @@
     }}
 
   </div>
+  {%elif left==False%}
+
+  {%else%}
+    {{left}}
   {%endif%}
 
   <div class="right">
@@ -645,8 +697,8 @@
   {%endif%}
 {%endmacro%}
 
-{%macro contentify(p, foldable=False)%}
-  <div class="post_content {{'foldable' if foldable else ''}}">
+{%macro contentify(p, foldable=False, classes='')%}
+  <div class="post_content {{classes}} {{'foldable' if foldable else ''}}">
     {%if p.spam%}
       <div style='color:pink;font-style:italic;'>
         [ content flagged as spam by AI ]
@@ -817,7 +869,7 @@
     ('?order=desc' if is_water_thread(tid) else '') %}
   <div class='threadlist_titlecombo'>
 
-    <a href="{{turl}}" class="threadlist_title">
+    <a href="{{turl}}" class="threadlist_title {{'mohu' if t.cid==17}}">
       {{- zhen('[已标记为删除]','[Deleted]')~' ' if t.delete else '' -}}
       {{-zhen('[已拦截]','[SPAM]')~' ' if t.spam else ''-}}
       {{
