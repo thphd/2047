@@ -416,6 +416,22 @@ class FlavoredRenderer(HTMLRenderer):
     def render_poll_instance(self, token):
         return token.replacement
 
+    def render_auto_link(self, token): # overridden
+        template = '<a href="{target}">{inner}</a>'
+        if token.mailto:
+            target = 'mailto:{}'.format(token.target)
+        else:
+            target = self.escape_url(token.target)
+        inner = self.render_inner(token)
+
+        # unescape inner
+        inner = decodeURI(inner)
+
+        return template.format(target=target, inner=inner)
+
+import urllib.parse
+unquote_ = decodeURI = urllib.parse.unquote
+
 # flavored_renderer = FlavoredRenderer()
 renderlock = threading.Lock()
 
