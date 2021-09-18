@@ -1996,6 +1996,8 @@ def conversation_page():
     let last = (for m in messages filter m.convid==i.convid and m.delete==null
     sort m.t_c desc limit 1 return m)[0]
 
+    filter last
+
     let count = length(for m in messages filter m.convid==i.convid
     return m)
 
