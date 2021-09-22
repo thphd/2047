@@ -6,6 +6,8 @@ from flask import g
 import concurrent.futures
 from concurrent.futures.thread import _threads_queues
 
+import functools
+
 def get_context(): return _app_ctx_stack.top if has_app_context() else None
 
 class TPEMod(concurrent.futures.ThreadPoolExecutor):
@@ -22,7 +24,7 @@ class TPEMod(concurrent.futures.ThreadPoolExecutor):
         _threads_queues.clear() # hack to stop joining from preventing ctrl-c
         return res
 
-tpe = TPEMod(max_workers=128)
+tpe = TPEMod(max_workers=256)
 
 class AppContextThreadMod(threading.Thread):
     """Implements Thread with flask AppContext."""
@@ -71,7 +73,7 @@ class StaleBuffer:
         assert ttl>ttr
 
     def refresh_threaded(self):
-        tsr()
+        # tsr()
         try:
             r = self.f()
         except Exception as e:
@@ -103,7 +105,9 @@ class StaleBuffer:
 
 
         # we couldn't afford expensive locking everytime, so
-        if state==idle and past < self.ttr or state==dispatching:
+        if state==idle and past < self.ttr:
+            return self.a
+        elif state==dispatching:
             return self.a
 
         else:
@@ -139,22 +143,128 @@ class StaleBuffer:
                 return self.a
 
 
-if __name__ == '__main__':
-    j = 1
-    def k():
-        global j
-        j+=1
-        time.sleep(1)
-        return j
+tmg = tm()
+def update_tmg():
+    global tmg
+    while 1:
+        tmg = tm()
+        time.sleep(0.2)
+tpe.submit(update_tmg)
 
-    sb = StaleBuffer(k, ttr=1, ttl=6)
+def StaleBufferFunctional(f, ttr=10, ttl=1800):
+    global tmg
+
+    a = None
+    tspttr = 0
+    tspttl = 0
+
+    l = threading.Lock()
+    state = empty
+
+    def update_t():
+        nonlocal tspttl,tspttr
+        tspttr = tmg+ttr
+        tspttl = tmg+ttl
+
+    def refresh_threaded():
+        nonlocal a,state
+        # tsr()
+        try:
+            res = f()
+        except Exception as e:
+            traceback.print_exc()
+            with l:
+                state = idle
+        else:
+            with l:
+                state = idle
+                a = res
+                update_t()
+
+    def dispatch_refresh():
+        tpe.submit(refresh_threaded)
+
+    def get():
+        nonlocal a,state,tspttl,tspttr
+
+        # past = tm() - ts
+
+        # we couldn't afford expensive locking everytime, so
+        if state==idle and tmg < tspttr:
+            # return a
+            pass
+
+        elif state==dispatching:
+            # return a
+            pass
+        else:
+            with l:
+                # cache is empty
+                if state == empty:
+                    a = f()
+                    update_t()
+                    state = idle
+
+                # cache is not empty, no dispatch on the way
+                elif state == idle:
+
+                    # is cache fresh?
+                    if tmg > tspttl:
+                        # too old.
+                        a = f()
+                        update_t()
+
+                    elif tmg > tspttr:
+                        # kinda old
+                        state = dispatching
+                        dispatch_refresh()
+
+                    # # cache is fresh
+                    # else:
+                    #     pass
+
+                # elif self.state == 'dispatching':
+                #     pass
+                # else:
+                #     pass
+
+        return a
+    return get
+
+
+if 1 and __name__ == '__main__':
+    from commons_static import timethis
+
+    def by33():return random.random()+random.random()*111
+    sb = StaleBuffer(by33, 15, 1000)
+
+    sbf = StaleBufferFunctional(by33)
+
+    timethis('$by33()')
+    timethis('$sb.get()')
+    timethis('$sbf()')
+
+
+if 0 and __name__ == '__main__':
+    def kg():
+        j = 1
+        def k():
+            nonlocal j
+            j+=1
+            time.sleep(1)
+            return j
+        return k
+
+    sb = StaleBuffer(kg(), ttr=1, ttl=6)
+    sbf = StaleBufferFunctional(kg(), ttr=1, ttl=6)
     for i in range(10):
-        print(sb.get(), sb.state)
+        print('old',sb.get(), sb.state)
+        print('new',sbf())
         time.sleep(0.3)
 
     print('stalebuf test end')
 
-def stale_cache(ttr=3, ttl=6, maxsize=128):
+def stale_cache_old(ttr=3, ttl=6, maxsize=128):
     def stale_cache_wrapper(f):
 
         @cachetools.func.lru_cache(maxsize=maxsize)
@@ -172,7 +282,39 @@ def stale_cache(ttr=3, ttl=6, maxsize=128):
         return stale_cache_inner
     return stale_cache_wrapper
 
-if __name__ == '__main__':
+def stale_cache(ttr=3, ttl=6, maxsize=128):
+    def stale_cache_wrapped(f):
+
+        @functools.lru_cache(maxsize=maxsize)
+        def get_stale_buffer(*a, **kw):
+            return StaleBufferFunctional(
+                lambda:f(*a, **kw),
+                ttr=ttr,
+                ttl=ttl,
+            )
+
+        def stale_cache_inner(*a, **kw):
+            return get_stale_buffer(*a, **kw)()
+
+        return stale_cache_inner
+
+    return stale_cache_wrapped
+
+if 1 and __name__ == '__main__':
+    from commons_static import timethis
+
+    print('00000'*5)
+
+    @stale_cache_old()
+    def by33():return random.random()+random.random()*111
+
+    @stale_cache()
+    def by34():return random.random()+random.random()*111
+
+    timethis('$by33()')
+    timethis('$by34()')
+
+if 0 and __name__ == '__main__':
 
     def return3():
         return 31234019374194
@@ -180,11 +322,18 @@ if __name__ == '__main__':
     future = tpe.submit(return3)
     print(future.result())
 
+
     j = 1
     k = 1
 
     @stale_cache(ttr=1.5)
     def a(i):
+        global j
+        j+=1
+        time.sleep(.5)
+        return i*j
+    @stale_cache2(ttr=1.5)
+    def a2(i):
         global j
         j+=1
         time.sleep(.5)
@@ -196,7 +345,14 @@ if __name__ == '__main__':
         k+=1
         time.sleep(.7)
         return k*n
+    @stale_cache2(ttr=3)
+    def b2(n):
+        global k
+        k+=1
+        time.sleep(.7)
+        return k*n
 
     for i in range(20):
-        print(a(3.5), b(6))
+        print('old',a(3.5), b(6))
+        print('new',a2(3.5), b2(6))
         time.sleep(0.4)
