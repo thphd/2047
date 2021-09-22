@@ -123,7 +123,7 @@ def sanitizeAttrValue(tag, name, value):
             return ''
 
         # replace domain names pointing at self
-        value = re.sub(r'^(?:http|https)://(?:2047.name|pincong.org|terminusnemheqvy.onion|terminus2xc2nnfk6ro5rmc5fu7lr5zm7n4ucpygvl5b6w6fqap6x2qd.onion)/(.+)', '/\g<1>', value)
+        value = re.sub(r'^(?:http|https)://(?:(?:mohu\.)?(?:2047.name|pincong.org)|terminusnemheqvy.onion|terminus2xc2nnfk6ro5rmc5fu7lr5zm7n4ucpygvl5b6w6fqap6x2qd.onion)/(.+)', '/\g<1>', value)
 
         # kill img src s with relative paths due to an error found on 20201109
         if tag=='img' and re.match(r'^\./.*?_files/.*?$', value):

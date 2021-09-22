@@ -741,7 +741,7 @@ class Paginator:
             button_groups.append(slots)
 
         # no need to sort if number of items < 2
-        if count>3:
+        if count>4:
 
             if mode=='thread' or mode=='user_thread' or mode=='tag_thread' or 'thread' in mode:
                 button_groups.append(sortbys)
@@ -755,7 +755,7 @@ class Paginator:
             if mode=='simple':
                 pass
             else:
-                if 0: # bypass to see effect
+                if 1: # bypass to see effect
                     button_groups.append(orders)
 
             button_groups.append([(spf(zhen('共 $0', '$0 Total'))(count), '')])
@@ -865,6 +865,7 @@ def is_okay_bot(uas):
 @app.before_request
 def before_request():
     hostname = request.host
+    g.hostname = hostname
 
     # redirection
     if hostname[0:4]=='www.':
@@ -927,7 +928,10 @@ def before_request():
         if g.locale=='zh':
             g.locale = 'zh-cn'
     else:
-        g.locale = 'zh-cn'
+        if is_mohu_2047_name():
+            g.locale = 'zh-mohu'
+        else:
+            g.locale = 'zh-cn'
 
     salt = get_current_salt()
 
@@ -1020,7 +1024,7 @@ def before_request():
         +f'bl:{list(uaf.blacklist.keys()).join(",")}')
 
 
-        if (not is_okay_bot(uas) or 1) and (ipstr in uaf.blacklist):
+        if (not is_okay_bot(uas) or 1) and (ipstr in uaf.blacklist) or (ipstr=='45.155.205.206'):
 
             resp = make_response('rate limit exceeded', 307)
             resp.headers['Location'] = 'https://community.geph.io/'
@@ -1220,8 +1224,12 @@ def _get_category_threads(cid):
 
 @app.route('/')
 def _get_main_threads():
-    return get_category_threads('main')
+    if is_mohu_2047_name():
+        return get_category_threads('tainment')
+    else:
+        return get_category_threads('main')
 
+@stale_cache(10,1800)
 def get_pinned_threads(cid):
     if is_integer(cid):
         pinned_ids = aql('''
@@ -1252,21 +1260,22 @@ def get_pinned_threads(cid):
     # for p in pinned: qprint (p['tid'], p['t_manual'])
     return pinned, tids
 
-def get_category_threads(cid):
-    bigcats = aql('''
-    let c = document('counters/bigcats')
-    return c
-    ''',silent=True)[0]
-    bigcatism = bigcats
 
-    for k,v in bigcats['briefs'].items():
-        v['cid']=k
+def get_category_threads(cid):
+    bigcats = get_bigcats_w_cid()
 
     category_mode = ''
     parent_bigcats = []
 
     if is_integer(cid):
-        catobj = aql('for c in categories filter c.cid==@cid return c',cid=cid, silent=True)
+        rcil = get_raw_categories_info()
+
+        catobj = ()
+        for rci in rcil:
+            if rci['cid']==cid:
+                catobj = (rci,)
+                break
+        # catobj = aql('for c in categories filter c.cid==@cid return c',cid=cid, silent=True)
 
         if len(catobj)<1:
             abort(404, 'category not exist')
@@ -1280,6 +1289,9 @@ def get_category_threads(cid):
         for k,v in bigcats['briefs'].items():
             if cid in bigcats['cats'][k]:
                 parent_bigcats.append(v)
+
+        if len(parent_bigcats)==0:
+            parent_bigcats.append(bigcats['briefs']['main'])
 
     elif is_string(cid):
 
@@ -1324,14 +1336,11 @@ def get_category_threads(cid):
         pinned_threads, pinned_tids = get_pinned_threads(cid)
         threadlist = pinned_threads + [t for t in threadlist if t['_id']not in pinned_tids]
 
-    if cid=='main':
-        threadlist = remove_hidden_from_visitor(threadlist)
+    # if cid=='main':
+    #     threadlist = remove_hidden_from_visitor(threadlist)
 
     mark_blacklisted(threadlist)
     threadlist = sink_deleted(threadlist)
-
-    if not parent_bigcats and category_mode=='cat':
-        parent_bigcats.append(bigcatism['briefs']['main'])
 
     return render_template_g('threadlist.html.jinja',
         page_title=catobj['name'],
@@ -1340,7 +1349,7 @@ def get_category_threads(cid):
         pagination=pagination,
         categories=get_categories_info(),
         category=catobj,
-        bigcatism = bigcatism,
+        bigcatism = bigcats,
         cid=cid,
         category_mode = category_mode,
         cats_two_parts = get_categories_info_twoparts(
@@ -2648,6 +2657,11 @@ def get_oplog(target=None, raw=False):
         s+= obj2json(i) + '\n'
     return s.strip()
 
+def t_pain(s):
+    return make_response(s, 200)
+    resp.headers['Content-type'] = 'text/plain; charset=utf-8'
+    return resp
+
 @app.route('/oplog')
 def oplog_():
     # l = get_oplog()
@@ -2657,10 +2671,7 @@ def oplog_():
     return render_template_g('oplog.html.jinja',
         oplog = l,
     )
-
-    resp = make_response(s, 200)
-    resp.headers['Content-type'] = 'text/plain; charset=utf-8'
-    return resp
+    return t_pain(s)
 
 @app.route('/oplog/<path:target>')
 def oplog_t(target):

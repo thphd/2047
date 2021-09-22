@@ -159,6 +159,7 @@
   and t
   and not can_do_to(g.logged_in, 'delete', p.uid)
   and not (t and can_do_to(g.logged_in, 'delete', t.uid))
+  and not g.mohuness
   )
   else '' }} {{
 'spam' if p.spam else '' }} {{
@@ -707,6 +708,10 @@
 
     {%if p.delete%}
       <s>{{zhen('标记为删除','Marked as deleted')}}</s>
+
+      {%if g.mohuness %}
+        <p class='liangjiahe_quote'>{{render_ljh_random()|safe}}</p>
+      {%endif%}
     {#
     {%elif p.blacklist%}
       <s>{{zhen('此人被你黑名单','User in your blacklist')}}</s>
@@ -1415,7 +1420,11 @@
         {%else%}
           <span class='header_title bigcats'>
             {%macro bcl(name)%}
-              {{'/c/'~ name if name!='main' else '/'}}
+              {%if is_mohu_2047_name()%}
+                {{'/c/'~ name if name!='tainment' else '/'}}
+              {%else%}
+                {{'/c/'~ name if name!='main' else '/'}}
+              {%endif%}
             {%endmacro%}
 
             {%for key,c in bigcatism.briefs.items()%}
@@ -1437,7 +1446,9 @@
           {%for cat in (
               parent_bigcats[1:] or parent_bigcats
             )%}
-            <a class="opaque5" href="/c/{{cat.cid}}">返回<b>{{cat.name}}</b></a>
+            <a class="opaque5" href="/c/{{cat.cid}}">
+              {{- zhen('返回','Back to')~' ' -}}
+              <b>{{cat.name}}</b></a>
           {%endfor%}
         {%endif%}
 
@@ -1466,7 +1477,12 @@
     </div>
   {%endif%}
 
-  {%if page_subheader%}
+  {%if g.within_tainment %}
+    <div class="subheader post_content padlr">
+      {{render_ljh_random()|safe}}
+    </div>
+
+  {%elif page_subheader %}
     <div class="subheader post_content padlr">
       {{convert_markdown(page_subheader)|safe}}
     </div>
@@ -1575,4 +1591,65 @@
       {% endfor %}
     </div>
   </div>
+{%endmacro%}
+
+{%macro quote_section(quote)%}
+<div class="quote_section" id="{{quote._key}}">
+  <span class='quote'>{{quote.quote}}</span>
+  {%if quote.quoting%}<span class='quoting'>——{{quote.quoting}}</span>{%endif%}
+</div>
+{%endmacro%}
+
+{%macro linkbox(link, show_uploader=True)%}
+  <div class='linkbox'>
+    <div class="linkbox_left">
+      <span>{{link.name}}</span>
+      <a href="{{link.url}}">{{link.url}}</a>
+      <span class="link_brief">{{link.brief}}</span>
+    </div>
+
+    {%if show_uploader%}
+      <div class='linkuploader'>由  {{macros.username(link.user)}} 上传于
+        <a href='/entities?eid={{link._key}}#{{link._key}}'>
+          {{format_time_dateifnottoday(link.t_u or link.t_c)}}
+        </a>
+      </div>
+    {%endif%}
+  </div>
+{%endmacro%}
+
+
+{# macro list_threads #}
+
+{%macro list_users(wb, avatar=False)%}
+  <div class="weekly_best">
+    {%for i in wb%}
+    <div class="weekly_best_item">
+      <div class='weekly_best_votes'>{{i.n or ''}}</div>
+      <div class='weekly_best_title'>
+        {%if avatar%}
+          {{avatar(i.user, class='follower_avatar', no_decoration=True)}}
+        {%endif%}
+        {{username(i.user)}}
+      </div>
+    </div>
+    {%endfor%}
+  </div>
+{%endmacro%}
+
+
+{%macro list_threads(wb) %}
+<div class="weekly_best">
+  {%for i in wb%}
+    {%if 1%}
+      <div class="weekly_best_item">
+        <div class='weekly_best_votes'>{{i.amv or ''}}</div>
+        <div class='weekly_best_title'>
+          {%set url = ('/p/'~i.mvp) if (i.mv or 0) > (i.votes or 0) else ('/t/'~i.tid)%}
+          <a href="{{url}}">{{i.title}}</a>
+        </div>
+      </div>
+    {%endif%}
+  {%endfor%}
+</div>
 {%endmacro%}

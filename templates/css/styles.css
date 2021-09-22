@@ -2452,3 +2452,9 @@ iframe {
 a.threadlist_title.mohu {
     color: #155faa;
 }
+
+
+.liangjiahe_quote {
+    font-style: italic;
+    color: #9e9e00;
+}

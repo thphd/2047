@@ -1,26 +1,8 @@
 {%extends 'base.html.jinja'%}
 
-{%macro linkbox(link, show_uploader=True)%}
-  <div class='linkbox'>
-    <div class="linkbox_left">
-      <span>{{link.name}}</span>
-      <a href="{{link.url}}">{{link.url}}</a>
-      <span class="link_brief">{{link.brief}}</span>
-    </div>
-
-    {%if show_uploader%}
-      <div class='linkuploader'>由  {{macros.username(link.user)}} 上传于
-        <a href='/entities?eid={{link._key}}#{{link._key}}'>
-          {{format_time_dateifnottoday(link.t_u or link.t_c)}}
-        </a>
-      </div>
-    {%endif%}
-  </div>
-{%endmacro%}
-
 {%block content%}
 
-{%import 'base.html.jinja' as base with context%}
+{%import 'macros.html.jinja' as macros with context%}
 
 <div class="threadlist">
   <div class="padlr">
@@ -35,9 +17,9 @@
       {{category}}
     </div>
 
-    {% for link in links[category] %}
-      {{linkbox(link)}}
-    {% endfor %}
+      {% for link in links[category] %}
+        {{macros.linkbox(link)}}
+      {% endfor %}
 
     {% endfor %}
 

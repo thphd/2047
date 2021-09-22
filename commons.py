@@ -232,6 +232,8 @@ def render_template_g(*a, **k):
 
     u = key(k, 'u')
     t = key(k, 't')
+    category = key(k, 'category')
+
     gli = g.logged_in
 
     def get_cosmetic_config_user(ck='background_image_uid'):
@@ -250,7 +252,29 @@ def render_template_g(*a, **k):
     k['online_stats'] = tgr['get_online_stats']()
 
     g.time_elapsed_before_render = g.get_elapsed()
+
+    g.within_tainment = ((t and key(t,'cid')==17)
+            or (category and (key(category,'cid') in [17,'tainment'])))
+
+    g.mohuness_chosen = (
+        ('liangjiahe' in g)
+        or is_mohu_2047_name()
+        or is_zh_mohu()
+    )
+
+    g.mohuness = (
+        g.mohuness_chosen
+        or g.within_tainment
+    )
+
+    g.rockness = (is_pincong_org() or is_zh_rocks())
+
     return render_template(*a, **k)
+
+# tlr
+@stale_cache(6, 1800)
+def render_thread_list_right(*a, **k):
+    return render_template_g('threadlist_right.html.jinja', *a, **k)
 
 def eat_rgb(s, raw=False):
     s = s.split(',')
@@ -488,9 +512,11 @@ def parse_showcases(s):
     occurences = re.findall(rsc, s)
     return occurences
 
-from flask import request, g
 def is_pincong_org():
-    return 'pincong.org' in request.host
+    return 'pincong.org' == g.hostname
+
+def is_mohu_2047_name():
+    return g.hostname.startswith('mohu.')
 
 def is_zh_rocks():
     return 'zh-rocks' == g.locale
@@ -632,6 +658,10 @@ def is_alphanumeric(n):
 import random
 from quotes import *
 
+@stale_cache(15, 1800)
+def get_links_slow():
+    return get_links()
+
 @stale_cache(ttr=3, ttl=900)
 def get_links():
     links = aql('''
@@ -701,7 +731,7 @@ def get_links():
     return din, fin
 
 def get_link_one():
-    linksd, linksl = get_links()
+    linksd, linksl = get_links_slow()
     return random.choice(linksl)
 
 @stale_cache(ttr=30, ttl=1800)

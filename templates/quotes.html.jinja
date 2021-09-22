@@ -1,8 +1,6 @@
 {%extends 'base.html.jinja'%}
 {%block content%}
 
-{%import 'base.html.jinja' as base with context%}
-
 <div class="threadlist">
   <div class="padlr">
     （欲向语录上传更多内容，请访问 <a href="/entities">Entities</a>）
@@ -12,7 +10,7 @@
   <div class="qboxes">
     {% for quote in get_quotes() %}
     <div class='quotebox'>
-      {{base.quote_section(quote)}}
+      {{macros.quote_section(quote)}}
       <div class='rightalign quoteuploader'>由 {{macros.username(quote.user)}} 上传于
         <a href='/entities?eid={{quote._key}}#{{quote._key}}'>
           {{format_time_dateifnottoday(quote.t_u)}}

@@ -150,9 +150,19 @@ def get_url_to_post_given_details(tid, pid, rank): # assume you know rank
 
     return url
 
-@stale_cache(ttr=3, ttl=1200)
+@stale_cache(6,1800)
 def get_bigcats():
     return aql("return document('counters/bigcats')",silent=True)[0]
+
+@stale_cache(6,1800)
+def get_bigcats_w_cid():
+    bigcats = aql('''return document('counters/bigcats')
+    ''',silent=True)[0]
+
+    for k in bigcats['briefs']:
+        bigcats['briefs'][k]['cid']=k
+
+    return bigcats
 
 def get_categories_info():
     return get_categories_info_withuid(show_empty=0 or is_self_admin())
@@ -214,7 +224,7 @@ def get_raw_categories_info():
         return merge(c, {count:cnt})
     ''', silent=True)
 
-@stale_cache(ttr=5, ttl=1200)
+@stale_cache(ttr=10, ttl=1200)
 def get_categories_info_withuid(show_empty=False):
     res = get_raw_categories_info()
     res = [i for i in cats_into_lines(res) if i is not None]
@@ -224,6 +234,7 @@ def get_categories_info_withuid(show_empty=False):
     else:
         return [i for i in res if i['count']>0]
 
+@stale_cache(ttr=15, ttl=1200)
 def get_categories_info_twoparts(cid, mode='cat'):
     res = get_raw_categories_info()
     bc = get_bigcats()
@@ -2667,7 +2678,7 @@ def _():
     tot, reg = get_online_stats()
     return {'total':tot,'registered':reg}
 
-@stale_cache(ttr=3, ttl=1800)
+@stale_cache(ttr=6, ttl=1800)
 def get_online_stats():
     n = aql('''
     for i in punchcards
@@ -2678,7 +2689,7 @@ def get_online_stats():
     ''',silent=True, recent=time_iso_now(-1800))[0]
     return n['n'],n['lu']
 
-@stale_cache(ttr=6, ttl=1800)
+@stale_cache(ttr=9, ttl=1800)
 def get_online_admins():
     n = aqls('''
 for i in punchcards
@@ -2709,6 +2720,61 @@ def _():
     if not u:
         raise Exception('user not exist')
     return {'user':u}
+
+# @stale_cache(15,1800)
+def get_liangjiahe_dict():
+    ljh = readfile('liangjiahe.txt', mode='r')
+    ljh = ljh.split('\n').map(lambda k:k.strip()).filter(lambda k:len(k))
+    ljhd = {}
+    for idx,t in enumerate(ljh):
+        match = re.match(r'^(\d{1,4})(?:\:|\.)(.*)$', t)
+        if match:
+            index = int(match.group(1))
+            text = match.group(2)
+            ljhd[index] = text.strip()
+            # print(index, text)
+
+            assert len(ljhd)==index # no index left behind
+
+    return ljhd
+
+rr = random.random
+ljh = get_liangjiahe_dict()
+lljh = len(ljh)
+
+def get_liangjiahe_one(id):
+    return id, ljh[id]
+
+def get_liangjiahe_random():
+    id = int(rr()*lljh)+1
+    return id, ljh[id]
+
+def render_ljh_one(id):
+    id = intify(id)
+    if 0<id<lljh+1:
+        return render_ljh(*get_liangjiahe_one(id))
+    else:
+        return render_ljh(0, 'index not found')
+
+def render_ljh(gid,ljh):
+    return f'''<span>{ljh}<sup><a href="/liangjiahe#{gid}">{gid}</a></sup></span>'''
+
+def render_ljh_random():
+    return render_ljh(*get_liangjiahe_random())
+
+@app.route('/liangjiahe')
+def ljh_page():
+    g.liangjiahe=True
+    resp = render_template_g(
+        'liangjiahe.html.jinja',
+        ljhd = ljh,
+        page_title='梁家河借阅室',
+    )
+    resp = make_response(resp, 200)
+    return resp
+
+# if __name__ == '__main__':
+#     timethis('$get_liangjiahe_one()')
 
 def put_punchcard():
     t_c = time_iso_now()

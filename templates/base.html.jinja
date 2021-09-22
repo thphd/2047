@@ -8,14 +8,14 @@
 {% set share_url = base_url + path_url %}
 {% set qr_url = request.host_url + "qr/" + share_url %}
 
-{% set mohuness = (is_zh_mohu() or (t and t.cid==17) or
-    (category and (category.cid==17 or category.cid=='tainment'))) %}
+{% set mohuness = g.mohuness %}
+{% set rockness = g.rockness %}
 
-{%if mohuness%}
-  {%set icon_url = "/images/favicon_new_pressed.png"%}
+{%if g.mohuness_chosen %}
+  {%set icon_url = "/images/mohu_favicon.ico"%}
   {%set logourl = '/images/mohu_logo.svg' %}
 
-{%elif is_pincong_org() or is_zh_rocks()%}
+{%elif rockness %}
   {%set icon_url = "/images/pc_favicon.ico"%}
   {%set logourl = '/images/pincong_logo.svg' %}
 
@@ -41,7 +41,7 @@
       k=='header_background_color' and
       (
         (mohuness and '#499ef3')
-        or ((is_pincong_org() or is_zh_rocks()) and '#404451')
+        or (rockness and '#404451')
       )
     )
     or False -%}
@@ -103,7 +103,17 @@
   {%endif%}
 
   <!-- site specific styles -->
-  {%if (is_pincong_org() and not mohuness) or is_zh_rocks()%}
+  {%if mohuness%}
+    <style>
+      a.threadlist_title {
+        color:#155faa;
+      }
+      .category_name, .tag {
+        background-color: #99cfff;
+      }
+    </style>
+
+  {%elif rockness%}
     <style>
       .outerbox {
         background-image:url('/images/pincong_bkgnd_mod.svg');
@@ -111,15 +121,6 @@
 
       .category_name {
         background-color: #697287;
-      }
-    </style>
-  {%elif mohuness%}
-    <style>
-      a.threadlist_title {
-        color:#155faa;
-      }
-      .category_name, .tag {
-        background-color: #99cfff;
       }
     </style>
   {%endif%}
@@ -132,12 +133,13 @@
   </style>
 
   <!-- background_image of body_wrapper -->
-  <meta name="nnn" content="{{get_background_image_url()}}">
-  {%if get_background_image_url()%}
+  {% set biu = get_background_image_url() %}
+  <meta name="nnn" content="{{biu}}">
+  {%if biu%}
     <style>
       .body_wrapper::before {
         content: "";
-        background-image:url('{{get_background_image_url()}}');
+        background-image:url('{{biu}}');
 
         /* background-size: cover; */
         position: absolute;
@@ -163,10 +165,11 @@
   .body_wrapper{
     padding-bottom: 1px;
   }
+  {% set hbc = color_if('header_background_color', in_css=True)%}
   .header_bkgnd {
-    {{color_if('header_background_color', in_css=True)}}
+    {{hbc}}
   }
-  {%if color_if('header_background_color')%}
+  {%if hbc%}
     .headerlink{
       {{color_if('header_text_color', 'color', in_css=True,)}}
     }
@@ -201,11 +204,11 @@
     }}" href="{{icon_url}}">
 
   <!-- site_name -->
-  {%if mohuness%}
-    {%set new_site_name = '膜乎，分享你的人生经验' %}
+  {%if g.mohuness%}
+    {%set site_name = '膜乎' %}
 
-  {%elif is_pincong_org() or is_zh_rocks()%}
-    {%set new_site_name = "新·品葱"%}
+  {%elif g.rockness%}
+    {%set site_name = "新·品葱"%}
 
   {%else%}
 
@@ -213,16 +216,16 @@
 
 
   <title>
-    {{- page_title_title or page_title}} - {{new_site_name or site_name -}}
+    {{- page_title_title or page_title}} - {{site_name -}}
   </title>
 
   <!-- meta for ogp and stuff -->
-  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:card" content="summary">
 
   <meta property="og:title" content="{{page_title}}" />
   <meta property="og:site_name" content="2047">
   {% set og_description =
-    (u and u.brief) or "2047论坛，自由人的精神角落" %}
+    (u and u.brief) or site_name %}
   <meta property="og:description" content="{{og_description}}">
   <meta name="twitter:description" content="{{og_description}}">
   <meta property="og:type" content="article" />
@@ -351,7 +354,7 @@
               Copyright © 2021 - 中南海皇家娱乐城, All Rights Reserved.
             </div>
 
-          {%elif is_pincong_org() or is_zh_rocks()%}
+          {%elif rockness%}
             <div class="copyright">
               Copyright © 2021, All Rights Reserved.
             </div>
@@ -399,7 +402,7 @@
           <div class="copyright">
           </div>
 
-          {%if 1 and not is_pincong_org() and not mohuness and not is_zh_rocks()%}
+          {%if 0 and not rockness and not mohuness%}
             <div class="copyright">
               <img src="/images/ga.png">
               <a href="/jgawb/全国互联网安全管理服务平台.html">京公网安备 11010502000728号</a>
@@ -431,19 +434,13 @@
 
 </div>
 
-{%macro quote_section(quote)%}
-<div class="quote_section" id="{{quote._key}}">
-  <span class='quote'>{{quote.quote}}</span>
-  {%if quote.quoting%}<span class='quoting'>——{{quote.quoting}}</span>{%endif%}
-</div>
-{%endmacro%}
 
   <div id="overlay" style='opacity:0;'>
     <div id="overlay_text">
       <div id="overlay_text_body">
 
       </div>
-      {{quote_section(get_quote())}}
+      {#{quote_section(get_quote())}#}
 
     </div>
   </div>

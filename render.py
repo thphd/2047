@@ -301,6 +301,14 @@ class PostMention(SpanToken):
     def __init__(self, match):
         self.id = match.group(1)
 
+class LjhReference(SpanToken):
+    pattern = re.compile(':liangjiahe\-?(\d{1,4}):')
+    parse_inner = False
+    parse_group = 1 # useful only when parse_inner = 1
+    precedence = 1 # default 5
+    def __init__(self, match):
+        self.id = match.group(1)
+
 class ThreadMention(SpanToken):
     pattern = re.compile(thread_autolink_regex)
     parse_inner = False
@@ -374,7 +382,7 @@ class FlavoredRenderer(HTMLRenderer):
     def __init__(self):
         # bad interface design ?
         super().__init__(PollInstance, YoutubePlayer, TwitterFrame, Cnmb,
-            AtUser, PostMention, ThreadMention)
+            AtUser, PostMention, ThreadMention, LjhReference)
 
         self.init_collection()
 
@@ -416,6 +424,10 @@ class FlavoredRenderer(HTMLRenderer):
     def render_poll_instance(self, token):
         return token.replacement
 
+    def render_ljh_reference(self, token):
+        from api import render_ljh_one
+        return render_ljh_one(token.id)
+
     def render_auto_link(self, token): # overridden
         template = '<a href="{target}">{inner}</a>'
         if token.mailto:
@@ -428,6 +440,7 @@ class FlavoredRenderer(HTMLRenderer):
         inner = decodeURI(inner)
 
         return template.format(target=target, inner=inner)
+
 
 import urllib.parse
 unquote_ = decodeURI = urllib.parse.unquote
