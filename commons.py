@@ -404,7 +404,7 @@ def linkify(s):
 common_links = linkify('''
 新手指南 /t/7623 如题
 创建投票 /t/9564 应用户强烈要求
-聊天室 /deer 公共聊天室
+聊天群 /p/170093 公共聊天群
 1337 /leet 做题家
 
 

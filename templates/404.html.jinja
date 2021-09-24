@@ -1,49 +1,59 @@
 {%extends 'base.html.jinja'%}
 {%block content%}
-<div class="c404">
+<div class="c404 padlr">
   <img src="/images/exc.png" alt="">
 
   {%if not e500%}
-  <div class="firstline">
-    {%if to_show%}
-    {{to_show}}
-    {%else%}
-    您要找的页面不存在
-    {%endif%}
-  </div>
-  <div class="secondline">
-    {%if reason%}
-    {{convert_markdown(reason)|safe}}
-    {%else%}
-    点击
-    <a href="/">这里</a>
-    回到首页，点击
-    <a href="javascript:history.go(-1)">这里</a>
-    返回上一页
-    {%endif%}
-  </div>
+    <div class="firstline">
+      {%if to_show%}
+      {{to_show}}
+      {%else%}
+      您要找的页面不存在
+      {%endif%}
+    </div>
+    <div class="secondline">
+      {%if reason%}
+      {{convert_markdown(reason)|safe}}
+      {%else%}
+      点击
+      <a href="/">这里</a>
+      回到首页，点击
+      <a href="javascript:history.go(-1)">这里</a>
+      返回上一页
+      {%endif%}
+    </div>
 
   {%else%}
-  <div class="firstline">
-    服务器内部错误
-  </div>
-  <div class="secondline">
-    请等待后台工程师处理
-  </div>
-  <div class="secondline">
-    点击
-    <a href="/">这里</a>
-    回到首页，点击
-    <a href="javascript:history.go(-1)">这里</a>
-    返回上一页
-  </div>
+    <div class="firstline">
+      服务器内部错误
+    </div>
+    <div class="secondline">
+      请等待后台工程师处理
+    </div>
+    <div class="secondline">
+      点击
+      <a href="/">这里</a>
+      回到首页，点击
+      <a href="javascript:history.go(-1)">这里</a>
+      返回上一页
+    </div>
   {%endif%}
 
   {%if err %}
-  <div class="secondline post_content" style='opacity:0.5;'>
-    <pre><code>{{err}}</code></pre>
-  </div>
+    <div class="secondline post_content" style='opacity:0.5;'>
+      <pre><code>{{err}}</code></pre>
+    </div>
   {%endif%}
+
+  <div class='post_content'>
+    <p>
+      如果你认为这个页面不应该出现，请通过element/matrix联系
+      <code>@thphd:matrix.org</code>
+      或
+      <code>#teahall:matrix.org</code>
+      向我们反馈问题。
+    </p>
+  </div>
 
 </div>
 {%endblock%}
