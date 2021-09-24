@@ -19,29 +19,57 @@ print('working on', dir)
 tar = tarfile.open(basename,"w")
 tar.add('dump')
 tar.close()
-print('written to', basename)
+print('complete backup written to', basename)
 
 if not args.upload:
     exit()
 
+yay = '''
+admins aliases avatars blacklist categories chat_channels chat_memberships
+counters entities favorites followings poll_votes polls posts
+tags threads translations users view_counters votes
+'''
+
+yay = re.findall(r'[a-z\_]+', yay)
+print(yay)
+yay = set(yay)
+
+# exit()
+
 nope = ('conversations histories messages logs passwords invitations exams answersheets operations notifications questions challenge_submissions punchcards'
 .split(' '))
 def accept(fn):
+    if fn=='dump':
+        return True
+
     # for obvious reasons
-    for k in nope:
-        if k in fn:
-            print('skip', fn)
-            return False
-    print('accept', fn)
-    return True
+    sfn = '_'.join(fn.split('_')[:-1])[5:]
+    # print(fn,sfn)
+    # print(sfn)
+
+    if sfn not in yay:
+        print('x', fn)
+        return False
+    else:
+        print('√', fn)
+        return True
+    # for k in nope:
+    #     if k in fn:
+    #         print('skip', fn)
+    #         return False
+    # print('accept', fn)
+    # return True
 
 tar = tarfile.open(basename_p,"w")
 tar.add('dump', filter=lambda x: x if accept(x.name) else None)
 tar.close()
-print('written to', basename_p)
+print('partial backup written to', basename_p)
+
 
 tok = open('release_token.txt','r').read().strip()
 os.environ['GITHUB_TOKEN'] = tok
+
+print('github token is', tok)
 
 from github_release import *
 

@@ -75,6 +75,19 @@ colored_up = cfg('yellow', attrs=['bold'])
 colored_down = cfg('cyan', attrs=['bold'])
 colored_err = cfg('red', attrs=['bold'])
 
+def log_info(*a):
+    text = ' '.join(map(lambda i:str(i), a))
+    logger.warning(colored_info(text))
+def log_up(*a):
+    text = ' '.join(map(lambda i:str(i), a))
+    logger.warning(colored_up(text))
+def log_down(*a):
+    text = ' '.join(map(lambda i:str(i), a))
+    logger.warning(colored_down(text))
+def log_err(*a):
+    text = ' '.join(map(lambda i:str(i), a))
+    logger.warning(colored_err(text))
+
 if __name__ == '__main__':
     cpg = colored_print_generator
     printredcyan = cpg('red', 'on_cyan')

@@ -253,21 +253,6 @@ class UAFilter:
 
 uaf = UAFilter()
 
-def log_info(*a):
-    text = ' '.join(map(lambda i:str(i), a))
-    app.logger.warning(colored_info(text))
-def log_up(*a):
-    text = ' '.join(map(lambda i:str(i), a))
-    app.logger.warning(colored_up(text))
-def log_down(*a):
-    text = ' '.join(map(lambda i:str(i), a))
-    app.logger.warning(colored_down(text))
-def log_err(*a):
-    text = ' '.join(map(lambda i:str(i), a))
-    app.logger.warning(colored_err(text))
-
-
-
 okaybots = ['AdsBot-Google-Mobile','googlebot','blexbot','semrushbot','webmeup','ahrefsbot'].map(lambda k:k.lower())
 
 def is_okay_bot(uas):
