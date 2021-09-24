@@ -1,5 +1,6 @@
 import monkeypatch
 from commons import *
+from app import app
 
 test_post = '''
 each poll in the form of:
@@ -222,6 +223,64 @@ def get_poll(id, selfuid):
 # def render_poll(poll):
 #     return render_template('poll_one.html.jinja', poll=poll)
 
+
+
+
+@app.route('/polls')
+def list_polls():
+    # must_be_admin()
+    start, pagesize, pagenumber, eat_count = generate_simple_pagination(pagesize=10)
+
+    count = aql('return length(for i in polls return i)')[0]
+    pagination = eat_count(count)
+
+    q = (QueryString('''
+    for i in polls sort i.t_c desc
+    let user = (for u in users filter u.uid==i.uid return u)[0]
+    let pollobj = (let poll = i
+    ''')
+    + get_poll_q +
+    QueryString('''
+    )[0]
+    '''+ f'limit {start}, {pagesize}' +'''
+    return merge(i,{user, pollobj})
+    ''')
+    )
+
+    qs = aql(q, uid=g.selfuid, silent=True)
+    qs.map(lambda i:poll_postprocess(i['pollobj']))
+
+    return render_template_g(
+        'qs_polls.html.jinja',
+        page_title='投票',
+        # questions = qs,
+        polls = qs,
+        pagination = pagination,
+    )
+
+@app.route('/polls/<string:pollid>')
+def one_poll(pollid):
+    poll = get_poll(pollid, g.selfuid)
+    return render_template_g(
+        'poll_one.html.jinja',
+        poll = poll,
+    )
+@app.route('/polls/<string:pollid>/votes')
+def one_poll_votes(pollid):
+    votes = aql('''
+    for i in poll_votes
+    filter i.pollid==@pollid
+    sort i.t_c desc
+    let user = (for u in users filter u.uid==i.uid return u)[0]
+    return merge(i, {user})
+    ''', pollid=pollid, silent=True)
+
+    s = ''
+    for v in votes:
+        vu = v['user']
+        s+= f"{v['t_c']} ({vu['uid']}) {vu['name']} [rep={pagerank_format(vu)} ts={trust_score_format(vu)}] --> {v['choice']} \n"
+
+    return doc2resp(s)
 
 if __name__ == '__main__':
     poll = str2p(test_text)

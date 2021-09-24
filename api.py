@@ -5,6 +5,8 @@ from commons import *
 from api_commons import *
 from flask import g, make_response
 
+from session import save_session,load_session
+
 from recently import *
 
 def create_all_necessary_collections():
@@ -2785,6 +2787,8 @@ def put_punchcard():
 
     hostname=request.host
 
+    ipad = g.display_ip_address
+
     if salt=='==nosalt==':
         qprint('ping no salt')
         return
@@ -2807,8 +2811,8 @@ def put_punchcard():
         return
 
     ups = dict(salt=salt, uid=uid, hostname=hostname)
-    kins = dict(t_c=t_c, t_u=t_u, uid=uid, salt=salt, hostname=hostname)
-    kups = dict(t_u=t_u, hostname=hostname)
+    kins = dict(t_c=t_c, t_u=t_u, uid=uid, salt=salt, hostname=hostname, ip=ipad)
+    kups = dict(t_u=t_u, hostname=hostname, ip=ipad)
 
     aql('upsert @ups insert @kins update @kups in punchcards',
         ups=ups, kins=kins, kups=kups, silent=True)
