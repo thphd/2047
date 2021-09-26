@@ -1,12 +1,12 @@
-from api import *
+from commons import *
 from medals import get_medals, get_user_medals
+from api import *
 
 import glob
 # hash all resource files see if they change
 def hash_these(path_arr, pattern='*.*'):
     resource_files_contents = b''
     for path in path_arr:
-        import glob
         files = glob.glob(path+pattern)
 
         for fn in files:
@@ -37,6 +37,7 @@ dispatch_with_retries(calculate_resource_files_hash)
 
 
 def mark_blacklisted(postlist):
+    # from api import get_blacklist_set
     bl_set = get_blacklist_set(g.selfuid)
 
     if 0 == len(bl_set):
@@ -1496,6 +1497,8 @@ def loginpage():
     )
 # print(ptf('2020-07-19T16:00:00'))
 
+from avatar_generation import render_identicon
+
 @app.route('/avatar/<int:uid>')
 @app.route('/avatar/<int:uid>.png')
 @app.route('/avatar/<int:uid>.jpg')
@@ -1533,7 +1536,6 @@ def route_get_avatar(uid):
     else: # db no match
         if 1:
             # render an identicon
-            from avatar_generation import render_identicon
 
             img = render_identicon(str(uid*uid+uid))
             resp = make_response(img, 200)
@@ -1906,10 +1908,11 @@ def apir():
     if ss: save_session(response)
     return response
 
-from imgproc import avatar_pipeline
 
+from imgproc import avatar_pipeline
 @app.route('/upload', methods=['POST'])
 def upload_file():
+
     if request.method != 'POST':
         return e('please use POST')
     must_be_logged_in()
@@ -1935,8 +1938,8 @@ def upload_file():
 
     return {'error':False}
 
-import qrcode, io
 
+import qrcode, io
 @app.route('/qr/<path:to_encode>')
 def qr(to_encode):
 
@@ -2341,3 +2344,6 @@ def resolve_mixed_content_pointers(list_pointers):
     litems = [i for i in litems if i]
 
     return litems
+
+
+from template_globals import tgr; tgr.update(globals())

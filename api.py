@@ -2003,6 +2003,9 @@ def _():
     must_be_logged_in()
     banned_check()
 
+    if current_user_doesnt_have_enough_likes():
+        raise Exception('你的账号级别较低，暂时没有生成邀请码的权限')
+
     uid = g.current_user['uid']
 
     code = generate_invitation_code(uid)

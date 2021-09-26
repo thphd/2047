@@ -1,6 +1,7 @@
 import monkeypatch
 from commons import *
 from app import app
+# from views import *
 
 test_post = '''
 each poll in the form of:
@@ -78,6 +79,16 @@ def create_or_update_poll(poll):
         poll['t_c'] = time_iso_now()
         poll['t_u'] = poll['t_c']
         poll['uid'] = g.selfuid
+
+        exist = aqls('''
+            for i in polls filter i.uid==@uid and i.t_c>@recent
+            return i
+            ''', uid=g.selfuid, recent = time_iso_now(-300)
+            )
+
+        if exist:
+            raise Exception('you can only create one new poll every 5 minutes')
+
         newpoll = aql('''
             insert @p in polls return NEW
         ''', p=poll)[0]
@@ -228,7 +239,10 @@ def get_poll(id, selfuid):
 
 @app.route('/polls')
 def list_polls():
+    from views import generate_simple_pagination
+
     # must_be_admin()
+
     start, pagesize, pagenumber, eat_count = generate_simple_pagination(pagesize=10)
 
     count = aql('return length(for i in polls return i)')[0]
@@ -280,6 +294,7 @@ def one_poll_votes(pollid):
         vu = v['user']
         s+= f"{v['t_c']} ({vu['uid']}) {vu['name']} [rep={pagerank_format(vu)} ts={trust_score_format(vu)}] --> {v['choice']} \n"
 
+    from views import doc2resp
     return doc2resp(s)
 
 if __name__ == '__main__':

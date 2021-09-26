@@ -43,6 +43,7 @@ import trust_score
 
 import sb1024_encryption
 
+import views
 from views import *
 
 def route(r):
@@ -424,7 +425,7 @@ def before_request():
         +f'bl:{list(uaf.blacklist.keys()).join(",")}')
 
 
-        if (not is_okay_bot(uas) or 1) and (ipstr in uaf.blacklist) or (ipstr=='45.155.205.206'):
+        if 0 and (not is_okay_bot(uas) or 1) and (ipstr in uaf.blacklist) or (ipstr=='45.155.205.206'):
 
             resp = make_response('rate limit exceeded', 307)
             resp.headers['Location'] = 'https://community.geph.io/'

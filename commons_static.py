@@ -188,3 +188,66 @@ def timethis(stmt):
 if __name__ == '__main__':
     toenc = b"r12uf-398gy309ghh123r1"*100000
     timethis('calculate_checksum_base64_replaced(toenc)')
+
+
+
+# everything time related
+
+import datetime
+
+dtdt = datetime.datetime
+dtt = datetime.time
+dtd = datetime.date
+dtn = dtdt.now
+dttz = datetime.timezone
+dttd = datetime.timedelta
+
+# default time parsing
+def dtdt_from_stamp(stamp):
+    return dtdt.fromisoformat(stamp)
+
+dfs = dtdt_from_stamp
+
+def dfshk(stamp):
+    return dfs(stamp).replace(tzinfo=working_timezone)
+
+# proper time formatting
+# input: string iso timestamp
+# output: string formatted time
+
+def format_time(dtdt,s):
+    return dtdt.strftime(s)
+
+# default time formatting
+def format_time_iso(dtdt):
+    return dtdt.isoformat(timespec='seconds')[:19]
+fti = format_time_iso
+
+format_time_datetime = lambda s: format_time(dfs(s), '%Y-%m-%d %H:%M')
+format_time_datetime_second = lambda s: format_time(dfs(s), '%Y-%m-%d %H:%M:%S')
+format_time_dateonly = lambda s: format_time(dfs(s), '%Y-%m-%d')
+format_time_timeonly = lambda s: format_time(dfs(s), '%H:%M')
+
+def days_since(ts):
+    then = dfshk(ts)
+    now = dtn(working_timezone)
+    dt = now - then
+    return dt.days
+
+def days_between(ts0, ts1):
+    return abs(days_since(ts0) - days_since(ts1))
+
+def seconds_since(ts):
+    then = dfshk(ts)
+    now = dtn(working_timezone)
+    dt = now - then
+    return dt.total_seconds()
+
+def cap(x, mi, ma):
+    return min(max(x, mi),ma)
+
+working_timezone = dttz(dttd(hours=+8)) # Hong Kong
+gmt_timezone = dttz(dttd(hours=0)) # GMT
+
+def time_iso_now(dt=0): # dt in seconds
+    return format_time_iso(dtn(working_timezone) + dttd(seconds=dt))

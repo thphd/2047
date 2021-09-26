@@ -706,6 +706,13 @@
       </div>
     {%endif%}
 
+    {%set abt = get_user_abusive_tag(p.uid)%}
+    {%if abt %}
+      <p class='liangjiahe_quote'>包括此用户在内的 {{abt[1]}} 名用户已被管理员标记为
+        {% for k in abt[0]%}{{' / ' if loop.index0}}<b>{{k|safe}}</b>{%endfor -%}
+      </p>
+    {%endif%}
+
     {%if p.delete%}
       <s>{{zhen('标记为删除','Marked as deleted')}}</s>
 
@@ -1031,6 +1038,13 @@
 {%call post_new(u, avatar_user=u, item_id=u.uid)%}
   <div class="post_content">
     {{username(u, class='userlist_name')}}
+
+    {%set abt = get_user_abusive_tag(u.uid)%}
+
+    {%if abt%}
+      <span class='liangjiahe_quote'>与{{abt[1]}}名用户被标记为
+         <b>{{abt[0]|join(', ')|safe}}</b></span>
+    {%endif%}
 
     {%if g.is_admin%}
     {%if u.invited_by%}
