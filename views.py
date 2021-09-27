@@ -926,7 +926,7 @@ def get_category_threads(cid):
 
     tlds, mode = iif(
         # cid!=4 and cid!='water' and cid!='inner',
-        cid=='main',
+        cid=='main' and random.random()>0.5,
         (thread_list_defaults, 'thread'),
         (thread_list_defaults_water, 'thread_water'),
     )
@@ -1250,7 +1250,7 @@ def get_all_posts():
     # kill water
     pl = []
     for i in postlist:
-        if i and i['t'] and i['t']['cid']==4:
+        if i and i['t'] and i['t']['cid']==4 and i['t']['tid']!=14636:
             pass
         else:
             pl.append(i)

@@ -277,6 +277,9 @@ def before_request():
         log_err('307 from',hostname,'to', goto)
         return resp
 
+    g.request_start_time = time.monotonic()
+    g.get_elapsed = lambda: int((time.monotonic() - g.request_start_time)*1000)
+
     rh = request.headers
 
     # request figerprinting
@@ -290,8 +293,6 @@ def before_request():
     is_local = ipstr[0:8]=='192.168.'
 
     g.display_ip_address = '[hidden]' if is_local else ipstr
-    g.request_start_time = time.time()
-    g.get_elapsed = lambda: int((time.time() - g.request_start_time)*1000)
 
     if 'action' in request.args and request.args['action']=='ping':
         is_ping = True
@@ -344,6 +345,10 @@ def before_request():
     g.current_user = False
     g.is_admin = False
 
+    g.is_static = is_static
+
+    g.after_request_cb = None
+
     if (not is_static):
         if 'uid' in session and session['uid']:
             uid = int(session['uid'])
@@ -367,24 +372,30 @@ def before_request():
                 cu['num_unread']=cu['ninbox']
                 cu['num_notif']=cu['nnotif']
 
-
-                log_info(
-                    ipstr,
-                    f'({uid}) {cu["name"]}',
-                    browserstr,
-                    salt,
-                    hostname,
+                g.after_request_cb = lambda:(
+                    qprint(
+                        colored_err(ipstr),
+                        colored_info(f'({uid}) {cu["name"]}'),
+                        browserstr,
+                        colored_info(salt),
+                        colored_down(hostname),
+                        colored_err(str(g.get_elapsed())+'ms'),
+                        )
                     )
                 return # done
 
             else: # bad uid
                 pass
         else: # no uid not static
-            log_info(
-                ipstr,
-                browserstr,
-                salt,
-                hostname,
+            g.after_request_cb = lambda:(
+                qprint(
+                    colored_err(ipstr),
+                    # f'({uid}) {cu["name"]}',
+                    browserstr,
+                    colored_info(salt),
+                    colored_down(hostname),
+                    colored_err(str(g.get_elapsed())+'ms'),
+                    )
                 )
 
     else: # is static
@@ -511,6 +522,14 @@ def e5001(e):
 @app.after_request
 def after_request(response):
     # save_session(response)
+
+    # punch!
+    # tpe.submit(put_punchcard)
+    put_punchcard()
+    k = g.after_request_cb
+    if k is not None:
+        k()
+
     return response
 
 from template_globals import tgr; tgr.update(globals())

@@ -217,7 +217,7 @@ function timed(interval){
     })
   }, interval)
 }
-timed(5000)
+// timed(5000)
 
 // use client side hashing
 // such that servers need not know the actual password.

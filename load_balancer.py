@@ -27,10 +27,17 @@ class UpStream:
         self.s = f'{h}:{p}'
         self.lasthit = time.monotonic()
 
+        self.accumulator = 0
+
         self.bad()
+
+    def accumulate(self, t):
+        self.accumulator = (self.accumulator + t) * 0.95
 
     def good(self):
         self.available = True
+        self.lasthit = time.monotonic() + self.accumulator*.1
+
         ss = self.s
         good_upstreams[ss] = self
         if ss in bad_upstreams:
@@ -38,6 +45,8 @@ class UpStream:
 
     def bad(self):
         self.available = False
+        self.lasthit = time.monotonic() + self.accumulator*.1
+
         ss = self.s
         bad_upstreams[ss] = self
         if ss in good_upstreams:
@@ -55,7 +64,7 @@ class UpStream:
                 print_info(f'upstream ok {self.s}')
                 ur, uw = k
                 await closew(uw)
-                
+
             else:
                 await asleep(0.2*rr())
 
@@ -65,12 +74,10 @@ class UpStream:
 
         except ConnectionRefusedError as e:
             print_err('CRE', e)
-            self.lasthit = time.monotonic()
             self.bad()
             return None
 
         else:
-            self.lasthit = time.monotonic()
             self.good()
             return conn
 
@@ -136,6 +143,7 @@ def get_conn_from_q():
         upst, conn = first
         r,w = conn
         if r.at_eof() or w.is_closing():
+            print_err(f'<- q:{len(q)} (drop closed conn)')
             continue
         else:
             return first
@@ -143,24 +151,35 @@ def get_conn_from_q():
     return None
 
 asleep = asyncio.sleep
-async def stream(r, w, note=''):
+async def stream(r, w):
     rateof = r.at_eof
     rread = r.read
     wdrain = w.drain
     wwrite = w.write
 
     nbytes = 0
+    firstline = None
 
     while not rateof():
         data = await rread(800000)
         # qprint(f'{note} {len(data)} bytes')
         if data:
+
             wwrite(data)
             await wdrain()
             nbytes+=len(data)
 
+            if firstline is None:
+                idx = data.find(b'\r\n')
+                if idx<100:
+                    firstline = data[:idx].decode('utf-8')
+                else:
+                    firstline = '(toolong)'
+                # qprint(f'{firstline}')
+
     await closew(w)
-    qprint(f'{note} {nbytes:8d}')
+    # qprint(f'{note} {nbytes:8d}')
+    return nbytes, firstline
 
 conn_counter = 0
 
@@ -175,6 +194,8 @@ async def tcp_lb_server(nretries=10):
         conn_counter+=1
 
         try:
+            ts = time.monotonic()
+
             addr = dw.get_extra_info('peername')
             ads = f'{addr[0]}:{addr[1]}'
 
@@ -202,13 +223,28 @@ async def tcp_lb_server(nretries=10):
 
                 break
 
+            up = stream(dr, uw)
+            down = stream(ur, dw)
 
-            qprint(f'{time_iso_now()} #{colored_info(str(conn_counter))} {ads} --> {upstream.h}:{upstream.p}')
+            cc = colored_info(f'#{str(conn_counter)}')
+            cc2 = (f'#{str(conn_counter)}')
+            qprint(cc,
+                f'{time_iso_now()} {ads} --> {upstream.h}:{upstream.p}',
+                colored_up(f'{upstream.accumulator:.3f}'))
 
-            up = stream(dr, uw, colored_up(f'#{conn_counter} >>'))
-            down = stream(ur, dw, colored_down(f'#{conn_counter} <<'))
 
-            await asyncio.gather(up, down)
+            (upb, ufl), (dnb, dfl) = await asyncio.gather(up, down)
+
+            elap = time.monotonic() - ts
+
+            qprint(cc2,
+                colored_up(f'{upb:7d} sent'),
+                colored_info(ufl),
+                colored_down(f'{dnb:7d} rcvd'),
+                colored_err(f'{int(elap*1000):5d} ms'),
+                colored_info(dfl))
+
+            upstream.accumulate(elap)
 
         except Exception as e:
             print_err('ccc',e)

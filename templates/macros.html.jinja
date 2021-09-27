@@ -709,7 +709,7 @@
     {%set abt = get_user_abusive_tag(p.uid)%}
     {%if abt %}
       <p class='liangjiahe_quote'>包括此用户在内的 {{abt[1]}} 名用户已被管理员标记为
-        {% for k in abt[0]%}{{' / ' if loop.index0}}<b>{{k|safe}}</b>{%endfor -%}
+        {% for k in abt[0]%}{{' / ' if loop.index0}}<b>{{k|safe}}</b>{%endfor -%}。若您认为当前标记是错误的，请私信联系管理员解除。
       </p>
     {%endif%}
 

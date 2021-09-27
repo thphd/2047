@@ -696,7 +696,23 @@ def getcomments(k1,k2):
 def current_user_doesnt_have_enough_likes():
     return g.current_user['nlikes'] < 3 if 'nlikes' in g.current_user else True
 
-def dlp_ts(ts): return min(60, max(2 +0, int(ts*0.025*2)))
+def current_user_posted_baodao():
+    uid = g.selfuid
+
+    if uid:
+        lp = aqls('''for i in posts
+        filter i.uid==@uid and i.tid==14636
+        return i''', uid=uid)
+
+        return True if lp else False
+    return False
+
+def current_user_can_post_outside_baodao():
+    is_new_user = key(g.current_user, 't_c') > time_iso_now(-86400*7)
+
+    return (not is_new_user) or current_user_posted_baodao()
+
+def dlp_ts(ts): return min(70, max(4 +0, int(ts*0.032*2)))
 def dlt_ts(ts): return min(10, max(2 +0, int(ts*0.006*2)))
 
 def daily_limit_posts(uid):
@@ -710,10 +726,14 @@ def daily_limit_threads(uid):
     return dlt_ts(trust_score)
 
 def daily_number_posts(uid):
-    return aql('return length(for t in posts filter t.uid==@k and t.t_c>@t return t)', silent=True, k=uid, t=time_iso_now(-86400*2))[0]
+    return aql('''return length(for t in posts
+    filter t.uid==@k and t.t_c>@t and t.tid!=14636 return t)''',
+    silent=True, k=uid, t=time_iso_now(-86400*2))[0]
 
 def daily_number_threads(uid):
-    return aql('return length(for t in threads filter t.uid==@k and t.t_c>@t return t)', silent=True, k=uid, t=time_iso_now(-86400*2))[0]
+    return aql('''return length(for t in threads
+    filter t.uid==@k and t.t_c>@t return t)''',
+    silent=True, k=uid, t=time_iso_now(-86400*2))[0]
 
 @ttl_cache(ttl=10, maxsize=1024)
 def daily_limit_posts_cached(uid):return daily_limit_posts(uid)
@@ -775,6 +795,13 @@ def _():
         # check if tid exists
         tid = _id
         thread = get_thread(tid)
+        cid = key(thread, 'cid')
+
+        # if not posting to baodao
+        if tid!=14636:
+            # check if user haven't baodao yet
+            if not current_user_can_post_outside_baodao():
+                raise Exception(zh('新用户需要先去水区新人报道，然后才可以发表回复。'))
 
         # check if user repeatedly submitted the same content
         lp = aql('for p in posts filter p.uid==@k sort p.t_c desc limit 1 return p',k=uid, silent=True)
@@ -783,13 +810,14 @@ def _():
                 raise Exception(en('repeatedly posting same content'))
 
 
-        # daily limit for low pagerank users
-        # daily_limit = int(pagerank*2+6)
-        daily_limit = daily_limit_posts(uid)
-        recent24hs = daily_number_posts(uid)
+        if tid!=14636:
+            # daily limit for low pagerank users
+            # daily_limit = int(pagerank*2+6)
+            daily_limit = daily_limit_posts(uid)
+            recent24hs = daily_number_posts(uid)
 
-        if recent24hs>=daily_limit:
-            raise Exception(spf(zh('你在过去$3小时发表了$0个评论，达到或超过了你目前的社会信用分($1) 所允许的值($2)。如果要提高这个限制，请尽量发表受其他用户欢迎的内容，以提高社会信用分。'))(recent24hs, trust_score, daily_limit,48))
+            if recent24hs>=daily_limit:
+                raise Exception(spf(zh('你在过去$3小时发表了$0个评论，达到或超过了你目前的社会信用分($1) 所允许的值($2)。如果要提高这个限制，请尽量发表受其他用户欢迎的内容，以提高社会信用分。'))(recent24hs, trust_score, daily_limit,48))
 
 
         # check if user posted too much content in too little time
@@ -2708,7 +2736,7 @@ sort i.t_u desc
         let gm = max(g)
         sort gm desc
         return {uid, t_u:gm}
-    ''', recent=time_iso_now(-86400/4))
+    ''', recent=time_iso_now(-3600))
 
     return n
 
@@ -2781,37 +2809,63 @@ def ljh_page():
 # if __name__ == '__main__':
 #     timethis('$get_liangjiahe_one()')
 
+# get punchcard. if within 3 minutes, don't stamp again
+
+punchcard_cache = {}
+pcl = threading.Lock()
+def get_recent_punchcards(salt, uid, hostname):
+    tup = (salt, uid, hostname)
+    with pcl:
+        if tup in punchcard_cache:
+            cached = punchcard_cache[tup]
+            n, t = cached
+            if t>time.time():
+                print_up('pc cache hit', n)
+                return n
+            else:
+                del punchcard_cache[tup]
+
+        n = aql('''return count(
+        for i in punchcards
+        filter i.t_u > @recent3 and i.salt==@salt
+         and i.uid==@uid and i.hostname==@hostname
+         return i)
+        ''', silent=True, recent3=time_iso_now(-180),
+            salt=salt, uid=uid, hostname=hostname)[0]
+
+        if n:
+            punchcard_cache[tup] = (n, time.time()+10)
+
+        # print_up('pc cache miss', n)
+
+    return n
+
 def put_punchcard():
-    t_c = time_iso_now()
-    t_u = t_c
-
-    uid = g.selfuid
-    salt = get_current_salt()
-
-    hostname=request.host
-
-    ipad = g.display_ip_address
-
-    if salt=='==nosalt==':
-        qprint('ping no salt')
+    if g.is_static:
+        # print_err('punch got static')
         return
 
     if not g.using_browser:
-        qprint('ping no browser')
+        # print_err('punch no browser')
         return
 
-    # get punchcard. if within 3 minutes, don't stamp again
-    n=aql('''return count(
-    for i in punchcards
-    filter i.t_u > @recent3 and i.salt==@salt
-     and i.uid==@uid and i.hostname==@hostname
-     return i)
-    ''', silent=True, recent3=time_iso_now(-180),
-        salt=salt, uid=uid, hostname=hostname)[0]
+    salt = get_current_salt()
+    if salt=='==nosalt==':
+        # print_err('punch no salt')
+        return
+
+    uid = g.selfuid
+    hostname=request.host
+
+    n = get_recent_punchcards(salt, uid, hostname)
 
     if n:
         # print_down('within 3 minutes, not stamping again')
         return
+
+    ipad = g.display_ip_address
+    t_c = time_iso_now()
+    t_u = t_c
 
     ups = dict(salt=salt, uid=uid, hostname=hostname)
     kins = dict(t_c=t_c, t_u=t_u, uid=uid, salt=salt, hostname=hostname, ip=ipad)
@@ -2819,7 +2873,7 @@ def put_punchcard():
 
     aql('upsert @ups insert @kins update @kups in punchcards',
         ups=ups, kins=kins, kups=kups, silent=True)
-    print_down(f'stamped {uid} {salt} {hostname}')
+    print_down(f'==stamped== {uid} {salt} {hostname}')
 
 # feedback regulated ping service
 # average 1 ping every 3 sec
@@ -2843,6 +2897,6 @@ def _():
     print_up(f'PING duration {durbuf:4.2f} pingtime {pingtime:4.2f}')
     ping_itvl = int(pingtime*1000)
 
-    put_punchcard()
+    # put_punchcard()
 
     return {'ping':'pong','interval':ping_itvl}

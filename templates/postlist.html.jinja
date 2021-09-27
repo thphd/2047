@@ -57,8 +57,11 @@
       你的<a href="/trust_score_explained">社会信用分</a>是{{tsc}}，过去48小时发表了 {{- dnp -}} 个回复（最多可以发表{{dlp}}个）
       {%- if dnt%}，{{dnt}}个主题（最多可以发表{{dlt}}个）
       {%-endif%}
-      <br>
-      如果想提高发言限制，可以去<a href="/t/14636">新人报道</a>让别人给你点赞
+
+      {%- if not current_user_can_post_outside_baodao() -%}
+        <br>
+        如果你是刚注册的新用户，发帖前请先去<a href="/t/14636">新人报道</a>
+      {%- endif -%}
     </div>
   {%endif%}
 
