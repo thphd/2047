@@ -701,18 +701,18 @@ def current_user_posted_baodao():
 
     if uid:
         lp = aqls('''for i in posts
-        filter i.uid==@uid and i.tid==14636
+        filter i.uid==@uid and i.tid==14636 and i.delete!=true
         return i''', uid=uid)
 
         return True if lp else False
     return False
 
 def current_user_can_post_outside_baodao():
-    is_new_user = key(g.current_user, 't_c') > time_iso_now(-86400*7)
+    is_new_user = key(g.current_user, 't_c') > time_iso_now(-86400*21)
 
     return (not is_new_user) or current_user_posted_baodao()
 
-def dlp_ts(ts): return min(70, max(4 +0, int(ts*0.032*2)))
+def dlp_ts(ts): return min(70, max(3 +0, int(ts*0.025*2)))
 def dlt_ts(ts): return min(10, max(2 +0, int(ts*0.006*2)))
 
 def daily_limit_posts(uid):
@@ -2867,13 +2867,15 @@ def put_punchcard():
     t_c = time_iso_now()
     t_u = t_c
 
+    ua = g.user_agent_string
+
     ups = dict(salt=salt, uid=uid, hostname=hostname)
-    kins = dict(t_c=t_c, t_u=t_u, uid=uid, salt=salt, hostname=hostname, ip=ipad)
-    kups = dict(t_u=t_u, hostname=hostname, ip=ipad)
+    kins = dict(t_c=t_c, t_u=t_u, uid=uid, salt=salt, hostname=hostname, ip=ipad, ua=ua)
+    kups = dict(t_u=t_u, hostname=hostname, ip=ipad, ua=ua)
 
     aql('upsert @ups insert @kins update @kups in punchcards',
         ups=ups, kins=kins, kups=kups, silent=True)
-    print_down(f'==stamped== {uid} {salt} {hostname}')
+    print_down(f'==stamped== {uid} {salt} {hostname} {ua}')
 
 # feedback regulated ping service
 # average 1 ping every 3 sec

@@ -290,7 +290,7 @@ def before_request():
     g.user_agent_string = uas
     ipstr = request.remote_addr
 
-    is_local = ipstr[0:8]=='192.168.'
+    is_local = ipstr.startswith('192.168.') or ipstr.startswith('127.0.')
 
     g.display_ip_address = '[hidden]' if is_local else ipstr
 
@@ -445,7 +445,7 @@ def before_request():
             return make_response('rate limit exceeded', 429)
 
     else:
-        # log_up(f'allow [{ipstr}]({uafd(ipstr):.1f}) {hostname} {uas}')
+        log_up(f'[{ipstr}]({uafd(ipstr):.1f}) {hostname} {uas}')
         pass
 
 

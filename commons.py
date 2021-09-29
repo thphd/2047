@@ -350,6 +350,8 @@ common_links = linkify('''
 聊天群 /p/170093 公共聊天群
 1337 /leet 做题家
 
+链接 /links 2047网址导航
+语录 /quotes 你不是一个人在战斗
 
 用户名录 /u/all 本站用户名册
 社会信用分 /u/all?sortby=trust_score 试点项目
@@ -364,8 +366,7 @@ common_links = linkify('''
 题库 /questions 考试题目编撰
 机读 /choice_stats 答题卡统计
 实体编辑 /entities 公钥上传/其他杂项数据
-# 链接 /links 2047网址导航
-# 语录 /quotes 你不是一个人在战斗
+
 oplog /oplog 管理日志
 英雄 /hero BE4的实验性项目
 维尼查 /ccpfinder 镰和锤子不可兼得
@@ -392,6 +393,31 @@ site_name='2047论坛，自由人的精神角落'
 site_name_header='2047'
 
 num_max_used_invitation_codes = 20
+
+special_user_dict = {
+'大量注册小号刷版的山东行为艺术家（见<a href="/t/16169">公告</a>）':{8091,8090, 8089, 8088, 8086, 8083, 8075, 8073, 8068,8067,8066, 8064, 8082, 8069, 8045,8043,8042,8041, 8030,8029,8026, 8012,8011,8010,8008, 7825, 7818,7817, 7807, 7806, 7801, 8049, 8048, 7629, 7590,7592,7594, 7596, 7599,7600,7601,7602,7603,7612, 7607, 7551, 7542,7541,7540, 7519, 8096, 8095} and {},
+'钢铁雄心小号（见<a href="/t/16115">公告</a>）'
+:{8113,8114,8115,8062,8061,8056,8054,8053,8052,8051,7790,7791,7792,7793,7794,7795,7796,5366},
+}
+
+special_user_dict_reverse = {}
+special_user_dict_reverse_count = {}
+
+for k,v in special_user_dict.items():
+    for i in v:
+        if i not in special_user_dict_reverse:
+            special_user_dict_reverse[i] = set()
+            special_user_dict_reverse_count[i] = 0
+        special_user_dict_reverse[i].add(k)
+        special_user_dict_reverse_count[i] += len(v)
+
+def get_user_abusive_tag(uid):
+    if uid in special_user_dict_reverse:
+        s = special_user_dict_reverse[uid]
+        c = special_user_dict_reverse_count[uid]
+        return s, c
+    else:
+        return None
 
 # priviledge: who can do what to whom
 
@@ -829,6 +855,8 @@ def get_high_trust_score_users_random(k):
     htsu = htsu.map(
         lambda d:{'user':d, 'n': trust_score_format(d)})
     return htsu
+
+
 
 if __name__ == '__main__':
     print('filtgen')

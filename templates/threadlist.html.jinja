@@ -24,8 +24,8 @@
 <div id="navigator" class="">
   {{render_thread_list_right(
     locale=g.locale,
-    cid=cid,
-    category_mode=category_mode)|safe}}
+    cid=(cid or 'main'),
+    category_mode=(category_mode or 'bigcats'))|safe}}
 </div>
 
 {%endblock%}
