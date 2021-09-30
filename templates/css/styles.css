@@ -2458,3 +2458,10 @@ a.threadlist_title.mohu {
     font-style: italic;
     color: #9e9e00;
 }
+
+[data-class="mod_message"] {
+    color: #bd000066;
+    font-style: italic;
+    background-color: #ff00001a;
+    padding: .5em .8em;
+}

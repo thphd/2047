@@ -702,14 +702,22 @@ def current_user_posted_baodao():
     if uid:
         lp = aqls('''for i in posts
         filter i.uid==@uid and i.tid==14636 and i.delete!=true
-        return i''', uid=uid)
+        limit 1
+        return i
+        ''', uid=uid)
 
-        return True if lp else False
+        lp2 = aqls('''for i in threads
+        filter i.uid==@uid and i.cid==4 and i.delete!=true
+        limit 1
+        return i
+        ''', uid=uid)
+
+        return True if (lp+lp2) else False
     return False
 
 def current_user_can_post_outside_baodao():
     is_new_user = key(g.current_user, 't_c') > time_iso_now(-86400*21)
-
+    
     return (not is_new_user) or current_user_posted_baodao()
 
 def dlp_ts(ts): return min(70, max(3 +0, int(ts*0.025*2)))

@@ -309,6 +309,14 @@ class LjhReference(SpanToken):
     def __init__(self, match):
         self.id = match.group(1)
 
+class ModMessage(SpanToken):
+    pattern = re.compile('\[mod\](.*?)\[/mod\]')
+    parse_inner = True
+    parse_group = 1 # useful only when parse_inner = 1
+    precedence = 1 # default 5
+    def __init__(self, match):
+        self.inner = match.group(1)
+
 class ThreadMention(SpanToken):
     pattern = re.compile(thread_autolink_regex)
     parse_inner = False
@@ -382,7 +390,7 @@ class FlavoredRenderer(HTMLRenderer):
     def __init__(self):
         # bad interface design ?
         super().__init__(PollInstance, YoutubePlayer, TwitterFrame, Cnmb,
-            AtUser, PostMention, ThreadMention, LjhReference)
+            AtUser, PostMention, ThreadMention, LjhReference, ModMessage)
 
         self.init_collection()
 
@@ -440,6 +448,10 @@ class FlavoredRenderer(HTMLRenderer):
         inner = decodeURI(inner)
 
         return template.format(target=target, inner=inner)
+
+    def render_mod_message(self, token):
+        inner = self.render_inner(token)
+        return f'<span data-class="mod_message">{inner}</span>'
 
 
 import urllib.parse
