@@ -1038,6 +1038,7 @@
 {%call post_new(u, avatar_user=u, item_id=u.uid)%}
   <div class="post_content">
     {{username(u, class='userlist_name')}}
+    {{brief(u,'userlist_brief')}}
 
     {%set abt = get_user_abusive_tag(u.uid)%}
 
@@ -1047,16 +1048,23 @@
     {%endif%}
 
     {%if g.is_admin%}
-    {%if u.invited_by%}
-      (由<a href="/u/{{u.invited_by}}">{{u.invited_by}}</a>邀请)
+
+      {%if u.invited_by%}
+        (由<a href="/u/{{u.invited_by}}">{{u.invited_by}}</a>邀请)
+      {%endif%}
+
+      <span class='admin_only'>
+
+        {%if u.salt%}(salt:{{u.salt}}){%endif%}
+        {%if u.ip_addr and g.selfuid==5108%}(from: {{u.ip_addr}}){%endif%}
+
+        {%if g.selfuid==5108%}
+          <span class='admin_only_inner'>[{{get_punched_by_uid(u.uid)}}]</span>
+        {%endif%}
+
+      </span>
+
     {%endif%}
-
-    {%if u.ip_addr and g.current_user['uid']==5108%}(from: {{u.ip_addr}}){%endif%}
-    {%if u.salt%}(salt:{{u.salt}}){%endif%}
-
-    {%endif%}
-
-    {{brief(u,'userlist_brief')}}
 
   </div>
 

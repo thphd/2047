@@ -717,7 +717,7 @@ def current_user_posted_baodao():
 
 def current_user_can_post_outside_baodao():
     is_new_user = key(g.current_user, 't_c') > time_iso_now(-86400*21)
-    
+
     return (not is_new_user) or current_user_posted_baodao()
 
 def dlp_ts(ts): return min(70, max(3 +0, int(ts*0.025*2)))
@@ -2910,3 +2910,33 @@ def _():
     # put_punchcard()
 
     return {'ping':'pong','interval':ping_itvl}
+
+import user_agents
+
+@lru_cache(maxsize=4096)
+def uas_into_readable(s):
+    agent = user_agents.parse(s)
+    return str(agent)
+
+@stale_cache(6, 1200, maxsize=4096)
+def get_punched_by_uid(uid):
+    mrp = aqls('''
+        for i in punchcards
+        filter i.uid==@uid
+        sort i.t_u desc
+        limit 1
+        return i
+    ''',uid=uid)[0]
+
+    res = ''
+
+    salt = key(mrp,'salt')
+    ip = key(mrp,'ip')
+    uas = key(mrp,'ua')
+    tu = key(mrp,'t_u')
+
+    res+= f'{tu} {salt}'
+    if ip: res+=f' {ip}'
+    if uas: res+=f' {uas_into_readable(uas)}'
+
+    return res

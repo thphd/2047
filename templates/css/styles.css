@@ -2465,3 +2465,14 @@ a.threadlist_title.mohu {
     background-color: #ff00001a;
     padding: .5em .8em;
 }
+
+span.admin_only {
+    color: #a000006e;
+    background-color: #ff000012;
+    font-size: 10px;
+    font-style: italic;
+}
+
+span.admin_only_inner {
+    color: #008b1b96;
+}
