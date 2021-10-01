@@ -716,7 +716,7 @@ def current_user_posted_baodao():
     return False
 
 def current_user_can_post_outside_baodao():
-    is_new_user = key(g.current_user, 't_c') > time_iso_now(-86400*21)
+    is_new_user = key(g.current_user, 't_c') > time_iso_now(-86400*42)
 
     return (not is_new_user) or current_user_posted_baodao()
 
@@ -2926,7 +2926,12 @@ def get_punched_by_uid(uid):
         sort i.t_u desc
         limit 1
         return i
-    ''',uid=uid)[0]
+    ''',uid=uid)
+
+    if not len(mrp):
+        return ''
+
+    mrp = mrp[0]
 
     res = ''
 
@@ -2935,8 +2940,8 @@ def get_punched_by_uid(uid):
     uas = key(mrp,'ua')
     tu = key(mrp,'t_u')
 
-    res+= f'{tu} {salt}'
-    if ip: res+=f' {ip}'
-    if uas: res+=f' {uas_into_readable(uas)}'
+    res+= f'{format_time_absolute_fallback(tu)} <b>(salt:{salt})</b>'
+    if ip: res+=f' (from:{ip})'
+    if uas: res+=f' {flask.escape(uas_into_readable(uas))}'
 
     return res

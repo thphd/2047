@@ -1059,7 +1059,7 @@
         {%if u.ip_addr and g.selfuid==5108%}(from: {{u.ip_addr}}){%endif%}
 
         {%if g.selfuid==5108%}
-          <span class='admin_only_inner'>[{{get_punched_by_uid(u.uid)}}]</span>
+          <span class='admin_only_inner'>{{get_punched_by_uid(u.uid)|safe}}</span>
         {%endif%}
 
       </span>
